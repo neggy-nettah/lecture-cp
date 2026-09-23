@@ -1,17 +1,24 @@
 const fs=require("fs");
 
 const html=fs.readFileSync("index.html","utf8");
-const main=html.match(/<script>\s*"use strict";([\s\S]*?)<\/script>/);
+const app=fs.readFileSync("app.js","utf8");
+const css=fs.readFileSync("styles.css","utf8");
+const source=html+"\n"+app;
 
 function fail(message,details=""){
   console.error("VALIDATION FAILED:",message,details);
   process.exit(1);
 }
 
-if(!main)fail("Main application script not found.");
+if(!html.includes('href="./styles.css?v='))fail("index.html is not loading styles.css.");
+if(!html.includes('src="./app.js?v='))fail("index.html is not loading app.js.");
+if(html.includes("<style>"))fail("Large inline style block returned to index.html.");
+if(/<script>\s*"use strict"/.test(html))fail("Large inline application script returned to index.html.");
+if(css.length<5000)fail("styles.css looks unexpectedly small.");
+if(app.length<20000)fail("app.js looks unexpectedly small.");
 
 try{
-  new Function('"use strict";'+main[1]);
+  new Function(app);
 }catch(error){
   fail("JavaScript syntax error:",error.message);
 }
@@ -38,35 +45,38 @@ const requiredFunctions=[
   "function parents("
 ];
 
-const missingFunctions=requiredFunctions.filter(token=>!html.includes(token));
+const missingFunctions=requiredFunctions.filter(token=>!app.includes(token));
 if(missingFunctions.length)fail("Missing required app functions:",missingFunctions.join(", "));
 
-const version=html.match(/const APP_VERSION="([^"]+)"/)?.[1];
+const version=app.match(/const APP_VERSION="([^"]+)"/)?.[1];
 if(!version)fail("APP_VERSION is missing.");
+if(!html.includes('styles.css?v='+version)||!html.includes('app.js?v='+version)){
+  fail("Asset cache-busting version does not match APP_VERSION:",version);
+}
 
-if(!html.includes('function speakMission(text,rate=.60){speak(text,rate)}')){
+if(!app.includes('function speakMission(text,rate=.60){speak(text,rate)}')){
   fail("Audio engine changed. Review the known Safari macOS issue before merging.");
 }
 
-if(/service[_-]?role/i.test(html)){
+if(/service[_-]?role/i.test(app)){
   fail("Possible Supabase service-role credential found in client code.");
 }
-if(!/sb_publishable_/.test(html)){
+if(!/sb_publishable_/.test(app)){
   fail("Expected Supabase publishable key is missing.");
 }
-if(!html.includes('.eq("parent_id",session.user.id)')){
+if(!app.includes('.eq("parent_id",session.user.id)')){
   fail("Child profile query is missing the explicit parent_id filter.");
 }
-if(!html.includes('x.parent_id===session?.user?.id')){
+if(!app.includes('x.parent_id===session?.user?.id')){
   fail("Child selection ownership guard is missing.");
 }
 
-const wordBlock=html.match(/words:\[([\s\S]*?)\],\n sentences:/)?.[1]||"";
+const wordBlock=app.match(/words:\[([\s\S]*?)\],\n sentences:/)?.[1]||"";
 const words=[...wordBlock.matchAll(/\{w:"([^"]+)",parts:\[([^\]]*)\],emoji:"([^"]+)"\}/g)].map(m=>({
   word:m[1],
   parts:[...m[2].matchAll(/"([^"]+)"/g)].map(x=>x[1])
 }));
-if(words.length<30)fail("Unexpectedly low reading content:",String(words.length));
+if(words.length<35)fail("Unexpectedly low reading content:",String(words.length));
 
 const duplicateWords=words.map(x=>x.word).filter((w,i,a)=>a.indexOf(w)!==i);
 if(duplicateWords.length)fail("Duplicate words:",[...new Set(duplicateWords)].join(", "));
@@ -74,16 +84,16 @@ if(duplicateWords.length)fail("Duplicate words:",[...new Set(duplicateWords)].jo
 const invalidWords=words.filter(x=>!x.word||!x.parts.length);
 if(invalidWords.length)fail("Word entries with missing parts found.");
 
-if(!html.includes('w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w')){
+if(!app.includes('w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w')){
   fail("Mission build pool no longer guarantees exact decodable word assembly.");
 }
-if(!html.includes('nextRandom(activeLearningSyllables(),currentAnswer,4)')||!html.includes('nextRandom(activeLearningSyllables(),currentAnswer,6)')){
+if(!app.includes('nextRandom(activeLearningSyllables(),currentAnswer,4)')||!app.includes('nextRandom(activeLearningSyllables(),currentAnswer,6)')){
   fail("Core syllable distractors are no longer constrained to unlocked syllables.");
 }
-if(!html.includes('extraBase=activeLearningSyllables()')){
+if(!app.includes('extraBase=activeLearningSyllables()')){
   fail("Build distractors can escape the unlocked curriculum.");
 }
-if(!html.includes('const pool=decodableSentencePool()')){
+if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
 
@@ -92,37 +102,37 @@ for(const view of requiredViews){
   if(!html.includes('data-view="'+view+'"'))fail("Navigation view missing:",view);
 }
 for(const route of ["world","collection","parents"]){
-  if(!html.includes('currentView==="'+route+'"'))fail("Render route missing:",route);
+  if(!app.includes('currentView==="'+route+'"'))fail("Render route missing:",route);
 }
 
-const literalActions=[...new Set([...html.matchAll(/data-action="([a-z0-9-]+)"/gi)].map(m=>m[1]))];
-const handled=new Set([...html.matchAll(/a==="([^"]+)"/g)].map(m=>m[1]));
+const literalActions=[...new Set([...source.matchAll(/data-action="([a-z0-9-]+)"/gi)].map(m=>m[1]))];
+const handled=new Set([...app.matchAll(/a==="([^"]+)"/g)].map(m=>m[1]));
 const missingActions=literalActions.filter(action=>!handled.has(action));
 if(missingActions.length)fail("Buttons without click handlers:",missingActions.join(", "));
 
-if(!html.includes("rewardLedger")||!html.includes("reviewQueue")){
+if(!app.includes("rewardLedger")||!app.includes("reviewQueue")||!app.includes("soundPractice")){
   fail("Adaptive/reward state protections are missing.");
 }
-
-if(!html.includes("missionHistory")||!html.includes("startAttempts")||!html.includes("startCorrect")){
+if(!app.includes("missionHistory")||!app.includes("startAttempts")||!app.includes("startCorrect")){
   fail("Per-mission tracking is incomplete.");
 }
-if(!html.includes("startAttempts:null")||!html.includes("if(m.startAttempts==null)")){
+if(!app.includes("startAttempts:null")||!app.includes("if(m.startAttempts==null)")){
   fail("Mission performance timing guard is missing.");
 }
-if(!html.includes("updatedAt")||!html.includes("localTs>remoteTs")){
+if(!app.includes("updatedAt")||!app.includes("localTs>remoteTs")){
   fail("Newest-state sync protection is missing.");
 }
-if(!html.includes("window.supabase?.createClient")){
+if(!app.includes("window.supabase?.createClient")){
   fail("Supabase offline fallback is missing.");
 }
 
 console.log("App validation OK");
 console.log("- Version:",version);
+console.log("- Split architecture: index.html + styles.css + app.js");
 console.log("- JavaScript syntax: OK");
 console.log("- Core functions: OK");
 console.log("- Navigation/actions: OK");
 console.log("- Reading words:",words.length);
-console.log("- Mission decodability guard: OK");
-console.log("- Client credential guard: OK");
+console.log("- Curriculum guards: OK");
+console.log("- Client credential/ownership guards: OK");
 console.log("- Audio guard: unchanged");
