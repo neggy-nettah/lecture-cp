@@ -147,3 +147,13 @@ Le script `scripts/check-content.js` vérifie à chaque push :
 - ponctuation des phrases ;
 - unicité des collectibles et zones du monde ;
 - progression croissante des seuils de déblocage des zones.
+
+## Révision espacée actuelle
+
+Le moteur utilise pour l'instant une règle simple et lisible :
+
+- ★ : révision après 1 jour ;
+- ★★ : révision après 3 jours ;
+- ★★★ : révision après 7 jours.
+
+Les erreurs récentes dans `reviewQueue` restent prioritaires sur cette planification. Cette logique est volontairement simple et pourra être ajustée après observation réelle des usages.
