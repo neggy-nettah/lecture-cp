@@ -79,9 +79,11 @@ Niveaux :
 
 Règles actuelles :
 
-- ★ : au moins 1 bonne réponse
+- ★ : au moins 1 bonne réponse autonome
 - ★★ : au moins 2 bonnes réponses et 60 % de réussite
 - ★★★ : au moins 4 bonnes réponses et 75 % de réussite
+
+Une réponse corrigée après une erreur garde son encouragement et sa récompense, mais ne fait pas monter la maîtrise et ne retire pas la syllabe de la file de révision. Cette règle reste active après la reprise d’une étape de mission. Les statistiques de tentatives incluent les corrections ; elles sont distinctes de la maîtrise. Les acquis déjà enregistrés sont conservés.
 
 `pickLearningSyllable()` donne plus de poids aux syllabes peu maîtrisées, aux erreurs récentes et aux syllabes maîtrisées qui n’ont pas été revues depuis plusieurs jours.
 

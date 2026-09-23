@@ -56,7 +56,7 @@ Le moteur doit :
 
 Faire défiler une carte ou appuyer sur un bouton audio ne signifie pas qu'une notion est maîtrisée.
 
-La maîtrise doit être alimentée uniquement par des réponses vérifiables.
+La maîtrise doit être alimentée uniquement par des réponses vérifiables. Une correction après une erreur dans la même question ne constitue pas une nouvelle preuve de maîtrise : l’enfant est encouragé, puis la notion reste à réviser.
 
 Les activités d'écoute/répétition peuvent compter comme pratique mais pas comme preuve de maîtrise.
 

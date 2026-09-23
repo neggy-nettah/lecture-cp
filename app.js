@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.16.0";
+const APP_VERSION="0.17.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -157,10 +157,20 @@ function masteryLevel(key){
  return 0
 }
 function masteryStars(key){const n=masteryLevel(key);return "★".repeat(n)+"☆".repeat(3-n)}
-function resetQuestionTracking(){questionErrorRecorded=false}
+function resetQuestionTracking(){
+ questionErrorRecorded=!!(missionMode&&state.dailyMission?.failedSteps?.[state.dailyMission.index])
+}
+function recordQuestionSuccess(key=null,challengeKey=""){
+ // Correcting a previously failed question earns encouragement, not mastery.
+ return recordAttempt(true,questionErrorRecorded?null:key,challengeKey)
+}
 function recordQuestionError(key=null){
  if(questionErrorRecorded)return false;
- questionErrorRecorded=true;recordAttempt(false,key);return true
+ questionErrorRecorded=true;
+ if(missionMode&&state.dailyMission){
+  const m=state.dailyMission;m.failedSteps=m.failedSteps||{};m.failedSteps[m.index]=true
+ }
+ recordAttempt(false,key);return true
 }
 function scopedChallengeKey(challengeKey=""){
  if(!challengeKey)return "";
@@ -804,7 +814,7 @@ function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
-   if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
+   if(ok){locked=true;recordQuestionSuccess("word:"+currentAnswer.w,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
    else{locked=true;recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
@@ -835,7 +845,7 @@ function updateOrder(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${esc(x)}</span>`).join(""):`<span class="empty">La phrase se construit ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join(" ")===orderTarget.join(" ");
-   if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "),"order:"+orderTarget.join(" "));rewardVerified("Phrase réussie !","order:"+orderTarget.join(" "));setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
+   if(ok){locked=true;recordQuestionSuccess("sentence:"+orderTarget.join(" "),"order:"+orderTarget.join(" "));rewardVerified("Phrase réussie !","order:"+orderTarget.join(" "));setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
    else{locked=true;recordQuestionError("sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
 }
@@ -1067,7 +1077,7 @@ function render(){
 function checkChoice(btn,value,kind){
  if(locked)return;
  if(value===currentAnswer){
-   locked=true;btn.classList.add("correct");recordAttempt(true,kind==="pictures"?"word:"+currentAnswer:currentAnswer,kind+":"+value);rewardVerified("Bonne réponse !",kind+":"+value);
+   locked=true;btn.classList.add("correct");recordQuestionSuccess(kind==="pictures"?"word:"+currentAnswer:currentAnswer,kind+":"+value);rewardVerified("Bonne réponse !",kind+":"+value);
    if(kind==="listen")setDone("listen");if(kind==="pictures")setDone("pictures");if(kind==="syllables")setDone("syllables");
    speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti();completeMissionStep()
  }else{
@@ -1227,7 +1237,7 @@ document.addEventListener("click",e=>{
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
  if(a==="bubble-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");screenTask(()=>speak(currentAnswer,.60),120);completeMissionStep()}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordQuestionSuccess(currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");screenTask(()=>speak(currentAnswer,.60),120);completeMissionStep()}
    else{recordQuestionError(currentAnswer);b.disabled=true;b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
    return
  }
@@ -1238,13 +1248,13 @@ document.addEventListener("click",e=>{
  if(a==="missing-answer"){
    if(locked)return;
    const value=b.dataset.value,key="missing:"+(missingWord?.w||"mot")+":"+missingIndex;
-   if(value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,currentAnswer,key);rewardVerified("Mot complété !",key);setDone("missing");$("#feedback").innerHTML='<div class="ok">🎉 Bravo ! Le mot est <b>'+esc(missingWord.w)+'</b>.</div>';completeMissionStep()}
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(currentAnswer,key);rewardVerified("Mot complété !",key);setDone("missing");$("#feedback").innerHTML='<div class="ok">🎉 Bravo ! Le mot est <b>'+esc(missingWord.w)+'</b>.</div>';completeMissionStep()}
    else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError(currentAnswer);miss("Cherche le morceau qui complète le mot.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
  if(a==="family-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,"family:"+currentAnswer);rewardVerified("Intrus trouvé !","family:"+currentAnswer);setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(null,"family:"+currentAnswer);rewardVerified("Intrus trouvé !","family:"+currentAnswer);setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
    else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
@@ -1258,7 +1268,7 @@ document.addEventListener("click",e=>{
  if(a==="comprehension-answer"){
    if(locked)return;
    const value=b.dataset.value,key="comprehension:"+currentAnswer;
-   if(value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,key);rewardVerified("Phrase comprise !",key);setDone("comprehension");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as bien compris la phrase !</div>';completeMissionStep()}
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(null,key);rewardVerified("Phrase comprise !",key);setDone("comprehension");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as bien compris la phrase !</div>';completeMissionStep()}
    else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Relis la phrase tranquillement.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }

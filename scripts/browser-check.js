@@ -59,6 +59,29 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>state.missionHistory.length),1);
   assert.equal(await page.evaluate(()=>state.rewards.pieces),1);
   await page.evaluate(()=>missionComplete());assert.equal(await page.evaluate(()=>state.rewards.pieces),1);
+  // Correcting an error must not award mastery, including after a mission reload.
+  await page.evaluate(()=>{state=normalizeState({});buildDailyMission();state.dailyMission.index=1;gameListen(state.dailyMission.primary,true)});
+  let target=await page.evaluate(()=>currentAnswer);
+  await page.locator(`[data-action="listen-answer"]:not([data-value="${target}"])`).first().click();
+  assert.equal(await page.evaluate(()=>state.mastery[currentAnswer].correct),0);
+  await page.reload();await page.waitForFunction(()=>state.dailyMission?.index===1);
+  await page.locator('[data-action="mission-next"]').click();
+  assert.equal(await page.evaluate(()=>questionErrorRecorded),true);
+  await page.locator(`[data-action="listen-answer"][data-value="${target}"]`).click();
+  assert.equal(await page.evaluate(target=>state.mastery[target].correct,target),0);
+  assert.equal(await page.evaluate(target=>state.reviewQueue.filter(x=>x===target).length,target),2);
+  assert.equal(await page.evaluate(()=>state.dailyMission.index),2);
+  // A fresh independent success can establish mastery and retire one review.
+  await page.evaluate(target=>gameListen(target),target);
+  await page.locator(`[data-action="listen-answer"][data-value="${target}"]`).click();
+  assert.equal(await page.evaluate(target=>state.mastery[target].correct,target),1);
+  assert.equal(await page.evaluate(target=>state.reviewQueue.filter(x=>x===target).length,target),1);
+  // A corrected word is also practice, not autonomous decoding evidence.
+  await page.evaluate(()=>{state=normalizeState({});gameBuild({w:'salami',parts:['sa','la','mi'],emoji:'🥓'});orderMade=['mi','la','sa'];updateBuild()});
+  await page.waitForTimeout(900);
+  for(const part of ['sa','la','mi'])await page.locator(`[data-action="build-token"][data-value="${part}"]`).click();
+  assert.equal(await page.evaluate(()=>state.mastery['word:salami'].correct),0);
+  assert.equal(await page.evaluate(()=>locked),true);
   // A pending reset from a wrong word must never mutate the next exercise.
   await page.evaluate(()=>{gameBuild({w:'salami',parts:['sa','la','mi'],emoji:'🥓'});orderMade=['mi','la','sa'];updateBuild();gameBuild({w:'salami',parts:['sa','la','mi'],emoji:'🥓'});orderMade=['sa'];updateBuild()});
   await page.waitForTimeout(950);assert.deepEqual(await page.evaluate(()=>orderMade),['sa']);
