@@ -130,5 +130,8 @@ for(const probe of probes){
 console.log("Runtime smoke test OK");
 console.log("- Application booted with Supabase unavailable");
 console.log("- Core functions callable");
-console.log("- Daily mission contains 5 steps");\nconsole.log("- Mission stats start only when the mission starts");\nconsole.log("- Legacy state migration: OK");\nconsole.log("- Duplicate mastery guard: OK");
+console.log("- Daily mission contains 5 steps");
+console.log("- Mission stats start only when the mission starts");
+console.log("- Legacy state migration: OK");
+console.log("- Duplicate mastery guard: OK");
 console.log("- Mission words assemble exactly");
