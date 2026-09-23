@@ -210,7 +210,7 @@ function activeLearningSyllables(){
 }
 function activeSoundGraphemes(){
  const consonants=DATA.sets.slice(0,unlockedFamilyCount()).map(set=>set[0][0]);
- return new Set(["a","i","o","u","é",...consonants])
+ return new Set(["a","e","i","o","u","é",...consonants])
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
@@ -241,7 +241,7 @@ function phraseTokenParts(token){
  const word=DATA.words.find(w=>w.w===clean);return word?.parts||PHRASE_NAME_PARTS[clean]||null
 }
 function decodableSentencePool(){
- const allowed=new Set([...activeLearningSyllables(),..."aioué"]);
+ const allowed=new Set([...activeLearningSyllables(),..."aioueé"]);
  return DATA.sentences.filter(arr=>arr.every(token=>{
   const parts=phraseTokenParts(token);if(parts===null)return false;if(parts.length===0)return true;
   const clean=String(token).toLowerCase().replace(/[.!?,;:]/g,"");
@@ -279,11 +279,11 @@ function weakestSyllable(exclude=""){
  return pick(all)
 }
 function fullyDecodableWords(){
- const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
+ const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioueé".includes(x.g)).map(x=>x.g)]);
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
 function decodableMissionWords(){
- const allowed=new Set([...activeLearningSyllables(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
+ const allowed=new Set([...activeLearningSyllables(),...DATA.sounds.filter(x=>"aioueé".includes(x.g)).map(x=>x.g)]);
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
 function missingSyllableWords(){const active=new Set(activeLearningSyllables());return decodableMissionWords().filter(w=>w.parts.some(p=>active.has(p)))}
@@ -988,7 +988,7 @@ function parents(){
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
  </div>
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>
- <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les 50 syllabes en détail</summary><div class="mastery-grid">${DATA.sets.flat().map(s=>`<div class="mastery-chip">${s.toUpperCase()}<small>${masteryStars(s)}</small></div>`).join("")}</div></details>
+ <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les ${DATA.sets.flat().length} syllabes en détail</summary><div class="mastery-grid">${DATA.sets.flat().map(s=>`<div class="mastery-chip">${s.toUpperCase()}<small>${masteryStars(s)}</small></div>`).join("")}</div></details>
  <div class="card"><b>📚 7 dernières missions</b>${recentMissionHTML()}</div>
  <div class="parent-grid">
   <div class="parent-box"><h3>📅 Routine simple</h3><p>Une mission courte par jour suffit. On s’arrête avant la fatigue et on privilégie la régularité.</p></div>
