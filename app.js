@@ -3,10 +3,12 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const APP_VERSION="0.9.1";
+const STATE_SCHEMA_VERSION=1;
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
-const DEFAULT_STATE={updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],attemptLedger:{},rewardLedger:{},soundPractice:{},wordPractice:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={schemaVersion:STATE_SCHEMA_VERSION,updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],attemptLedger:{},rewardLedger:{},soundPractice:{},wordPractice:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight=false,remoteSavePending=false;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},reviewQueue:Array.isArray(raw?.reviewQueue)?raw.reviewQueue:[],attemptLedger:(raw&&raw.attemptLedger)||{},rewardLedger:(raw&&raw.rewardLedger)||{},soundPractice:(raw&&raw.soundPractice)||{},wordPractice:(raw&&raw.wordPractice)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
+function migrateState(raw){const src=raw&&typeof raw==="object"?{...raw}:{};src.schemaVersion=STATE_SCHEMA_VERSION;return src}
+function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION,done:raw.done||{},stats:{...DEFAULT_STATE.stats,...(raw.stats||{})},mastery:raw.mastery||{},reviewQueue:Array.isArray(raw.reviewQueue)?raw.reviewQueue:[],attemptLedger:raw.attemptLedger||{},rewardLedger:raw.rewardLedger||{},soundPractice:raw.soundPractice||{},wordPractice:raw.wordPractice||{},missionHistory:Array.isArray(raw.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...(raw.rewards||{}),collection:[...((raw.rewards||{}).collection||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
