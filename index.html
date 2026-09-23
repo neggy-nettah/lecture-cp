@@ -300,8 +300,16 @@ function daysSinceDayKey(key){
  const d=new Date(key+"T00:00:00"),today=new Date();today.setHours(0,0,0,0);
  return Math.max(0,Math.round((today-d)/86400000))
 }
+function unlockedFamilyCount(){
+ const missions=(state.missionHistory||[]).length;
+ return Math.min(DATA.sets.length,3+Math.floor(missions/2))
+}
+function activeLearningSyllables(){
+ const unlocked=DATA.sets.slice(0,unlockedFamilyCount()).flat(),known=Object.keys(state.mastery||{}).filter(k=>DATA.sets.flat().includes(k));
+ return [...new Set([...unlocked,...known])]
+}
 function pickLearningSyllable(){
- const all=DATA.sets.flat(),weighted=[];
+ const all=activeLearningSyllables(),weighted=[];
  all.forEach(s=>{
   const level=masteryLevel(s),m=state.mastery?.[s]||{},overdue=m.lastSeen&&daysSinceDayKey(m.lastSeen)>=7?2:0,weight=[5,4,2,1][level]+overdue;
   for(let i=0;i<weight;i++)weighted.push(s)
@@ -314,7 +322,7 @@ function localDayKey(){
  return y+"-"+m+"-"+day
 }
 function weakestSyllable(exclude=""){
- const all=DATA.sets.flat().filter(s=>s!==exclude),attempted=all.filter(s=>(state.mastery?.[s]?.attempts||0)>0);
+ const all=activeLearningSyllables().filter(s=>s!==exclude),attempted=all.filter(s=>(state.mastery?.[s]?.attempts||0)>0);
  if(attempted.length){
   return [...attempted].sort((a,b)=>{
    const ma=state.mastery[a],mb=state.mastery[b],aa=(ma.correct||0)/Math.max(1,ma.attempts),ab=(mb.correct||0)/Math.max(1,mb.attempts);
@@ -324,11 +332,11 @@ function weakestSyllable(exclude=""){
  return pick(all)
 }
 function decodableMissionWords(){
- const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
+ const allowed=new Set([...activeLearningSyllables(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
 function pickReviewSyllable(exclude=""){
- const all=DATA.sets.flat(),recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&all.includes(s));
+ const all=activeLearningSyllables(),recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&all.includes(s));
  if(recent.length)return recent[0];
  const overdue=all.filter(s=>s!==exclude&&masteryLevel(s)>=2&&state.mastery?.[s]?.lastSeen&&daysSinceDayKey(state.mastery[s].lastSeen)>=7)
    .sort((a,b)=>daysSinceDayKey(state.mastery[b].lastSeen)-daysSinceDayKey(state.mastery[a].lastSeen));
