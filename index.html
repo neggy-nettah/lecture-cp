@@ -189,7 +189,12 @@ async function saveRemoteNow(){
  const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=8,attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
  if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
 }
-function save(touch=true){if(touch)state.updatedAt=Date.now();saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
+function save(touch=true){
+ if(touch)state.updatedAt=Date.now();
+ saveLocal();topUI();
+ if(!touch)return;
+ clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)
+}
 async function loadRemoteState(){
  if(!sb||!session||!currentChild)return;$("#syncStatus").textContent="☁️ Chargement…";
  let cached=null;try{cached=JSON.parse(localStorage.getItem(childKey(currentChild.id))||"null")}catch(e){console.error("Local cache read error",e)}
