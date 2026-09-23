@@ -57,7 +57,10 @@ Principaux champs de l'état :
 Les missions ne tirent plus dans les 50 syllabes dès le premier jour.
 
 - départ : 3 familles de syllabes débloquées
-- puis 1 nouvelle famille tous les 2 jours de mission terminée
+- une nouvelle famille demande désormais à la fois assez de missions terminées et assez de consolidation réelle sur les syllabes déjà travaillées
+- la cadence maximale reste d'environ 1 nouvelle famille tous les 2 jours de mission, mais elle peut être retardée si la maîtrise n'est pas suffisante
+- une famille réellement travaillée dans une ancienne version reste accessible afin de ne pas faire régresser un profil existant
+- la simple pratique d'un son isolé ne suffit pas à débloquer toute une famille
 - une syllabe déjà travaillée reste dans le pool même si elle n'appartient pas au palier normalement ouvert
 - les distracteurs des missions utilisent uniquement les familles actuellement débloquées
 - le mot final de mission doit être entièrement décodable avec les syllabes actives et les voyelles isolées disponibles
