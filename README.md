@@ -31,11 +31,14 @@ Principaux champs de l'état :
 - `streak` : série de réponses correctes
 - `done` : activités déjà validées
 - `stats` : essais et réponses correctes
-- `mastery` : maîtrise par syllabe
+- `mastery` : maîtrise par syllabe, avec dernière date de révision
+- `reviewQueue` : erreurs récentes à revoir en priorité
+- `attemptLedger` : empêche de gonfler artificiellement la maîtrise avec la même réussite répétée
 - `rewardLedger` : empêche de gagner plusieurs fois la même étoile sur le même défi le même jour
 - `rewards` : morceaux de puzzle, puzzles terminés, collection
 - `dailyMission` : mission du jour et étape en cours
 - `missionHistory` : historique des missions terminées
+- `updatedAt` : horodatage utilisé pour choisir la sauvegarde locale/distante la plus récente
 - `lastView` : écran à restaurer
 
 `normalizeState()` doit rester rétrocompatible avec les anciennes sauvegardes.
@@ -55,7 +58,7 @@ Règles actuelles :
 - ★★ : au moins 2 bonnes réponses et 60 % de réussite
 - ★★★ : au moins 4 bonnes réponses et 75 % de réussite
 
-`pickLearningSyllable()` donne plus de poids aux syllabes peu maîtrisées.
+`pickLearningSyllable()` donne plus de poids aux syllabes peu maîtrisées, aux erreurs récentes et aux syllabes maîtrisées qui n’ont pas été revues depuis plusieurs jours.
 
 ## Mission du jour
 
@@ -79,7 +82,7 @@ Une mission terminée :
 ## Récompenses
 
 - bonne réponse vérifiée : étoile
-- même défi répété le même jour : pas de nouvelle étoile
+- même défi répété le même jour : pas de nouvelle étoile et pas de nouvelle hausse artificielle de maîtrise
 - mission terminée : 1 morceau de puzzle
 - 4 morceaux : collectible
 - badges : dérivés automatiquement des progrès
@@ -98,6 +101,27 @@ Une mission terminée :
 - Écoute & répète — BÊTA
 
 Le jeu micro reste un entraînement BÊTA et ne doit pas décider de la maîtrise ou donner des récompenses.
+
+## Monde et motivation
+
+- objectif doux : jusqu’à 5 missions sur les 7 derniers jours
+- carte du monde avec zones débloquées progressivement
+- évolution du compagnon Léo
+- puzzles de 4 morceaux
+- collectibles
+- badges automatiques
+
+## Sauvegarde et robustesse
+
+- sauvegarde locale immédiate
+- Supabase quand un compte enfant est connecté
+- la sauvegarde locale ou distante la plus récente gagne lors du chargement
+- reconnexion automatique après un passage hors ligne
+- navigation seule non considérée comme un nouveau progrès
+- l’app reste utilisable localement si Supabase est indisponible
+- écran de récupération en cas d’erreur JavaScript
+- diagnostic parent copiable sans email ni donnée personnelle
+- copie locale automatique avant remise à zéro
 
 ## Audio
 
@@ -124,15 +148,16 @@ Point connu : comportement non fiable sur Safari macOS. Ne pas modifier à nouve
 - améliorer l'expérience tablette/mobile
 - revoir l'audio macOS avec une solution plus fiable
 - renforcer l'idempotence côté serveur si l'application est ouverte au public
-- ajouter des tests automatiques avant les évolutions plus importantes
+- faire évoluer les tests automatiques avec chaque nouvelle fonctionnalité
 
 ## Contrôle avant publication
 
 Avant de pousser `develop-caly` vers `main` :
 
-1. vérifier la syntaxe JavaScript
-2. vérifier qu'une ancienne sauvegarde se charge
-3. vérifier qu'une mission peut être reprise
-4. vérifier qu'une mission ne récompense qu'une fois par jour
-5. vérifier mobile et desktop
-6. ne pas réintroduire le micro dans la progression pédagogique
+1. exécuter `node scripts/check-app.js`
+2. exécuter `node scripts/smoke-runtime.js`
+3. vérifier qu'une ancienne sauvegarde se charge
+4. vérifier qu'une mission peut être reprise
+5. vérifier qu'une mission ne récompense qu'une fois par jour
+6. vérifier mobile et desktop
+7. ne pas réintroduire le micro dans la progression pédagogique
