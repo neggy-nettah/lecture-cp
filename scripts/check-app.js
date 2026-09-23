@@ -2,7 +2,8 @@ const fs=require("fs");
 
 const html=fs.readFileSync("index.html","utf8");
 const content=fs.readFileSync("content.js","utf8");
-const app=fs.readFileSync("app.js","utf8");
+const scriptFiles=["progression.js","rewards.js","app.js"];
+const app=scriptFiles.map(file=>fs.readFileSync(file,"utf8")).join("\n");
 const css=fs.readFileSync("styles.css","utf8");
 const manifestText=fs.readFileSync("manifest.webmanifest","utf8");
 const sw=fs.readFileSync("sw.js","utf8");
@@ -82,8 +83,17 @@ if(!version)fail("APP_VERSION is missing.");
 if(!html.includes('styles.css?v='+version)||!html.includes('content.js?v='+version)||!html.includes('app.js?v='+version)){
   fail("Asset cache-busting version does not match APP_VERSION:",version);
 }
+let previousScript=-1;
+for(const file of ["content.js",...scriptFiles]){
+ const index=html.indexOf('src="./'+file+'?v='+version+'"');
+ if(index<0||index<=previousScript)fail("Missing, outdated or misordered script:",file);
+ previousScript=index;
+ try{new Function(fs.readFileSync(file,"utf8"))}catch(error){fail("Script syntax error:",file+": "+error.message)}
+}
+const declarations=[...app.matchAll(/^(?:async )?function ([A-Za-z0-9_]+)\(/gm)].map(m=>m[1]);
+if(new Set(declarations).size!==declarations.length)fail("Duplicate function declarations across scripts.");
 if(!sw.includes('lecture-cp-shell-v'+version))fail("Service Worker cache version does not match APP_VERSION:",version);
-for(const asset of ['styles.css?v='+version,'content.js?v='+version,'app.js?v='+version]){
+for(const asset of ['styles.css?v='+version,'content.js?v='+version,...scriptFiles.map(file=>file+'?v='+version)]){
   if(!sw.includes(asset))fail("Service Worker shell is missing versioned asset:",asset);
 }
 if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Worker registration is missing.");
@@ -184,7 +194,7 @@ if(!app.includes("window.supabase?.createClient")){
 
 console.log("App validation OK");
 console.log("- Version:",version);
-console.log("- Split architecture: index.html + styles.css + content.js + app.js");
+console.log("- Split architecture: index.html + styles.css + content.js + progression.js + rewards.js + app.js");
 console.log("- JavaScript syntax: OK");
 console.log("- Core functions: OK");
 console.log("- Navigation/actions: OK");

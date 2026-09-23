@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.21.0 — 2026-09-23
+
+- extraction sans changement de logique des règles de progression et des récompenses dans deux fichiers dédiés
+- documentation des responsabilités et de l’ordre de chargement
+- contrôles des versions, de l’ordre des scripts et des fonctions dupliquées
+- cache hors ligne étendu aux nouveaux fichiers et vérification navigateur du rechargement sans réseau
+
 ## 0.20.0 — 2026-09-23
 
 - audit automatisé de tous les types d’exercices sur les huit paliers accessibles, intégré aux contrôles GitHub

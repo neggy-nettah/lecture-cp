@@ -2,7 +2,8 @@ const fs=require("fs");
 const vm=require("vm");
 
 const content=fs.readFileSync("content.js","utf8");
-const main=fs.readFileSync("app.js","utf8");
+const modules=["progression.js","rewards.js","app.js"].map(file=>({file,source:fs.readFileSync(file,"utf8")}));
+const main=modules.map(x=>x.source).join("\n");
 if(!content.trim()||!main.trim()){
   console.error("content.js or app.js is empty");
   process.exit(1);
@@ -91,7 +92,7 @@ const context=vm.createContext(sandbox);
 
 try{
   vm.runInContext(content,context,{timeout:2000});
-  vm.runInContext(main,context,{timeout:2000});
+  for(const module of modules)vm.runInContext(module.source,context,{timeout:2000,filename:module.file});
 }catch(error){
   console.error("Runtime boot failed:",error);
   process.exit(1);

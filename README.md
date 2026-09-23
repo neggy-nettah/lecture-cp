@@ -16,7 +16,9 @@ L'application privilégie la précision, la répétition espacée et la progress
 - `index.html` : structure HTML et chargement des assets
 - `styles.css` : styles et responsive
 - `content.js` : sons, syllabes, mots, phrases, collectibles et zones
-- `app.js` : logique pédagogique, navigation, Supabase et jeux
+- `progression.js` : maîtrise, réponses, révisions, paliers et sélection du contenu
+- `rewards.js` : étoiles, récompenses, encouragements et séries
+- `app.js` : démarrage, navigation, Supabase, orchestration des missions et jeux
 - `manifest.webmanifest` : métadonnées d'installation
 - `sw.js` : cache hors ligne versionné du shell applicatif
 - `icon.svg` : icône temporaire de l'application
@@ -243,3 +245,9 @@ La disposition des six cartes, les paires trouvées et les erreurs sont conserv�
 `node scripts/browser-check.js` lance aussi `scripts/audit-games-browser.js` : tous les paliers, choix corrects et incorrects, assemblage de tous les mots accessibles, phrases, images, indices, répétition des clics et affichage à 320 px. Les autres scénarios couvrent Memory, reprise, profils, comptes et sauvegardes. Voir `AUDIT.md` pour les corrections et les limites.
 
 Les questions visuelles utilisent uniquement `PICTURE_WORDS`. La syllabe manquante donne le mot cible à écouter. La construction avec modèle entraîne l’assemblage et conserve sa récompense, mais ne prouve pas une lecture autonome. L’indice audio du jeu Mot & image supprime la preuve de maîtrise pour cette question. `DEFERRED_WORDS` exclut valise et miso tant que la règle du s prononcé z n’est pas enseignée.
+
+### Organisation et ordre de chargement
+
+Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression.js`, `rewards.js`, `app.js`. Les deux fichiers extraits déclarent leurs fonctions sans accéder à la progression au chargement. Ils utilisent l’état actif et les fonctions de sauvegarde/affichage lors des appels. Cette séparation est une première étape : les dépendances globales restent explicites, et ne constituent pas encore des modules indépendants.
+
+Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
