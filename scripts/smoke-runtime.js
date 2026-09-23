@@ -109,7 +109,7 @@ const probes=[
   'activeLearningSyllables().length===15',
   'fullyDecodableWords().length>=4',
   'fullyDecodableWords().every(w=>w.parts.join("")===w.w)',
-  'decodableMissionWords().length>=1',
+  'decodableMissionWords().length>=6',
   'decodableMissionWords().every(w=>w.parts.join("")===w.w)',
   'decodableMissionWords().every(w=>w.parts.every(p=>activeLearningSyllables().includes(p)||"aioué".includes(p)))',
   'getDailyMission().steps.length===5',
@@ -120,6 +120,7 @@ const probes=[
   '(state=normalizeState({}),missionMode=false,recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
+  '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}]}),unlockedFamilyCount()===5)',
   '(state=normalizeState({lastView:"unknown-view"}),currentView="unknown-view",render(),currentView==="home")'
 ];
 
@@ -145,6 +146,7 @@ console.log("- Legacy state migration: OK");
 console.log("- Duplicate mastery guard: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Initial curriculum unlock: 3 families");
+console.log("- Curriculum expands with completed missions");
 console.log("- Free reading words are fully decodable");
 console.log("- Mission words use currently unlocked syllables");
 console.log("- Unknown saved views recover to home");
