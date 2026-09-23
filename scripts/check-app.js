@@ -28,7 +28,9 @@ const requiredFunctions=[
   "function recordAttempt(",
   "function scopedChallengeKey(",
   "function activeLearningSyllables(",
+  "function activeSoundData(",
   "function fullyDecodableWords(",
+  "function decodableSentencePool(",
   "function gameMemory(",
   "function gameFamily(",
   "function worldView(",
@@ -74,6 +76,9 @@ if(!html.includes('fromMission?activeLearningSyllables():DATA.sets.flat()')){
 }
 if(!html.includes('extraBase=fromMission?activeLearningSyllables():DATA.sets.flat()')){
   fail("Mission build distractors can escape the unlocked curriculum.");
+}
+if(!html.includes('const pool=decodableSentencePool()')){
+  fail("Phrase game no longer filters its sentence pool.");
 }
 
 const requiredViews=["home","sounds","syllables","words","games","world","collection","parents"];
