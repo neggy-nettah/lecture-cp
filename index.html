@@ -306,7 +306,7 @@ function buildDailyMission(){
  const primary=pickLearningSyllable(),review=pickReviewSyllable(primary),decodable=decodableMissionWords();
  const candidates=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),word=pick(candidates.length?candidates:decodable.length?decodable:DATA.words);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualType=Number(localDayKey().slice(-2))%2?"family":"memory";
- state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:state.stats?.attempts||0,startCorrect:state.stats?.correct||0,steps:[
+ state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
   {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
   {type:"bubbles",target:review,title:"Je révise",detail:"Éclate la bonne bulle"},
@@ -318,7 +318,6 @@ function buildDailyMission(){
 function getDailyMission(){
  const m=state.dailyMission;
  if(!m||m.date!==localDayKey()||!Array.isArray(m.steps)||m.steps.length!==5)return buildDailyMission();
- if(m.startAttempts==null){m.startAttempts=state.stats?.attempts||0;m.startCorrect=state.stats?.correct||0;state.dailyMission=m;save()}
  return m
 }
 function missionProgressHTML(m){
@@ -345,6 +344,7 @@ function missionDiscover(target){
 }
 function startMissionStep(){
  const m=getDailyMission();if(m.completed||m.index>=m.steps.length){missionComplete();return}
+ if(m.startAttempts==null){m.startAttempts=state.stats?.attempts||0;m.startCorrect=state.stats?.correct||0;state.dailyMission=m;save()}
  const s=currentMissionStep();missionMode=true;
  if(s.type==="discover")missionDiscover(s.target);
  else if(s.type==="listen")gameListen(s.target,true);
