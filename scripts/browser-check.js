@@ -3,17 +3,22 @@
 const assert=require('node:assert/strict');
 const {chromium}=require('playwright');
 const url=process.env.CALY_TEST_URL||'http://127.0.0.1:8765';
-const mockClient=`window.__mock={reads:[],writes:[],holdWrites:false};
+const mockClient=`window.__mock={reads:[],writes:[],holdWrites:false,authCalls:[],inserts:[],children:[]};
 window.supabase={createClient:()=>({
- auth:{getSession:async()=>({data:{session:null}}),onAuthStateChange:fn=>{window.__mock.authChange=fn},signOut:async()=>({})},
- from:()=>{const filters={};const q={select:()=>q,eq:(k,v)=>{filters[k]=v;return q},
+ auth:{getSession:async()=>{if(__mock.recoveryAtBoot){const session={user:{id:'parent'}};__mock.authChange('PASSWORD_RECOVERY',session);return {data:{session}}}return {data:{session:null}}},
+ onAuthStateChange:fn=>{window.__mock.authChange=fn},signOut:async()=>({}),
+ signInWithPassword:async args=>{__mock.authCalls.push({type:'login'});if(__mock.loginThrows)throw Error('offline');return {error:__mock.loginError||null}},
+ resetPasswordForEmail:async()=>{__mock.authCalls.push({type:'forgot'});return {error:null}},
+ signUp:async()=>{__mock.authCalls.push({type:'signup'});return {data:{session:null},error:null}},
+ updateUser:async args=>{__mock.authCalls.push({type:'update',password:args.password});return __mock.holdUpdate?new Promise(resolve=>__mock.releaseUpdate=resolve):{error:__mock.updateError||null}}},
+ from:()=>{const filters={};const q={select:()=>q,order:async()=>({data:__mock.children,error:null}),insert:row=>{__mock.inserts.push(row);return q},single:()=>new Promise(resolve=>__mock.releaseInsert=resolve),eq:(k,v)=>{filters[k]=v;return q},
  maybeSingle:()=>new Promise(resolve=>__mock.reads.push({filters,resolve})),
  upsert:row=>{__mock.writes.push(row);return __mock.holdWrites?new Promise(resolve=>__mock.releaseWrite=resolve):Promise.resolve({error:null})}};return q}
 })};`;
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH,args:["--no-sandbox","--disable-dev-shm-usage","--no-zygote","--single-process","--in-process-gpu","--use-gl=angle","--use-angle=swiftshader","--disable-features=AudioServiceOutOfProcess"]}:{})});
  try{
-  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const context=await browser.newContext();const page=await context.newPage();const errors=[];page.on('dialog',dialog=>dialog.accept());page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({body:mockClient,contentType:'application/javascript'}));
   await page.goto(url);await page.locator('[data-action="mission-start"]').first().waitFor();
   // Every principal screen must fit on phones, tablets and desktop.
@@ -100,8 +105,57 @@ window.supabase={createClient:()=>({
   assert.deepEqual(await page.evaluate(()=>orderMade),['sa']);
   assert.equal(await page.evaluate(()=>currentView),'build');
   await page.evaluate(()=>{session=null;currentChild=null;profileLoading=false;state=normalizeState({});activate('home')});
+  // A slow import cannot end up on a different child's profile.
+  await page.evaluate(()=>{state=normalizeState({stars:9});window.__importTask=importProgressFile({size:1,text:()=>new Promise(resolve=>window.__readImport=resolve)});currentChild={id:'other',nickname:'Autre'};__readImport(JSON.stringify({app:'La Fabrique des Syllabes',state:{stars:99}}))});
+  await page.evaluate(()=>window.__importTask);assert.equal(await page.evaluate(()=>state.stars),9);
+  // If the safety backup cannot be written, replacement is cancelled.
+  await page.evaluate(async()=>{currentChild=null;const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.endsWith('_backup'))throw Error('quota');return original.call(this,key,value)};try{await importProgressFile({size:1,text:async()=>JSON.stringify({app:'La Fabrique des Syllabes',state:{stars:99}})})}finally{Storage.prototype.setItem=original}});
+  assert.equal(await page.evaluate(()=>state.stars),9);
+  // Restoring a backup preserves the state it replaced, allowing an undo.
+  await page.evaluate(()=>{localStorage.setItem(backupKey(),JSON.stringify({stars:3}));restoreBackup()});
+  assert.equal(await page.evaluate(()=>state.stars),3);
+  await page.evaluate(()=>restoreBackup());assert.equal(await page.evaluate(()=>state.stars),9);
+  // Invalid emails never invoke auth, and network failures stay inside the form.
+  await page.locator('#accountBtn').click();
+  await page.locator('#loginEmail').fill('incorrect');
+  await page.locator('[data-action="forgot"]').click();
+  assert.equal(await page.evaluate(()=>__mock.authCalls.length),0);
+  await page.locator('#loginEmail').fill('parent@example.test');
+  await page.locator('[data-action="forgot"]').click();
+  assert.equal(await page.evaluate(()=>__mock.authCalls.filter(x=>x.type==='forgot').length),1);
+  await page.locator('#loginPassword').fill('test-password');
+  await page.evaluate(()=>__mock.loginThrows=true);
+  await page.locator('#loginPassword').press('Enter');
+  await page.waitForFunction(()=>document.querySelector('#authMsg').classList.contains('error'));
+  assert.equal(await page.evaluate(()=>document.querySelector('[data-action="login"]').disabled),false);
+  // Recovery rejects a mismatch, then updates exactly once despite repeated requests.
+  await page.evaluate(()=>__mock.authChange('PASSWORD_RECOVERY',{user:{id:'parent'}}));
+  await page.locator('#recoveryPassword').fill('replacement-password');
+  await page.locator('#recoveryConfirm').fill('different-password');
+  await page.locator('[data-action="update-password"]').click();
+  assert.equal(await page.evaluate(()=>__mock.authCalls.filter(x=>x.type==='update').length),0);
+  await page.locator('#recoveryConfirm').fill('replacement-password');
+  await page.evaluate(()=>{__mock.holdUpdate=true;void updatePassword();void updatePassword()});
+  assert.equal(await page.evaluate(()=>__mock.authCalls.filter(x=>x.type==='update').length),1);
+  await page.evaluate(()=>__mock.releaseUpdate({error:null}));
+  await page.locator('[data-action="account-open"]').waitFor();
+  assert.equal(await page.evaluate(()=>passwordRecovery),false);
+  await page.locator('[data-action="account-open"]').click();
+  await page.locator('#newChildName').fill('Enfant test');
+  await page.evaluate(()=>{void createChild();void createChild()});
+  assert.equal(await page.evaluate(()=>__mock.inserts.length),1);
+  await page.keyboard.press('Escape');
+  await page.evaluate(()=>__mock.releaseInsert({data:{id:'new',parent_id:'parent'},error:null}));
+  await page.waitForTimeout(30);
+  // The listener must catch recovery during initial getSession, before boot finishes.
+  const recoveryPage=await page.context().newPage();
+  recoveryPage.on('pageerror',e=>errors.push(e.message));
+  await recoveryPage.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({body:mockClient+'window.__mock.recoveryAtBoot=true;',contentType:'application/javascript'}));
+  await recoveryPage.goto(url);await recoveryPage.locator('#recoveryPassword').waitFor();
+  assert.equal(await recoveryPage.evaluate(()=>passwordRecovery),true);
+  await recoveryPage.close();
   await page.screenshot({path:'/tmp/caly-mobile.png',fullPage:true});
   assert.deepEqual(errors,[]);
-  console.log('Browser checks OK: 32 responsive screens, mission resume/completion, single reward, delayed navigation, profile races, save queue, token refresh.');
+  console.log('Browser checks OK: 32 responsive screens, mission resume/completion, single reward, delayed navigation, profile races, save queue, token refresh, password recovery, auth errors and duplicate submissions.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
