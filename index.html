@@ -318,7 +318,9 @@ function pickReviewSyllable(exclude=""){
 }
 function buildDailyMission(){
  const primary=pickLearningSyllable(),review=pickReviewSyllable(primary),decodable=decodableMissionWords();
- const candidates=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),word=pick(candidates.length?candidates:decodable.length?decodable:DATA.words);
+ const recentWords=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word));
+ const related=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
+ const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualType=Number(localDayKey().slice(-2))%2?"family":"memory";
  state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
