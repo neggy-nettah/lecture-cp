@@ -778,7 +778,7 @@ function gamePicture(){
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
  missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=(fromMission?decodableMissionWords():fullyDecodableWords()).filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool);currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
- const extras=shuffle(DATA.sets.flat()).slice(0,Math.max(1,4-answer.parts.length));
+ const extraCount=Math.max(1,4-answer.parts.length),extraPool=DATA.sets.flat().filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
  `<div class="card center"><div class="emojis">${answer.emoji}</div><div style="font-size:16px;color:var(--muted)">Fabrique : <b>${answer.w}</b></div>
@@ -981,6 +981,7 @@ function render(){
  else if(currentView==="build")gameBuild();
  else if(currentView==="order")gameOrder();
  else if(currentView==="parents")parents();
+ else{currentView="home";state.lastView="home";save(false);home()}
  topUI();window.scrollTo({top:0,behavior:"smooth"});
 }
 
