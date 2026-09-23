@@ -132,6 +132,8 @@ const probes=[
   'decodableMissionWords().every(w=>w.parts.every(p=>activeLearningSyllables().includes(p)||"aioué".includes(p)))',
   'getDailyMission().steps.length===5',
   '["memory","family","missing"].includes(getDailyMission().steps[3].type)',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),buildDailyMission(),["memory","family","missing","comprehension"].includes(state.dailyMission.steps[3].type))',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),dailyMission:{date:localDayKey(),index:3,completed:false,primary:"ma",review:"la",word:"polo",sessionStats:{attempts:0,correct:0},steps:[{type:"discover",target:"ma"},{type:"listen",target:"ma"},{type:"bubbles",target:"la"},{type:"comprehension",target:"polo"},{type:"build",target:"polo"}]}}),startMissionStep(),missionMode===true&&currentView==="comprehension"&&currentAnswer==="polo")',
   '(()=>{const s=getDailyMission().steps[3];return s.type!=="missing"||decodableMissionWords().some(w=>w.w===s.target)})()',
   'getDailyMission().startAttempts===null',
   '(startMissionStep(),getDailyMission().startAttempts!==null)',
@@ -247,6 +249,7 @@ console.log("- Navigation alone does not validate sound practice");
 console.log("- Sound browser follows unlocked curriculum");
 console.log("- Phrase game unlocks after 8 missions with decodable sentences");
 console.log("- Sentence comprehension game: OK");
+console.log("- Advanced missions can rotate comprehension into step 4: OK");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
 console.log("- Missing-syllable game stays inside unlocked curriculum");
