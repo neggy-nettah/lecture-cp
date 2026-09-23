@@ -443,6 +443,7 @@ function gamesMenu(){
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
+  <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
@@ -470,6 +471,15 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
  if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
+}
+function gameFamily(forcedFamily=null,fromMission=false){
+ missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save();locked=false;
+ const family=forcedFamily||pick(DATA.sets),others=DATA.sets.flat().filter(x=>!family.includes(x));
+ const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
+ const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
+ stage.innerHTML=title("Trouve l’intrus","Trois syllabes commencent par "+initial+". Une seule n’est pas de la même famille.","Jeu visuel")+
+ '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback"></div></div>'+
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-family">Nouvel intrus →</button>')+'</div>'
 }
 function makeMemoryDeck(preferred=[]){
  const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(DATA.sets.flat().filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
@@ -775,7 +785,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne.</p><div class="actions"><button class="btn gray" data-action="reset">Réinitialiser la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","family","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -788,6 +798,7 @@ function render(){
  else if(currentView==="listen")gameListen();
  else if(currentView==="bubbles")gameBubbles();
  else if(currentView==="memory")gameMemory();
+ else if(currentView==="family")gameFamily();
  else if(currentView==="pronunciation")gamePronunciation();
  else if(currentView==="pictures")gamePicture();
  else if(currentView==="build")gameBuild();
@@ -856,6 +867,13 @@ document.addEventListener("click",e=>{
  }
  if(a==="game-memory"){gameMemory();return}
  if(a==="memory-card"){memoryFlip(b,Number(b.dataset.index));return}
+ if(a==="game-family"){gameFamily();return}
+ if(a==="family-answer"){
+   if(locked)return;
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true);rewardVerified("Intrus trouvé !");setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
+   else{b.classList.add("wrong","wiggle");recordAttempt(false);miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   return
+ }
  if(a==="game-pronunciation"){gamePronunciation();return}
  if(a==="pronunciation-listen"){speak(currentAnswer,.60);return}
  if(a==="pronunciation-record"){startPronunciationRecognition();return}
