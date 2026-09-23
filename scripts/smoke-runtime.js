@@ -123,6 +123,8 @@ const probes=[
   'decodableMissionWords().every(w=>w.parts.join("")===w.w)',
   'decodableMissionWords().every(w=>w.parts.every(p=>activeLearningSyllables().includes(p)||"aioué".includes(p)))',
   'getDailyMission().steps.length===5',
+  '["memory","family","missing"].includes(getDailyMission().steps[3].type)',
+  '(()=>{const s=getDailyMission().steps[3];return s.type!=="missing"||decodableMissionWords().some(w=>w.w===s.target)})()',
   'getDailyMission().startAttempts===null',
   '(startMissionStep(),getDailyMission().startAttempts!==null)',
   'normalizeState({stars:2}).attemptLedger!=null',
@@ -205,6 +207,7 @@ console.log("- Application booted with Supabase unavailable");
 console.log("- Core functions callable");
 console.log("- Main screens, mission flow, microphone screen and games render without runtime errors");
 console.log("- Daily mission contains 5 steps");
+console.log("- Daily mission visual step rotates across supported games");
 console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
 console.log("- Saved-state schema version: OK");
