@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.10.0 — 2026-09-23
+
+### Nouveau jeu
+- ajout de **Syllabe manquante**
+- un mot décodable est affiché avec une syllabe cachée
+- les distracteurs restent dans le curriculum actif
+- la bonne réponse fait progresser la maîtrise de la syllabe retrouvée
+- le jeu fonctionne aussi comme étape de mission
+
+### Missions
+- l'étape visuelle alterne maintenant entre Memory, Trouve l'intrus et Syllabe manquante
+- le mot de Syllabe manquante est différent du défi final lorsque le corpus le permet
+- test automatique du parcours complet en 5 étapes
+- test d'idempotence de la récompense de fin de mission
+
+### Révision
+- révision espacée simple par niveau de maîtrise : 1, 3 ou 7 jours
+- les erreurs récentes restent prioritaires
+- compteur des syllabes à revoir dans le Coin parent
+
+### Statistiques et sauvegarde
+- Memory enregistre au maximum une erreur par manche
+- atelier Mots validé après 5 mots réellement essayés, sans attribuer de maîtrise
+- sauvegardes Supabase sérialisées pour éviter les écritures hors ordre
+- backup local automatique avant remplacement par un état distant
+- schéma de sauvegarde versionné
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.9.1 — 2026-09-23
 
 ### Maintenabilité
