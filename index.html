@@ -20,6 +20,7 @@ color:var(--ink);font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,-apple
 button,input{font:inherit}
 button{border:0;cursor:pointer;touch-action:manipulation}
 button:disabled{cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #4037d6;outline-offset:3px}
 .app{max-width:1040px;margin:auto;padding:14px 14px 34px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 0 12px}
 .brand{display:flex;gap:11px;align-items:center}.logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(140deg,var(--purple),#a49eff);display:grid;place-items:center;color:#fff;font-size:29px;box-shadow:var(--shadow)}
@@ -65,6 +66,7 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
  .app{padding:8px}.layout{grid-template-columns:1fr;gap:8px}.nav{position:sticky;top:4px;z-index:40;display:flex;align-items:center;gap:6px;overflow-x:auto;padding:7px;scrollbar-width:none;-webkit-overflow-scrolling:touch;background:#fffffff2}.nav::-webkit-scrollbar{display:none}.profilebox{min-width:178px;margin:0;flex:0 0 auto}.nav-btn{width:auto;min-width:max-content;flex:0 0 auto;margin:0;padding:10px 11px;font-size:13px}.stage{padding:13px;min-height:auto}.sound-grid{grid-template-columns:repeat(4,1fr)}.levels{grid-template-columns:1fr 1fr}.parent-grid{grid-template-columns:1fr}.top{align-items:flex-start}.top-actions{gap:5px}.score,.account-chip{font-size:12px;padding:8px 9px}.choices{gap:8px}.choice{min-height:66px}
 }
 @media(max-width:390px){.nav-btn{font-size:13px}.sound-grid{grid-template-columns:repeat(3,1fr)}.choice{font-size:26px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.account-chip{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px 12px;font-weight:900;box-shadow:var(--shadow);white-space:nowrap;font-size:13px}.profilebox{margin-bottom:10px;padding:10px;border-radius:14px;background:#faf9ff;border:1px solid #e9e4ff}.profilebox .tiny{font-size:11px;color:var(--muted);margin-bottom:5px}.profileline{display:flex;justify-content:space-between;align-items:center;gap:6px}.sync{font-size:11px;color:var(--muted);margin-top:5px}.sync.ok{color:#228c55}.sync.err{color:#b32949}.modal{position:fixed;inset:0;background:rgba(24,24,35,.62);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}.modal.hidden{display:none}.modal-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:19px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-card h2{margin:0 0 6px}.modal-card p{color:var(--muted);font-size:14px;line-height:1.45}.form{display:grid;gap:10px;margin-top:13px}.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px 3px}.field input,.field select{width:100%;padding:12px;border:1px solid var(--line);border-radius:13px;outline:none;background:#fff}.tabs{display:grid;grid-template-columns:1fr 1fr;background:#f4f2fb;border-radius:13px;padding:4px;gap:4px}.tab{padding:10px;border-radius:10px;background:transparent;font-weight:850}.tab.active{background:#fff;box-shadow:0 3px 10px #00000012;color:#4b43ce}.auth-msg{min-height:20px;font-size:13px;margin-top:8px}.auth-msg.error{color:#b32949}.auth-msg.good{color:#228c55}.children-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.child-card{padding:14px;border:2px solid #eee9f7;border-radius:18px;background:#fff;text-align:center}.child-card .avatar{font-size:45px}.child-card b{display:block;margin:5px 0}.child-card small{color:var(--muted)}.btn.redbtn{background:#fff0f3;color:#a11f42}
 
@@ -473,7 +475,7 @@ function sounds(){
    <b>Touche une lettre pour l'entendre :</b>
    <div class="sound-grid">${DATA.sounds.slice(0,15).map(s=>`<button class="sound-tile" data-action="speak" data-text="${esc(s.say)}" data-rate=".58">${s.g}</button>`).join("")}</div>
  </div>
- <div id="feedback" class="feedback"></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  <div class="nextbar"><button class="btn gray" data-action="sound-prev">← Avant</button><button class="btn primary" data-action="sound-next">Suivant →</button></div>`;
 }
 function syllables(){
@@ -485,7 +487,7 @@ function syllables(){
    <div style="margin-top:12px">${set.map(s=>`<button class="syllable" data-action="speak" data-text="${s}" data-rate=".62"><span>${colorSyl(s)}</span><small>${masteryStars(s)}</small></button>`).join("")}</div>
  </div>
  ${mission("🧩","Mini-jeu","Écoute une syllabe et retrouve-la parmi les cartes.")}
- <div class="card center"><button class="btn primary" data-action="syllable-quiz">🎧 Lancer l'exercice</button><div id="quizArea"></div><div id="feedback" class="feedback"></div></div>
+ <div class="card center"><button class="btn primary" data-action="syllable-quiz">🎧 Lancer l'exercice</button><div id="quizArea"></div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="set-prev">← Série</button><button class="btn primary" data-action="set-next">Série suivante →</button></div>`;
 }
 function startSyllableQuiz(){
@@ -504,7 +506,7 @@ function words(){
    <div class="actions" style="margin-top:13px"><button class="btn primary" data-action="speak" data-text="${x.w}" data-rate=".70">🔊 Le mot entier</button><button class="btn good" data-action="word-read">🙋 J'ai essayé de le lire</button></div>
    <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.</div>
  </div>
- <div id="feedback" class="feedback"></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  <div class="nextbar"><button class="btn gray" data-action="word-prev">← Mot</button><button class="btn primary" data-action="word-next">Mot suivant →</button></div>`;
 }
 function gamesMenu(){
@@ -527,7 +529,7 @@ function gameListen(forcedTarget=null,fromMission=false){
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
  if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
 }
@@ -538,7 +540,7 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
  `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
  if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
 }
@@ -548,7 +550,7 @@ function gameFamily(forcedFamily=null,fromMission=false){
  const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
  const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
  stage.innerHTML=title("Trouve l’intrus","Trois syllabes commencent par "+initial+". Une seule n’est pas de la même famille.","Jeu visuel")+
- '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback"></div></div>'+
+ '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-family">Nouvel intrus →</button>')+'</div>'
 }
 function makeMemoryDeck(preferred=[]){
@@ -563,7 +565,7 @@ function gameMemory(preferred=[],fromMission=false){
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
  <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`
 }
 function memoryFlip(btn,index){
@@ -662,7 +664,7 @@ function gamePronunciation(){
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
  <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${micAvailable?"":"disabled"}>🎙️ À toi !</button></div>
  <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${micAvailable?"Appuie sur « À toi ! ». Le micro restera actif pendant l’écoute et aucune réponse ne sera validée sans voix détectée.":"Le microphone n’est pas disponible sur ce navigateur."}</div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-pronunciation">Nouvelle syllabe →</button></div>`;
  setTimeout(()=>speak(currentAnswer,.60),120)
 }
@@ -733,7 +735,7 @@ function gamePicture(){
  `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
  <div class="choices">${opts.map(w=>`<button class="choice" data-action="picture-answer" data-value="${w}">${w}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Indice audio</button></div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
@@ -745,7 +747,7 @@ function gameBuild(forcedAnswer=null,fromMission=false){
  <div class="order-zone" id="orderZone"><span class="empty">Les syllabes arrivent ici…</span></div>
  <div class="choices" id="buildChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:27px" data-action="build-token" data-value="${x}" data-id="${i}">${colorSyl(x)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="build-reset">↩ Recommencer</button><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Écouter le mot</button></div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-build">Nouveau mot →</button>`}</div>`;
 }
 function updateBuild(){
@@ -763,7 +765,7 @@ function gameOrder(){
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
  <div class="choices" id="orderChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:21px" data-action="order-token" data-value="${esc(x)}" data-id="${i}">${esc(x)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="order-reset">↩ Recommencer</button></div>
- <div id="feedback" class="feedback"></div></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-order">Nouvelle phrase →</button></div>`;
 }
 function updateOrder(){
