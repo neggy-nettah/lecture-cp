@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.9.0 — 2026-09-23
+
+### Architecture
+- séparation du monolithe `index.html` en `index.html`, `styles.css` et `app.js`
+- cache-busting des assets aligné sur la version de l'application
+- validation statique et smoke tests adaptés à la nouvelle architecture
+- smoke test étendu à tous les principaux écrans, au parcours mission et à l'écran micro
+
+### Pédagogie
+- sons, syllabes, mots et jeux principaux limités au curriculum actuellement débloqué
+- validation d'une activité séparée de la simple navigation
+- pratique des sons suivie séparément et recalculée quand de nouveaux sons se débloquent
+- jeu des phrases débloqué après 8 missions et filtré sur des phrases décodables
+- enrichissement du vocabulaire initial avec Lili, Mimi, Lola, Mila, Sami et safari
+- annonce visuelle lorsqu'une nouvelle famille de syllabes est débloquée
+- affichage de la prochaine famille et du nombre de missions restantes
+- feuille de route visuelle des familles et indicateurs des sons déjà pratiqués
+
+### Robustesse et sécurité
+- jeux libres principaux eux aussi contenus dans le palier actif
+- filtre explicite `parent_id` sur les profils enfants
+- contrôle d'appartenance du profil enfant avant sélection
+- échappement de l'email et de l'avatar dans le panneau compte
+- documentation des politiques RLS Supabase indispensables
+- export JSON portable de la progression
+- progression globale recalculée selon les activités réellement disponibles
+- champ Supabase `completed` basé sur un critère d'apprentissage réel plutôt que sur le nombre de drapeaux
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.8.1 — 2026-09-23
 
 ### Corrections
