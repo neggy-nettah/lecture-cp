@@ -913,11 +913,20 @@ function parseProgressImport(text){
  imported.stars=Math.floor(Number(imported.stars||0));imported.streak=Math.floor(Number(imported.streak||0));
  imported.stats={attempts:Math.floor(Number(imported.stats?.attempts||0)),correct:Math.floor(Number(imported.stats?.correct||0))};
  if(imported.stats.correct>imported.stats.attempts)throw new Error("Statistiques incohérentes");
- imported.missionHistory=(imported.missionHistory||[]).filter(x=>x&&typeof x==="object"&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))).slice(-365);
+ const historyMap=new Map();
+ (imported.missionHistory||[]).filter(x=>x&&typeof x==="object"&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))).forEach(x=>historyMap.set(String(x.date),x));
+ imported.missionHistory=[...historyMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-365);
  const validSyllables=new Set(DATA.sets.flat()),cleanMastery={};
- Object.entries(imported.mastery||{}).forEach(([k,v])=>{if(validSyllables.has(k)&&v&&typeof v==="object")cleanMastery[k]={attempts:Math.max(0,Math.floor(Number(v.attempts||0))),correct:Math.max(0,Math.floor(Number(v.correct||0))),lastSeen:v.lastSeen||null,lastCorrect:v.lastCorrect||null}});
+ Object.entries(imported.mastery||{}).forEach(([k,v])=>{
+  if(!validSyllables.has(k)||!v||typeof v!=="object")return;
+  const attempts=Math.max(0,Math.floor(Number(v.attempts||0))),correct=Math.min(attempts,Math.max(0,Math.floor(Number(v.correct||0))));
+  cleanMastery[k]={attempts,correct,lastSeen:v.lastSeen||null,lastCorrect:v.lastCorrect||null}
+ });
  imported.mastery=cleanMastery;
  imported.reviewQueue=(imported.reviewQueue||[]).filter(s=>validSyllables.has(s)).slice(-50);
+ const rewardIds=new Set(COLLECTIBLES.map(x=>x.id)),seenRewards=new Set(),collection=[];
+ (imported.rewards?.collection||[]).forEach(x=>{if(x&&rewardIds.has(x.id)&&!seenRewards.has(x.id)){collection.push(COLLECTIBLES.find(c=>c.id===x.id));seenRewards.add(x.id)}});
+ imported.rewards={towardPiece:0,pieces:Math.min(3,Math.max(0,Math.floor(Number(imported.rewards?.pieces||0)))),puzzles:Math.max(0,Math.floor(Number(imported.rewards?.puzzles||0))),collection};
  if(imported.dailyMission?.date!==localDayKey())imported.dailyMission=null;
  return imported
 }
