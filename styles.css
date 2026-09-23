@@ -61,3 +61,22 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 .top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.account-chip{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px 12px;font-weight:900;box-shadow:var(--shadow);white-space:nowrap;font-size:13px}.profilebox{margin-bottom:10px;padding:10px;border-radius:14px;background:#faf9ff;border:1px solid #e9e4ff}.profilebox .tiny{font-size:11px;color:var(--muted);margin-bottom:5px}.profileline{display:flex;justify-content:space-between;align-items:center;gap:6px}.sync{font-size:11px;color:var(--muted);margin-top:5px}.sync.ok{color:#228c55}.sync.err{color:#b32949}.modal{position:fixed;inset:0;background:rgba(24,24,35,.62);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}.modal.hidden{display:none}.modal-card{width:min(540px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:19px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.modal-card h2{margin:0 0 6px}.modal-card p{color:var(--muted);font-size:14px;line-height:1.45}.form{display:grid;gap:10px;margin-top:13px}.field label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px 3px}.field input,.field select{width:100%;padding:12px;border:1px solid var(--line);border-radius:13px;outline:none;background:#fff}.tabs{display:grid;grid-template-columns:1fr 1fr;background:#f4f2fb;border-radius:13px;padding:4px;gap:4px}.tab{padding:10px;border-radius:10px;background:transparent;font-weight:850}.tab.active{background:#fff;box-shadow:0 3px 10px #00000012;color:#4b43ce}.auth-msg{min-height:20px;font-size:13px;margin-top:8px}.auth-msg.error{color:#b32949}.auth-msg.good{color:#228c55}.children-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.child-card{padding:14px;border:2px solid #eee9f7;border-radius:18px;background:#fff;text-align:center}.child-card .avatar{font-size:45px}.child-card b{display:block;margin:5px 0}.child-card small{color:var(--muted)}.btn.redbtn{background:#fff0f3;color:#a11f42}
+
+/* Keep every screen usable on small phones, at large text sizes and with a keyboard. */
+.layout>*{min-width:0}.brand{min-width:0}.brand>div:last-child{min-width:0}
+h1{line-height:1.12}.titlebar{flex-wrap:wrap}.word,.choice,.token{overflow-wrap:anywhere}
+.field input,.field select{font-size:16px}.nav-btn,.account-chip,.tab{min-height:44px}
+.family-chip small{font-size:12px}.mastery-chip small{font-size:12px}
+.nextbar{flex-wrap:wrap}.nextbar .btn{flex:1 1 130px}
+button:disabled{opacity:.65}.choice:disabled.correct{opacity:1}
+.stage{scroll-margin-top:90px}.modal-card{padding-bottom:max(19px,env(safe-area-inset-bottom))}
+@media(max-width:760px){
+ .app{padding:10px max(10px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+ .nav{scrollbar-width:thin}.nav::-webkit-scrollbar{display:block;height:4px}.nav::-webkit-scrollbar-thumb{background:#c8c1ff;border-radius:4px}
+ .profilebox{min-width:160px;margin:0}.stage{padding:12px}.sync{font-size:12px;line-height:1.5}
+}
+@media(max-width:480px){
+ .top{display:grid;grid-template-columns:minmax(0,1fr)}.top-actions{justify-content:space-between;width:100%}
+ .brand .logo{flex:0 0 44px;width:44px;height:44px}.titlebar h2{font-size:24px}
+ .card{padding:12px}.sound-grid{gap:6px}.actions .btn{max-width:100%}
+}

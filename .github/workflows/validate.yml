@@ -22,3 +22,26 @@ jobs:
         run: node scripts/check-content.js
       - name: Runtime smoke test
         run: node scripts/smoke-runtime.js
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Check mobile layouts, missions and profile isolation
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/caly-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in 1 2 3 4 5; do
+            curl --silent --fail http://127.0.0.1:8765/ > /dev/null && break
+            sleep 1
+          done
+          node scripts/browser-check.js
