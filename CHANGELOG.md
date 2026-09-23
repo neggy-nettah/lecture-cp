@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.11.1 — 2026-09-23
+
+### Hors ligne
+- statut hors connexion plus clair dans l'interface
+- rappel que l'application reste utilisable et que la progression est conservée localement
+- retour automatique au statut normal quand Internet revient
+- nouveau numéro de cache pour garantir la mise à jour des appareils déjà installés
+- test automatique du comportement sur navigateur hors ligne
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.11.0 — 2026-09-23
 
 ### Installation et hors ligne
