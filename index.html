@@ -949,7 +949,7 @@ function parents(){
  `<div class="parent-grid">
   <div class="parent-box"><h3>🎯 Précision</h3><p><b style="font-size:26px">${accuracy} %</b><br>${correct} bonnes réponses sur ${attempts} essais vérifiés.</p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
-  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes actuellement à ★ ou ★★.</p></div>
+  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.</p></div>
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
  </div>
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions.</p><div class="collection-row">${weak}</div></div>
