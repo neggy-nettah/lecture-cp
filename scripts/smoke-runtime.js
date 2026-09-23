@@ -1,9 +1,10 @@
 const fs=require("fs");
 const vm=require("vm");
 
+const content=fs.readFileSync("content.js","utf8");
 const main=fs.readFileSync("app.js","utf8");
-if(!main.trim()){
-  console.error("app.js is empty");
+if(!content.trim()||!main.trim()){
+  console.error("content.js or app.js is empty");
   process.exit(1);
 }
 
@@ -89,6 +90,7 @@ sandbox.window.supabase=undefined;
 const context=vm.createContext(sandbox);
 
 try{
+  vm.runInContext(content,context,{timeout:2000});
   vm.runInContext(main,context,{timeout:2000});
 }catch(error){
   console.error("Runtime boot failed:",error);
