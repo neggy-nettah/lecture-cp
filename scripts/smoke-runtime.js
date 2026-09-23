@@ -108,6 +108,8 @@ const probes=[
   'typeof gameComprehension==="function"',
   'typeof recentPerformance==="function"',
   'typeof recordQuestionError==="function"',
+  'typeof parseProgressImport==="function"',
+  'typeof importProgressFile==="function"',
   'typeof dueReviewSyllables==="function"',
   '(state=normalizeState({mastery:{ma:{attempts:1,correct:1,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===1&&dueReviewSyllables().includes("ma"))',
   '(state=normalizeState({mastery:{ma:{attempts:2,correct:2,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===3)',
@@ -138,6 +140,9 @@ const probes=[
   '(state=normalizeState({}),missionMode=false,recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)',
   '(state=normalizeState({}),resetQuestionTracking(),recordQuestionError("ma"),recordQuestionError("ma"),state.stats.attempts===1&&state.mastery.ma.attempts===1)',
   '(state=normalizeState({}),missionMode=false,memoryMissedPairs=new Set(["ma"]),recordAttempt(true,memoryMissedPairs.has("ma")?null:"ma","memory:ma"),state.stats.correct===1&&!state.mastery.ma)',
+  '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stars:4,stats:{attempts:2,correct:1}}}));return s.stars===4&&s.stats.attempts===2&&s.stats.correct===1})()',
+  '(()=>{try{parseProgressImport(JSON.stringify({app:"Autre application",state:{stars:1}}));return false}catch(e){return true}})()',
+  '(()=>{try{parseProgressImport("{bad json");return false}catch(e){return true}})()',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5],sessionStats:{attempts:0,correct:0}}}),missionMode=false,recordAttempt(true,"ma","free:test"),missionMode=true,recordAttempt(false,"mi"),recordAttempt(true,"mi","mission:test"),state.dailyMission.sessionStats.attempts===2&&state.dailyMission.sessionStats.correct===1&&state.stats.attempts===3)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
@@ -222,6 +227,7 @@ console.log("- Spaced review intervals: OK");
 console.log("- Duplicate mastery guard: OK");
 console.log("- One-error-per-question analytics: OK");
 console.log("- Memory mistakes do not inflate syllable mastery: OK");
+console.log("- Portable progress import validation: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
