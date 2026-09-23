@@ -52,7 +52,7 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
 .tip{margin-top:11px;padding:11px 12px;background:#f5fbff;border:1px solid #d9edf9;border-radius:14px;color:#486676;font-size:14px;line-height:1.45}
 .mission{display:flex;gap:10px;align-items:center;padding:11px;border-radius:15px;background:#fffaf0;border:1px solid #f3e0ad;margin-top:12px}.mission-icon{font-size:30px}.mission b{display:block}.mission span{font-size:13px;color:#71664d}
 .streak{display:inline-flex;gap:5px;align-items:center;background:#fff3d5;padding:7px 10px;border-radius:999px;font-weight:900;font-size:13px}
-.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px}.level{border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px;text-align:center}.level .ico{font-size:34px}.level b{display:block;margin-top:5px}.level small{color:var(--muted)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:13px}.level{border:1px solid var(--line);background:#fff;border-radius:18px;padding:13px;text-align:center}.level:disabled{opacity:.46;filter:grayscale(1);cursor:default}.level .ico{font-size:34px}.level b{display:block;margin-top:5px}.level small{color:var(--muted)}
 .star-pop{position:fixed;left:50%;top:45%;transform:translate(-50%,-50%);font-size:80px;pointer-events:none;animation:pop .75s both;z-index:30}@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(-20deg)}45%{opacity:1;transform:translate(-50%,-50%) scale(1.22) rotate(8deg)}100%{opacity:0;transform:translate(-50%,-75%) scale(.9)}}@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}.wiggle{animation:wiggle .25s 2}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}.confetti i{position:absolute;top:-20px;font-style:normal;animation:fall 1.5s linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(560deg);opacity:.2}}
 .order-zone{display:flex;gap:8px;min-height:73px;justify-content:center;align-items:center;flex-wrap:wrap;padding:10px;border:2px dashed #d9d3ec;border-radius:17px;background:#fcfbff;margin-top:12px}.order-zone .empty{color:#9298a0;font-size:14px}.token{min-width:76px;padding:13px 15px;border-radius:15px;background:#efedff;color:#4b42c9;font-size:25px;font-weight:1000}
@@ -525,7 +525,7 @@ function home(){
    <button class="level" data-action="game-listen"><div class="ico">👂</div><b>J'écoute</b><small>Je trouve ce que j'entends</small></button>
    <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Je répète <span class="beta-pill">BÊTA</span></b><small>Entraînement vocal seulement</small></button>
    <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Image-mot</b><small>Je relie mot et image</small></button>
-   <button class="level" data-action="game-order"><div class="ico">🧠</div><b>La phrase</b><small>Je remets les mots en ordre</small></button>
+   <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🧠":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Je remets les mots en ordre":"Se débloque après 8 missions"}</small></button>
  </div></details>`;
 }
 function sounds(){
