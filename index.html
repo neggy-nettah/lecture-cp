@@ -724,6 +724,7 @@ function parents(){
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>Historique des missions validées.</p></div>
  </div>
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions.</p><div class="collection-row">${weak}</div></div>
+ <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les 50 syllabes en détail</summary><div class="mastery-grid">${DATA.sets.flat().map(s=>`<div class="mastery-chip">${s.toUpperCase()}<small>${masteryStars(s)}</small></div>`).join("")}</div></details>
  <div class="card"><b>📚 7 dernières missions</b>${recentMissionHTML()}</div>
  <div class="parent-grid">
   <div class="parent-box"><h3>📅 Routine simple</h3><p>Une mission courte par jour suffit. On s’arrête avant la fatigue et on privilégie la régularité.</p></div>
