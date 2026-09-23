@@ -805,6 +805,36 @@ function collectionView(){
  <div class="collection-grid">${COLLECTIBLES.map(x=>`<div class="treasure-card ${unlocked.has(x.id)?"":"locked"}"><div class="treasure-emoji">${unlocked.has(x.id)?x.emoji:"❓"}</div><b>${unlocked.has(x.id)?x.name:"À découvrir"}</b><small style="display:block;color:var(--muted);margin-top:5px">${unlocked.has(x.id)?"Débloqué ✨":"Continue les missions"}</small></div>`).join("")}</div>
  <div class="card"><b>🏅 Mes badges</b><div class="badge-grid">${badges.map(x=>`<div class="badge-card ${x.ok?"":"locked"}"><div class="badge-emoji">${x.ok?x.emoji:"🔒"}</div><b>${x.name}</b><small>${x.ok?"Débloqué !":x.desc}</small></div>`).join("")}</div></div>`
 }
+function diagnosticText(){
+ const m=state.dailyMission||{};
+ const voices=("speechSynthesis" in window&&speechSynthesis.getVoices)?speechSynthesis.getVoices():[];
+ return [
+  "La Fabrique des Syllabes "+APP_VERSION,
+  "Navigateur: "+navigator.userAgent,
+  "En ligne: "+navigator.onLine,
+  "Écran: "+window.innerWidth+"x"+window.innerHeight,
+  "speechSynthesis: "+("speechSynthesis" in window),
+  "Voix disponibles: "+voices.length,
+  "Voix françaises: "+voices.filter(v=>/^fr/i.test(v.lang||"")).length,
+  "Session parent: "+!!session,
+  "Profil enfant: "+!!currentChild,
+  "Vue: "+currentView,
+  "Mission date: "+(m.date||"aucune"),
+  "Mission étape: "+(m.index??"-")+"/"+((m.steps||[]).length||"-"),
+  "Mission terminée: "+!!m.completed,
+  "Missions historique: "+(state.missionHistory||[]).length,
+  "Étoiles: "+(state.stars||0)
+ ].join("\n")
+}
+async function copyDiagnostic(){
+ const txt=diagnosticText();
+ try{await navigator.clipboard.writeText(txt);toast("Diagnostic copié.","ok")}
+ catch(e){prompt("Copie ce diagnostic :",txt)}
+}
+function resetDailyMission(){
+ if(!confirm("Recréer seulement la mission du jour ? La progression générale sera conservée."))return;
+ state.dailyMission=null;missionMode=false;currentView="home";save();render();toast("Nouvelle mission créée.","ok")
+}
 function parents(){
  const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0;
  const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses pour repérer les difficultés.</span>`;
@@ -824,7 +854,8 @@ function parents(){
   <div class="parent-box"><h3>🎯 Priorité</h3><p>La précision avant la vitesse. L’image sert de vérification, pas à deviner le mot.</p></div>
   <div class="parent-box"><h3>🌟 Motivation</h3><p>Valoriser l’effort et les progrès. Une courte réussite quotidienne vaut mieux qu’une longue séance tendue.</p></div>
  </div>
- <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne.</p><div class="actions"><button class="btn gray" data-action="reset">Réinitialiser la progression</button></div></div>`;
+ <div class="card"><b>🛠️ Outils parent</b><p style="color:var(--muted);font-size:13px">En cas de souci, tu peux recréer uniquement la mission du jour ou copier un diagnostic technique sans email ni donnée personnelle.</p><div class="actions"><button class="btn gray" data-action="reset-mission">↻ Recréer la mission</button><button class="btn gray" data-action="copy-diagnostic">📋 Copier diagnostic</button></div></div>
+ <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne.</p><div class="actions"><button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","family","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
@@ -938,6 +969,8 @@ document.addEventListener("click",e=>{
  if(a==="create-child"){createChild();return}
  if(a==="select-child"){selectChild(b.dataset.id);return}
  if(a==="close-modal"){$("#authModal").classList.add("hidden");return}
+ if(a==="reset-mission"){resetDailyMission();return}
+ if(a==="copy-diagnostic"){copyDiagnostic();return}
  if(a==="reset"){
    if(confirm("Remettre les étoiles et la progression à zéro ?")){state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
  }
