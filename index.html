@@ -311,9 +311,19 @@ function startMissionStep(){
 }
 function completeMissionStep(){
  if(!missionMode)return;
+ missionMode=false;locked=true;
  const m=getDailyMission();m.index=Math.min(m.steps.length,m.index+1);
- if(m.index>=m.steps.length){m.completed=true;state.dailyMission=m;save();missionMode=false;setTimeout(()=>missionComplete(),950);return}
- state.dailyMission=m;save();missionMode=false;setTimeout(()=>missionHub(),850)
+ if(m.index>=m.steps.length)m.completed=true;
+ state.dailyMission=m;save();
+ let box=$("#missionContinue");
+ if(!box){box=document.createElement("div");box.id="missionContinue";box.className="card center";stage.appendChild(box)}
+ if(m.completed){
+  box.innerHTML='<div class="hero-emoji">🏆</div><b style="font-size:20px">Mission terminée !</b><p style="color:var(--muted)">Toutes les étapes sont réussies.</p><button class="btn primary" data-action="mission-finish">Voir ma récompense →</button>'
+ }else{
+  const next=m.steps[m.index];
+  box.innerHTML='<div class="hero-emoji">✅</div><b style="font-size:20px">Étape réussie !</b><p style="color:var(--muted)">Prochaine étape : <b>'+next.title+'</b> — '+next.detail+'</p><button class="btn primary" data-action="mission-continue">Continuer → étape '+(m.index+1)+'</button>'
+ }
+ setTimeout(()=>box.scrollIntoView({behavior:"smooth",block:"center"}),80)
 }
 function missionComplete(){
  const m=getDailyMission();missionMode=false;currentView="mission-complete";state.lastView="mission-complete";save();confetti();
@@ -741,6 +751,8 @@ document.addEventListener("click",e=>{
  if(a==="go"){missionMode=false;activate(b.dataset.to);return}
  if(a==="mission-start"){missionHub();return}
  if(a==="mission-next"){startMissionStep();return}
+ if(a==="mission-continue"){startMissionStep();return}
+ if(a==="mission-finish"){missionComplete();return}
  if(a==="mission-back"){missionHub();return}
  if(a==="mission-review"){missionMode=false;activate("games");return}
  if(a==="mission-discover-listen"){speakMission(currentAnswer,.58);return}
