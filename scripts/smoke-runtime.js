@@ -119,6 +119,7 @@ const probes=[
   'normalizeState({stars:2}).attemptLedger!=null',
   'normalizeState({stars:2}).updatedAt===0',
   '(state=normalizeState({}),missionMode=false,recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)',
+  '(state=normalizeState({}),resetQuestionTracking(),recordQuestionError("ma"),recordQuestionError("ma"),state.stats.attempts===1&&state.mastery.ma.attempts===1)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
   '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}]}),unlockedFamilyCount()===5)',
@@ -188,6 +189,7 @@ console.log("- Daily mission contains 5 steps");
 console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
 console.log("- Duplicate mastery guard: OK");
+console.log("- One-error-per-question analytics: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Initial curriculum unlock: 3 families");
 console.log("- Curriculum expands with completed missions");
