@@ -443,6 +443,10 @@ function mission(ico,b,txt){return `<div class="mission"><div class="mission-ico
 function activate(v){currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render()}
 function nextRandom(arr,answer,n=4){let a=shuffle(arr.filter(x=>x!==answer)).slice(0,n-1);return shuffle([answer,...a])}
 
+function weeklyRhythmHTML(){
+ const weekly=Math.min(5,missionsLast7Days()),streak=missionDayStreak();
+ return `<div class="card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><b>📅 Mon rythme</b><p style="color:var(--muted);font-size:13px;margin:4px 0 0">Une petite mission par jour, sans obligation de tout faire d’un coup.</p></div><span class="pill">🔥 ${streak} jour(s)</span></div><div class="mission-progress" style="margin-bottom:5px">${[0,1,2,3,4].map(i=>`<span class="mission-dot ${i<weekly?"done":""}"></span>`).join("")}</div><small style="color:var(--muted)">${weekly} / 5 missions sur les 7 derniers jours</small></div>`
+}
 function home(){
  stage.innerHTML=title("Prête pour la mission ?","On apprend en jouant, quelques minutes à la fois.","CP • syllabique")+
  `<div class="card center">
@@ -452,6 +456,7 @@ function home(){
    <div class="actions"><button class="btn primary" data-action="mission-start">🚀 Ma mission du jour</button><button class="btn yellow" data-action="speak" data-text="Prête pour la mission lecture ?">🔊 Écouter</button></div>
  </div>
  ${missionCardHTML()}
+ ${weeklyRhythmHTML()}
  ${(()=>{const r=state.rewards||DEFAULT_STATE.rewards;const next=COLLECTIBLES[r.puzzles%COLLECTIBLES.length];return `<div class="card"><div class="puzzle-wrap"><div class="puzzle-grid">${[0,1,2,3].map(i=>`<div class="puzzle-piece ${i<r.pieces?"on":""}">${i<r.pieces?"✨":"?"}</div>`).join("")}</div><div><b style="font-size:18px">🧩 Puzzle magique</b><p style="color:var(--muted);font-size:13px;line-height:1.45">Chaque mission du jour terminée donne un morceau. 4 morceaux complètent le puzzle et débloquent une nouvelle découverte.</p><div style="font-weight:900">Prochaine découverte : ${next.emoji} ???</div>${r.collection.length?`<div class="collection-row">${r.collection.map(x=>`<span class="collectible">${x.emoji} ${x.name}</span>`).join("")}</div>`:""}</div></div></div>`})()}
  <div class="levels">
    <button class="level" data-action="go" data-to="sounds"><div class="ico">🔤</div><b>1. Les sons</b><small>J'écoute et je reconnais</small></button>
