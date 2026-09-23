@@ -186,27 +186,39 @@ function voice(){
  const vs=window.speechSynthesis?.getVoices?.()||[];
  return vs.find(v=>/^fr[-_]/i.test(v.lang)&&/France|French|fr-FR/i.test(v.lang+" "+v.name))||vs.find(v=>/^fr/i.test(v.lang))||null
 }
-function speak(text,rate=.72,cb){
+let activeSpeechUtterance=null;
+function isMacSafariAudio(){
+ return /Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints<2&&/^((?!chrome|chromium|crios|edg).)*safari/i.test(navigator.userAgent)
+}
+function playSpeech(text,rate=.72,cb=null,retry=true){
  if(!("speechSynthesis" in window)){toast("🔈 Audio non disponible sur ce navigateur.");return}
- const synth=window.speechSynthesis;
- try{synth.resume()}catch(e){}
- const u=new SpeechSynthesisUtterance(String(text||""));u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
- const v=voice();if(v)u.voice=v;if(cb)u.onend=cb;
- try{synth.cancel();synth.speak(u)}catch(e){console.error("Speech error",e)}
-}
-function speakMission(text,rate=.60){
- if(!("speechSynthesis" in window))return;
- const synth=window.speechSynthesis;let started=false;
- const attempt=()=>{
+ const synth=window.speechSynthesis,input=String(text||"");
+ const launch=()=>{
   try{synth.resume()}catch(e){}
-  const u=new SpeechSynthesisUtterance(String(text||""));u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
-  const v=voice();if(v)u.voice=v;u.onstart=()=>{started=true};
-  try{synth.speak(u)}catch(e){console.error("Mission speech error",e)}
+  const u=new SpeechSynthesisUtterance(input);activeSpeechUtterance=u;
+  u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
+  const v=voice();if(v)u.voice=v;
+  let started=false;
+  u.onstart=()=>{started=true};
+  u.onend=()=>{if(activeSpeechUtterance===u)activeSpeechUtterance=null;if(cb)cb()};
+  u.onerror=e=>{if(activeSpeechUtterance===u)activeSpeechUtterance=null;if(e?.error!=="canceled")console.error("Speech error",e)};
+  try{synth.speak(u)}catch(e){console.error("Speech error",e)}
+  if(retry)setTimeout(()=>{
+   if(!started&&!synth.speaking&&!synth.pending){
+    try{synth.resume()}catch(e){}
+    playSpeech(input,rate,cb,false)
+   }
+  },450)
  };
- try{synth.cancel()}catch(e){}
- attempt();
- setTimeout(()=>{if(!started){try{synth.cancel()}catch(e){};attempt()}},280)
+ if(isMacSafariAudio()&&(synth.speaking||synth.pending)){
+  try{synth.cancel()}catch(e){}
+  setTimeout(launch,90)
+ }else{
+  launch()
+ }
 }
+function speak(text,rate=.72,cb){playSpeech(text,rate,cb,true)}
+function speakMission(text,rate=.60){playSpeech(text,rate,null,true)}
 function tone(kind="ok"){
  try{
   const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();
