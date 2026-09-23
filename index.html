@@ -182,7 +182,7 @@ async function saveRemoteNow(){
  const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=8,attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
  if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
 }
-function save(){state.updatedAt=Date.now();saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
+function save(touch=true){if(touch)state.updatedAt=Date.now();saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
 async function loadRemoteState(){
  if(!sb||!session||!currentChild)return;$("#syncStatus").textContent="☁️ Chargement…";
  let cached=null;try{cached=JSON.parse(localStorage.getItem(childKey(currentChild.id))||"null")}catch(e){console.error("Local cache read error",e)}
@@ -326,7 +326,7 @@ function missionCardHTML(){
 }
 function currentMissionStep(){const m=getDailyMission();return m.steps[Math.min(m.index,m.steps.length-1)]}
 function missionHub(){
- missionMode=false;currentView="mission";state.lastView="mission";save();
+ missionMode=false;currentView="mission";state.lastView="mission";save(false);
  const m=getDailyMission();
  stage.innerHTML=title("Mission du jour","Une petite séance variée, adaptée à ce qui mérite d’être revu.","8–12 min")+
  '<div class="card">'+missionProgressHTML(m)+missionStepsHTML(m)+'</div><div class="actions" style="margin-top:14px"><button class="btn gray" data-action="go" data-to="home">← Accueil</button><button class="btn primary" data-action="mission-next">▶ Étape '+Math.min(m.index+1,5)+'</button></div>'
@@ -415,7 +415,7 @@ function toast(msg,type="ok"){
 }
 function title(t,p,pill){return `<div class="titlebar"><div><h2>${t}</h2><p>${p}</p></div>${pill?`<span class="pill">${pill}</span>`:""}</div>`}
 function mission(ico,b,txt){return `<div class="mission"><div class="mission-icon">${ico}</div><div><b>${b}</b><span>${txt}</span></div></div>`}
-function activate(v){currentView=v;state.lastView=v;save();document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render()}
+function activate(v){currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render()}
 function nextRandom(arr,answer,n=4){let a=shuffle(arr.filter(x=>x!==answer)).slice(0,n-1);return shuffle([answer,...a])}
 
 function home(){
@@ -501,7 +501,7 @@ function gamesMenu(){
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
 function gameListen(forcedTarget=null,fromMission=false){
- missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save();currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
+ missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
  const opts=nextRandom(DATA.sets.flat(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
@@ -512,7 +512,7 @@ function gameListen(forcedTarget=null,fromMission=false){
 }
 
 function gameBubbles(forcedTarget=null,fromMission=false){
- missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save();currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
+ missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
  const opts=nextRandom(DATA.sets.flat(),currentAnswer,6);
  stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
  `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
@@ -522,7 +522,7 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
 }
 function gameFamily(forcedFamily=null,fromMission=false){
- missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save();locked=false;
+ missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;
  const family=forcedFamily||pick(DATA.sets),others=DATA.sets.flat().filter(x=>!family.includes(x));
  const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
  const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
@@ -538,7 +538,7 @@ function makeMemoryDeck(preferred=[]){
  ]));memoryOpen=[];memoryMatches=0
 }
 function gameMemory(preferred=[],fromMission=false){
- missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save();locked=false;makeMemoryDeck(preferred);
+ missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;makeMemoryDeck(preferred);
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
  <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
@@ -635,7 +635,7 @@ function pronunciationMatches(expected,heard){
  return (aliases[e]||[]).some(x=>normalizeHeard(x)===h) || (h.startsWith(e)&&h.length<=e.length+2);
 }
 function gamePronunciation(){
- currentView="pronunciation";state.lastView="pronunciation";save();currentAnswer=pickLearningSyllable();locked=false;
+ currentView="pronunciation";state.lastView="pronunciation";save(false);currentAnswer=pickLearningSyllable();locked=false;
  const micAvailable=!!navigator.mediaDevices?.getUserMedia;
  stage.innerHTML=title("Écoute & répète","Écoute la syllabe, puis dis-la dans le micro.","Jeu micro")+
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
@@ -706,7 +706,7 @@ async function startPronunciationRecognition(){
 }
 
 function gamePicture(){
- currentView="pictures";state.lastView="pictures";save();const answer=pick(DATA.words);currentAnswer=answer.w;locked=false;
+ currentView="pictures";state.lastView="pictures";save(false);const answer=pick(DATA.words);currentAnswer=answer.w;locked=false;
  const opts=nextRandom(DATA.words.map(x=>x.w),answer.w,4);
  stage.innerHTML=title("Quel est ce mot ?","Lis les mots et touche celui qui correspond à l'image.","Jeu 2")+
  `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
@@ -716,7 +716,7 @@ function gamePicture(){
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
- missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save();const answer=forcedAnswer||pick(DATA.words.filter(x=>x.parts.length>=2));currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
+ missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const answer=forcedAnswer||pick(DATA.words.filter(x=>x.parts.length>=2));currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
  const extras=shuffle(DATA.sets.flat()).slice(0,Math.max(1,4-answer.parts.length));
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
@@ -736,7 +736,7 @@ function updateBuild(){
  }
 }
 function gameOrder(){
- currentView="order";state.lastView="order";save();const arr=pick(DATA.sentences);orderTarget=arr;orderMade=[];locked=false;const opts=shuffle(arr);
+ currentView="order";state.lastView="order";save(false);const arr=pick(DATA.sentences);orderTarget=arr;orderMade=[];locked=false;const opts=shuffle(arr);
  stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase.","Jeu 4")+
  `<div class="card center"><div class="hero-emoji">💬</div>
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
