@@ -57,7 +57,7 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
 .order-zone{display:flex;gap:8px;min-height:73px;justify-content:center;align-items:center;flex-wrap:wrap;padding:10px;border:2px dashed #d9d3ec;border-radius:17px;background:#fcfbff;margin-top:12px}.order-zone .empty{color:#9298a0;font-size:14px}.token{min-width:76px;padding:13px 15px;border-radius:15px;background:#efedff;color:#4b42c9;font-size:25px;font-weight:1000}
 .emojis{font-size:58px;margin:8px 0}
 .parent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.parent-box{border:1px solid var(--line);border-radius:17px;padding:13px;background:#fff}.parent-box h3{margin:0 0 7px;font-size:16px}.parent-box p,.parent-box li{font-size:13px;color:#5f6973;line-height:1.5}
-.mic-status{margin:13px auto 0;max-width:520px;padding:11px 13px;border-radius:14px;background:#f5f3ff;color:#554db5;font-weight:850;font-size:14px}.mic-status.listening{background:#fff3d5;color:#765600}.mic-status.success{background:#e9f9f0;color:#176d40}.mic-status.error{background:#fff1f4;color:#9f2145}.mic-pulse{display:inline-block;animation:micPulse .9s infinite alternate}@keyframes micPulse{to{transform:scale(1.16)}}
+.mic-status{margin:13px auto 0;max-width:520px;padding:11px 13px;border-radius:14px;background:#f5f3ff;color:#554db5;font-weight:850;font-size:14px}.mic-status.listening{background:#fff3d5;color:#765600}.mic-status.success{background:#e9f9f0;color:#176d40}.mic-status.error{background:#fff1f4;color:#9f2145}.mic-pulse{display:inline-block;animation:micPulse .9s infinite alternate}@keyframes micPulse{to{transform:scale(1.16)}}.puzzle-wrap{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}.puzzle-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:140px;height:140px}.puzzle-piece{display:grid;place-items:center;border-radius:18px;border:2px dashed #d9d3ec;background:#f8f6ff;font-size:30px;color:#aaa}.puzzle-piece.on{border-style:solid;border-color:#f0c760;background:#fff4c8;color:#6a5000}.collection-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.collectible{padding:7px 9px;border-radius:12px;background:#f5f3ff;font-size:12px;font-weight:850;color:#554db5}@media(max-width:520px){.puzzle-wrap{grid-template-columns:1fr}.puzzle-grid{margin:auto}}
 .footer-note{text-align:center;color:#8c9299;font-size:11px;margin-top:16px}
 @media(max-width:760px){
  .app{padding:10px}.layout{grid-template-columns:1fr}.nav{position:static;display:grid;grid-template-columns:1fr 1fr;gap:5px}.name{grid-column:1/-1;margin:0}.nav-btn{margin:0;padding:10px;font-size:14px}.stage{padding:14px;min-height:auto}.sound-grid{grid-template-columns:repeat(4,1fr)}.levels{grid-template-columns:1fr 1fr}.parent-grid{grid-template-columns:1fr}.top{align-items:flex-start}.score{font-size:13px}.choices{gap:8px}.choice{min-height:66px}
@@ -140,9 +140,9 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{}}}
+function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
@@ -230,8 +230,27 @@ function pickLearningSyllable(){
  all.forEach(s=>{const level=masteryLevel(s),weight=[5,4,2,1][level];for(let i=0;i<weight;i++)weighted.push(s)});
  return pick(weighted.length?weighted:all)
 }
+const COLLECTIBLES=[
+ {id:"dragon",emoji:"🐉",name:"Bébé dragon"},{id:"fairy",emoji:"🧚",name:"Fée des étoiles"},
+ {id:"knight",emoji:"🛡️",name:"Petit chevalier"},{id:"unicorn",emoji:"🦄",name:"Licorne nuage"},
+ {id:"dino",emoji:"🦕",name:"Petit dinosaure"},{id:"fox",emoji:"🦊",name:"Renard explorateur"}
+];
+function advanceRewards(){
+ state.rewards=state.rewards||{towardPiece:0,pieces:0,puzzles:0,collection:[]};
+ state.rewards.towardPiece++;
+ if(state.rewards.towardPiece<3)return {piece:false,complete:false};
+ state.rewards.towardPiece=0;state.rewards.pieces++;
+ if(state.rewards.pieces<4)return {piece:true,complete:false};
+ state.rewards.pieces=0;state.rewards.puzzles++;
+ const item=COLLECTIBLES[(state.rewards.puzzles-1)%COLLECTIBLES.length];
+ if(!state.rewards.collection.some(x=>x.id===item.id))state.rewards.collection.push(item);
+ return {piece:true,complete:true,item};
+}
 function rewardVerified(msg="Bravo !"){
- state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok")
+ state.stars++;state.streak++;const gain=advanceRewards();save();tone("ok");starFx();
+ if(gain.complete){confetti();toast("🎁 Puzzle terminé ! "+gain.item.emoji+" "+gain.item.name+" rejoint ta collection !","ok")}
+ else if(gain.piece)toast("🧩 "+msg+" Tu gagnes un morceau de puzzle !","ok");
+ else toast("🌟 "+msg,"ok")
 }
 function practiceDone(msg="Bravo pour ton effort !"){
  tone("ok");toast("👏 "+msg,"ok")
@@ -256,6 +275,7 @@ function home(){
    <div class="actions"><button class="btn primary" data-action="go" data-to="sounds">🚀 Commencer</button><button class="btn yellow" data-action="speak" data-text="Prête pour la mission lecture ?">🔊 Écouter</button></div>
  </div>
  ${mission("🎯","Objectif du jour","5 à 10 minutes. On s'arrête pendant que c'est encore amusant.")}
+ ${(()=>{const r=state.rewards||DEFAULT_STATE.rewards;const next=COLLECTIBLES[r.puzzles%COLLECTIBLES.length];return `<div class="card"><div class="puzzle-wrap"><div class="puzzle-grid">${[0,1,2,3].map(i=>`<div class="puzzle-piece ${i<r.pieces?"on":""}">${i<r.pieces?"✨":"?"}</div>`).join("")}</div><div><b style="font-size:18px">🧩 Puzzle magique</b><p style="color:var(--muted);font-size:13px;line-height:1.45">3 bonnes réponses vérifiées donnent un morceau. Encore ${Math.max(0,3-(r.towardPiece||0))} réussite(s) avant le prochain morceau.</p><div style="font-weight:900">Prochaine découverte : ${next.emoji} ???</div>${r.collection.length?`<div class="collection-row">${r.collection.map(x=>`<span class="collectible">${x.emoji} ${x.name}</span>`).join("")}</div>`:""}</div></div></div>`})()}
  <div class="levels">
    <button class="level" data-action="go" data-to="sounds"><div class="ico">🔤</div><b>1. Les sons</b><small>J'écoute et je reconnais</small></button>
    <button class="level" data-action="go" data-to="syllables"><div class="ico">🧩</div><b>2. Les syllabes</b><small>Je combine les sons</small></button>
