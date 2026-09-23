@@ -324,14 +324,16 @@ function completeMissionStep(){
 function missionComplete(){
  const m=getDailyMission();missionMode=false;currentView="mission-complete";state.lastView="mission-complete";
  state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
+ let gain=null;
  if(!state.missionHistory.some(x=>x.date===m.date)){
   const attempts=Math.max(0,(state.stats?.attempts||0)-(m.startAttempts||0)),correct=Math.max(0,(state.stats?.correct||0)-(m.startCorrect||0));
   state.missionHistory.push({date:m.date,primary:m.primary,review:m.review,word:m.word,attempts,correct,accuracy:attempts?Math.round(correct/attempts*100):100});
-  state.missionHistory=state.missionHistory.slice(-60);rewardMissionPiece()
+  state.missionHistory=state.missionHistory.slice(-60);gain=rewardMissionPiece()
  }
  save();confetti();
+ const reward=gain?(gain.complete?'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">'+gain.item.emoji+'</div><h3 style="margin:5px">Nouveau trésor !</h3><b>'+gain.item.name+'</b><p style="color:var(--muted)">Le puzzle est terminé et ce personnage rejoint ta collection.</p><button class="btn yellow" data-action="go" data-to="collection">🎁 Voir ma collection</button></div>':'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">🧩</div><h3 style="margin:5px">Tu gagnes un morceau !</h3><b>'+(state.rewards?.pieces||0)+' / 4 morceaux</b><p style="color:var(--muted)">Encore '+Math.max(0,4-(state.rewards?.pieces||0))+' mission(s) pour terminer le puzzle.</p></div>'):'<div class="tip">Cette mission a déjà donné sa récompense aujourd’hui.</div>';
  stage.innerHTML=title("Mission terminée !","Tu as fini ta séance du jour.","Bravo !")+
- '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p><p style="color:var(--muted);font-size:13px">Mission enregistrée dans le suivi parent.</p><div class="actions"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="games">🎮 Jouer encore</button></div></div>'
+ '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p><p style="color:var(--muted);font-size:13px">Mission enregistrée dans le suivi parent.</p></div>'+reward+'<div class="actions" style="margin-top:14px"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="world">🗺️ Mon monde</button></div>'
 }
 const COLLECTIBLES=[
  {id:"dragon",emoji:"🐉",name:"Bébé dragon"},{id:"fairy",emoji:"🧚",name:"Fée des étoiles"},
@@ -351,9 +353,7 @@ function rewardVerified(msg="Bravo !"){
  state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok")
 }
 function rewardMissionPiece(){
- const gain=advanceRewards();save();tone("ok");starFx();
- if(gain.complete){confetti();toast("🎁 Puzzle terminé ! "+gain.item.emoji+" "+gain.item.name+" rejoint ta collection !","ok")}
- else toast("🧩 Mission terminée ! Tu gagnes un morceau de puzzle !","ok")
+ const gain=advanceRewards();save();tone("ok");starFx();if(gain.complete)confetti();return gain
 }
 function practiceDone(msg="Bravo pour ton effort !"){
  tone("ok");toast("👏 "+msg,"ok")
