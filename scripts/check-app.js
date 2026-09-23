@@ -55,7 +55,7 @@ const words=[...wordBlock.matchAll(/\{w:"([^"]+)",parts:\[([^\]]*)\],emoji:"([^"
   word:m[1],
   parts:[...m[2].matchAll(/"([^"]+)"/g)].map(x=>x[1])
 }));
-if(words.length<20)fail("Unexpectedly low reading content:",String(words.length));
+if(words.length<30)fail("Unexpectedly low reading content:",String(words.length));
 
 const duplicateWords=words.map(x=>x.word).filter((w,i,a)=>a.indexOf(w)!==i);
 if(duplicateWords.length)fail("Duplicate words:",[...new Set(duplicateWords)].join(", "));
@@ -86,6 +86,15 @@ if(!html.includes("rewardLedger")||!html.includes("reviewQueue")){
 
 if(!html.includes("missionHistory")||!html.includes("startAttempts")||!html.includes("startCorrect")){
   fail("Per-mission tracking is incomplete.");
+}
+if(!html.includes("startAttempts:null")||!html.includes("if(m.startAttempts==null)")){
+  fail("Mission performance timing guard is missing.");
+}
+if(!html.includes("updatedAt")||!html.includes("localTs>remoteTs")){
+  fail("Newest-state sync protection is missing.");
+}
+if(!html.includes("window.supabase?.createClient")){
+  fail("Supabase offline fallback is missing.");
 }
 
 console.log("App validation OK");
