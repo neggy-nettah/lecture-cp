@@ -68,7 +68,7 @@ function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&ra
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,missionMode=false;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,missionMode=false,questionErrorRecorded=false;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -167,6 +167,11 @@ function masteryLevel(key){
  return 0
 }
 function masteryStars(key){const n=masteryLevel(key);return "★".repeat(n)+"☆".repeat(3-n)}
+function resetQuestionTracking(){questionErrorRecorded=false}
+function recordQuestionError(key=null){
+ if(questionErrorRecorded)return false;
+ questionErrorRecorded=true;recordAttempt(false,key);return true
+}
 function scopedChallengeKey(challengeKey=""){
  if(!challengeKey)return "";
  if(missionMode){
@@ -467,7 +472,7 @@ function syllables(){
  <div class="nextbar"><button class="btn gray" data-action="set-prev">← Série</button><button class="btn primary" data-action="set-next">Série suivante →</button></div>`;
 }
 function startSyllableQuiz(){
- const set=DATA.sets[state.set%DATA.sets.length];currentAnswer=pick(set);locked=false;
+ const set=DATA.sets[state.set%DATA.sets.length];currentAnswer=pick(set);locked=false;resetQuestionTracking();
  const opts=nextRandom(set,currentAnswer,4);
  $("#quizArea").innerHTML=`<div class="choices">${opts.map(x=>`<button class="choice" data-action="syllable-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>`;
  $("#feedback").innerHTML="";speak(currentAnswer,.60)
@@ -500,7 +505,7 @@ function gamesMenu(){
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
 function gameListen(forcedTarget=null,fromMission=false){
- missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
+ missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
  const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
@@ -511,7 +516,7 @@ function gameListen(forcedTarget=null,fromMission=false){
 }
 
 function gameBubbles(forcedTarget=null,fromMission=false){
- missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
+ missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
  const opts=nextRandom(activeLearningSyllables(),currentAnswer,6);
  stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
  `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
@@ -521,7 +526,7 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
 }
 function gameFamily(forcedFamily=null,fromMission=false){
- missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;
+ missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;resetQuestionTracking();
  const availableFamilies=DATA.sets.slice(0,unlockedFamilyCount()),family=forcedFamily||pick(availableFamilies),base=activeLearningSyllables(),others=base.filter(x=>!family.includes(x));
  const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
  const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
@@ -705,7 +710,7 @@ async function startPronunciationRecognition(){
 }
 
 function gamePicture(){
- currentView="pictures";state.lastView="pictures";save(false);const pool=decodableMissionWords(),answer=pick(pool);currentAnswer=answer.w;locked=false;
+ currentView="pictures";state.lastView="pictures";save(false);const pool=decodableMissionWords(),answer=pick(pool);currentAnswer=answer.w;locked=false;resetQuestionTracking();
  const opts=nextRandom(pool.map(x=>x.w),answer.w,4);
  stage.innerHTML=title("Quel est ce mot ?","Lis les mots et touche celui qui correspond à l'image.","Jeu 2")+
  `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
@@ -715,7 +720,7 @@ function gamePicture(){
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
- missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=decodableMissionWords().filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool);currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
+ missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=decodableMissionWords().filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool);currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;resetQuestionTracking();
  const extraCount=Math.max(1,4-answer.parts.length),extraBase=activeLearningSyllables(),extraPool=extraBase.filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
@@ -731,13 +736,13 @@ function updateBuild(){
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
    if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
-   else{recordAttempt(false,"word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
+   else{recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
 function gameOrder(){
  if(!sentenceUnlocked()){activate("games");return}
  const pool=decodableSentencePool();if(!pool.length){activate("games");return}
- currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;const opts=shuffle(arr);
+ currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;resetQuestionTracking();const opts=shuffle(arr);
  stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Les petits mots comme « un » ou « une » sont lus avec un adulte au besoin.","Jeu 4")+
  `<div class="card center"><div class="hero-emoji">💬</div>
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
@@ -751,7 +756,7 @@ function updateOrder(){
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join(" ")===orderTarget.join(" ");
    if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "),"order:"+orderTarget.join(" "));rewardVerified("Phrase réussie !","order:"+orderTarget.join(" "));setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
-   else{recordAttempt(false,"sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
+   else{recordQuestionError("sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
 }
 function masterySummary(){
@@ -941,7 +946,7 @@ function checkChoice(btn,value,kind){
    if(kind==="listen")setDone("listen");if(kind==="pictures")setDone("pictures");if(kind==="syllables")setDone("syllables");
    speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti();completeMissionStep()
  }else{
-   btn.classList.add("wrong","wiggle");recordAttempt(false,kind==="pictures"?"word:"+currentAnswer:currentAnswer);miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
+   btn.classList.add("wrong","wiggle");recordQuestionError(kind==="pictures"?"word:"+currentAnswer:currentAnswer);btn.disabled=true;miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
  }
 }
 
@@ -990,7 +995,7 @@ document.addEventListener("click",e=>{
  if(a==="bubble-answer"){
    if(locked)return;
    if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120);completeMissionStep()}
-   else{recordAttempt(false,currentAnswer);b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
+   else{recordQuestionError(currentAnswer);b.disabled=true;b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
    return
  }
  if(a==="game-memory"){gameMemory();return}
@@ -999,7 +1004,7 @@ document.addEventListener("click",e=>{
  if(a==="family-answer"){
    if(locked)return;
    if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,"family:"+currentAnswer);rewardVerified("Intrus trouvé !","family:"+currentAnswer);setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
-   else{b.classList.add("wrong","wiggle");recordAttempt(false);miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
  if(a==="game-pronunciation"){gamePronunciation();return}
