@@ -188,9 +188,16 @@ function recordAttempt(correct,key=null,challengeKey=""){
   state.attemptLedger[ledgerKey]=1;
   const keys=Object.keys(state.attemptLedger);if(keys.length>700)keys.slice(0,keys.length-400).forEach(k=>delete state.attemptLedger[k])
  }
- state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;
+ state.stats=state.stats||{attempts:0,correct:0};
+ const beforeAttempts=state.stats.attempts||0,beforeCorrect=state.stats.correct||0;
+ state.stats.attempts++;if(correct)state.stats.correct++;
  if(missionMode&&state.dailyMission){
-  const ss=state.dailyMission.sessionStats||{attempts:0,correct:0};ss.attempts++;if(correct)ss.correct++;state.dailyMission.sessionStats=ss
+  let ss=state.dailyMission.sessionStats;
+  if(!ss){
+   const legacy=typeof state.dailyMission.startAttempts==="number"&&typeof state.dailyMission.startCorrect==="number";
+   ss={attempts:legacy?Math.max(0,beforeAttempts-state.dailyMission.startAttempts):0,correct:legacy?Math.max(0,beforeCorrect-state.dailyMission.startCorrect):0}
+  }
+  ss.attempts++;if(correct)ss.correct++;state.dailyMission.sessionStats=ss
  }
  if(key){
   state.mastery=state.mastery||{};const m=state.mastery[key]||{attempts:0,correct:0};
@@ -305,7 +312,6 @@ function buildDailyMission(){
 function getDailyMission(){
  const m=state.dailyMission;
  if(!m||m.date!==localDayKey()||!Array.isArray(m.steps)||m.steps.length!==5)return buildDailyMission();
- if(!m.sessionStats)m.sessionStats={attempts:0,correct:0};
  return m
 }
 function missionProgressHTML(m){
