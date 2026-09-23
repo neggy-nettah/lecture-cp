@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.17.0 — 2026-09-23
+
+- distinction entre réponse autonome et correction après une erreur dans les choix, syllabes manquantes, mots et phrases à construire
+- les corrections gardent leurs encouragements sans augmenter la maîtrise ni effacer une révision prévue
+- les étapes de mission conservent cette information après interruption et rechargement
+- vérification Chromium des erreurs, corrections, reprise et réussite autonome
+
 ## 0.16.0 — 2026-09-24
 
 ### Compte parent
