@@ -122,6 +122,9 @@ if(!app.includes("missionHistory")||!app.includes("startAttempts")||!app.include
 if(!app.includes("startAttempts:null")||!app.includes("if(m.startAttempts==null)")){
   fail("Mission performance timing guard is missing.");
 }
+if(!app.includes("sessionStats")||!app.includes("state.dailyMission.sessionStats")){
+  fail("Mission-only performance tracking is missing.");
+}
 if(!app.includes("updatedAt")||!app.includes("localTs>remoteTs")){
   fail("Newest-state sync protection is missing.");
 }
