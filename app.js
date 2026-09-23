@@ -778,6 +778,11 @@ function missionDayStreak(){
  for(const d of dates){if(d!==fmt(cursor))break;streak++;cursor.setDate(cursor.getDate()-1)}
  return streak
 }
+function recentPerformance(){
+ const rows=(state.missionHistory||[]).filter(x=>x.accuracy!=null&&Number.isFinite(Number(x.attempts))).slice(-7);
+ const attempts=rows.reduce((sum,x)=>sum+Number(x.attempts||0),0),correct=rows.reduce((sum,x)=>sum+Number(x.correct||0),0);
+ return {missions:rows.length,attempts,correct,accuracy:attempts?Math.round(correct/attempts*100):null}
+}
 function recentMissionHTML(){
  const hist=(state.missionHistory||[]).slice(-7).reverse();
  if(!hist.length)return '<p style="color:var(--muted);font-size:13px">Aucune mission terminée pour le moment.</p>';
@@ -894,11 +899,11 @@ function resetDailyMission(){
  state.dailyMission=null;missionMode=false;currentView="home";save();render();alert("Nouvelle mission créée.")
 }
 function parents(){
- const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0;
+ const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance();
  const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses pour repérer les difficultés.</span>`;
  stage.innerHTML=title("Coin parent","Suivi simple de la progression réelle.","Tableau de bord")+
  `<div class="parent-grid">
-  <div class="parent-box"><h3>🎯 Précision</h3><p><b style="font-size:26px">${accuracy} %</b><br>${correct} bonnes réponses sur ${attempts} essais vérifiés.</p></div>
+  <div class="parent-box"><h3>🎯 Précision récente</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${accuracy} % (${correct}/${attempts})</small></p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
   <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumStatus().complete?"Toutes les familles sont ouvertes.":"Prochaine famille : "+curriculumStatus().nextInitial+" dans "+curriculumStatus().remaining+" mission(s)."}</p></div>
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
