@@ -101,6 +101,8 @@ const probes=[
   'typeof buildDailyMission==="function"',
   'typeof fullyDecodableWords==="function"',
   'typeof decodableMissionWords==="function"',
+  'typeof activeSoundData==="function"',
+  'typeof decodableSentencePool==="function"',
   'typeof worldView==="function"',
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
@@ -123,8 +125,9 @@ const probes=[
   '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}]}),unlockedFamilyCount()===5)',
   '(state=normalizeState({lastView:"unknown-view"}),currentView="unknown-view",render(),currentView==="home")',
   '(state=normalizeState({}),state.sound=DATA.sounds.length-1,currentView="sounds",state.done.sounds!==true)',
+  '(state=normalizeState({}),activeSoundData().length===8)',
   '(state=normalizeState({}),sentenceUnlocked()===false)',
-  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),sentenceUnlocked()===true)',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),sentenceUnlocked()===true&&decodableSentencePool().length>=3)',
   '(state=normalizeState({set:9}),syllables(),state.set<unlockedFamilyCount())',
   '(state=normalizeState({}),buildDailyMission(),gameListen(state.dailyMission.primary,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),gameBubbles(state.dailyMission.review,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
@@ -158,7 +161,8 @@ console.log("- Free reading words are fully decodable");
 console.log("- Mission words use currently unlocked syllables");
 console.log("- Unknown saved views recover to home");
 console.log("- Navigation alone does not validate sound practice");
-console.log("- Phrase game unlocks after 8 missions");
+console.log("- Sound browser follows unlocked curriculum");
+console.log("- Phrase game unlocks after 8 missions with decodable sentences");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
 console.log("- Mission words assemble exactly");
