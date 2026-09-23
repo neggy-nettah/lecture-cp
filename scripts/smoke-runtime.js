@@ -111,7 +111,8 @@ const probes=[
   '(startMissionStep(),getDailyMission().startAttempts!==null)',
   'normalizeState({stars:2}).attemptLedger!=null',
   'normalizeState({stars:2}).updatedAt===0',
-  '(state=normalizeState({}),recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)'
+  '(state=normalizeState({}),missionMode=false,recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)',
+  '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)'
 ];
 
 for(const probe of probes){
@@ -134,4 +135,5 @@ console.log("- Daily mission contains 5 steps");
 console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
 console.log("- Duplicate mastery guard: OK");
+console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Mission words assemble exactly");
