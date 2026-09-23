@@ -31,10 +31,12 @@ for(const s of data.sounds){
 const syllables=data.sets.flat();
 const dupSyllables=duplicates(syllables);
 if(dupSyllables.length)fail("Duplicate syllables:",dupSyllables.join(", "));
+const familyVowels=["a","e","i","o","u","é"];
 for(const family of data.sets){
-  if(family.length!==5)fail("Each syllable family must contain 5 syllables:",family.join(", "));
+  if(family.length!==familyVowels.length)fail("Each syllable family must contain "+familyVowels.length+" syllables:",family.join(", "));
   const initial=family[0]?.[0];
   if(!initial||!family.every(s=>s[0]===initial))fail("Mixed initial letters inside a family:",family.join(", "));
+  if(!familyVowels.every(v=>family.includes(initial+v)))fail("Incomplete vowel pattern inside a family:",family.join(", "));
 }
 
 const wordNames=data.words.map(x=>x.w);
@@ -46,6 +48,16 @@ for(const w of data.words){
 }
 const exactWords=data.words.filter(w=>w.parts.join("")===w.w);
 if(exactWords.length<30)fail("Too few exactly assembled words:",String(exactWords.length));
+
+const taughtParts=new Set([...syllables,"a","e","i","o","u","é"]);
+const fullyDecodable=data.words.filter(w=>w.parts.join("")===w.w&&w.parts.every(p=>taughtParts.has(p)));
+if(fullyDecodable.length<44)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
+for(const expected of ["lune","tomate","banane","pirate","valise","minute","navire"]){
+  if(!fullyDecodable.some(w=>w.w===expected))fail("Expected e-syllable word is not fully decodable:",expected);
+}
+for(const deferred of ["maman","domino","cabane"]){
+  if(fullyDecodable.some(w=>w.w===deferred))fail("Word with untaught grapheme became decodable too early:",deferred);
+}
 
 for(const sentence of data.sentences){
   if(!Array.isArray(sentence)||sentence.length<3)fail("Malformed sentence:",JSON.stringify(sentence));
@@ -76,6 +88,7 @@ console.log("- Syllable families:",data.sets.length);
 console.log("- Syllables:",syllables.length);
 console.log("- Words:",data.words.length);
 console.log("- Exactly assembled words:",exactWords.length);
+console.log("- Fully decodable with taught graphemes:",fullyDecodable.length);
 console.log("- Sentences:",data.sentences.length);
 console.log("- Collectibles:",collectibles.length);
 console.log("- World zones:",zones.length);
