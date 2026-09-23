@@ -982,6 +982,15 @@ async function copyDiagnostic(){
  try{await navigator.clipboard.writeText(txt);alert("Diagnostic copié.")}
  catch(e){prompt("Copie ce diagnostic :",txt)}
 }
+function exportProgress(){
+ const payload={app:"La Fabrique des Syllabes",version:APP_VERSION,exportedAt:new Date().toISOString(),profile:currentChild?{nickname:currentChild.nickname,school_level:currentChild.school_level,avatar:currentChild.avatar}:null,state};
+ const json=JSON.stringify(payload,null,2);
+ try{
+  const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+  const label=(currentChild?.nickname||state.name||"progression").toLowerCase().replace(/[^a-z0-9_-]+/gi,"-").replace(/^-+|-+$/g,"")||"progression";
+  a.href=url;a.download="lecture-cp-"+label+"-"+localDayKey()+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
+ }catch(e){console.error("Export progress error",e);prompt("Copie cette sauvegarde :",json)}
+}
 function resetDailyMission(){
  if(!confirm("Recréer seulement la mission du jour ? La progression générale sera conservée."))return;
  state.dailyMission=null;missionMode=false;currentView="home";save();render();alert("Nouvelle mission créée.")
@@ -1005,7 +1014,7 @@ function parents(){
   <div class="parent-box"><h3>🎯 Priorité</h3><p>La précision avant la vitesse. L’image sert de vérification, pas à deviner le mot.</p></div>
   <div class="parent-box"><h3>🌟 Motivation</h3><p>Valoriser l’effort et les progrès. Une courte réussite quotidienne vaut mieux qu’une longue séance tendue.</p></div>
  </div>
- <div class="card"><b>🛠️ Outils parent</b><p style="color:var(--muted);font-size:13px">En cas de souci, tu peux recréer uniquement la mission du jour ou copier un diagnostic technique sans email ni donnée personnelle.</p><div class="actions"><button class="btn gray" data-action="reset-mission">↻ Recréer la mission</button><button class="btn gray" data-action="copy-diagnostic">📋 Copier diagnostic</button></div></div>
+ <div class="card"><b>🛠️ Outils parent</b><p style="color:var(--muted);font-size:13px">En cas de souci, tu peux recréer uniquement la mission du jour, exporter la progression ou copier un diagnostic technique sans email.</p><div class="actions"><button class="btn gray" data-action="reset-mission">↻ Recréer la mission</button><button class="btn good" data-action="export-progress">⬇️ Exporter la progression</button><button class="btn gray" data-action="copy-diagnostic">📋 Copier diagnostic</button></div></div>
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
@@ -1124,6 +1133,7 @@ document.addEventListener("click",e=>{
  if(a==="close-modal"){$("#authModal").classList.add("hidden");return}
  if(a==="reset-mission"){resetDailyMission();return}
  if(a==="copy-diagnostic"){copyDiagnostic();return}
+ if(a==="export-progress"){exportProgress();return}
  if(a==="restore-backup"){restoreBackup();return}
  if(a==="reset"){
    if(confirm("Remettre les étoiles et la progression à zéro ? Une sauvegarde locale sera conservée.")){saveBackup();state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
