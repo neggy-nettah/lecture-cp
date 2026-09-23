@@ -121,6 +121,8 @@ const probes=[
   'getDailyMission().startAttempts===null',
   '(startMissionStep(),getDailyMission().startAttempts!==null)',
   'normalizeState({stars:2}).attemptLedger!=null',
+  'normalizeState({stars:2}).wordPractice!=null',
+  '(state=normalizeState({}),decodableMissionWords().slice(0,5).forEach(w=>state.wordPractice[w.w]=true),wordPracticeComplete()===true)',
   'normalizeState({stars:2}).updatedAt===0',
   '(state=normalizeState({}),missionMode=false,recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)',
   '(state=normalizeState({}),resetQuestionTracking(),recordQuestionError("ma"),recordQuestionError("ma"),state.stats.attempts===1&&state.mastery.ma.attempts===1)',
@@ -196,6 +198,7 @@ console.log("- Main screens, mission flow, microphone screen and games render wi
 console.log("- Daily mission contains 5 steps");
 console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
+console.log("- Word practice tracking: OK");
 console.log("- Duplicate mastery guard: OK");
 console.log("- One-error-per-question analytics: OK");
 console.log("- Mission/free-play attempt scoping: OK");
