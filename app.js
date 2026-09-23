@@ -191,9 +191,11 @@ function dueReviewSyllables(){
 function curriculumMasteryPoints(){return DATA.sets.flat().reduce((sum,s)=>sum+masteryLevel(s),0)}
 function knownFamilyFloor(){
  let floor=3;
+ const practicedWords=new Set(Object.entries(state.wordPractice||{}).filter(([,v])=>!!v).map(([w])=>w));
  DATA.sets.forEach((set,i)=>{
-  const initial=(set[0]||"")[0],known=set.some(s=>(state.mastery?.[s]?.attempts||0)>0)||!!state.soundPractice?.[initial];
-  if(known)floor=Math.max(floor,i+1)
+  const syllableWorked=set.some(s=>(state.mastery?.[s]?.attempts||0)>0);
+  const wordWorked=DATA.words.some(w=>practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p)));
+  if(syllableWorked||wordWorked)floor=Math.max(floor,i+1)
  });
  return Math.min(DATA.sets.length,floor)
 }
