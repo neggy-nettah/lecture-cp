@@ -231,6 +231,80 @@ function pickLearningSyllable(){
  all.forEach(s=>{const level=masteryLevel(s),weight=[5,4,2,1][level];for(let i=0;i<weight;i++)weighted.push(s)});
  return pick(weighted.length?weighted:all)
 }
+function localDayKey(){
+ const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+ return y+"-"+m+"-"+day
+}
+function weakestSyllable(exclude=""){
+ const all=DATA.sets.flat().filter(s=>s!==exclude),attempted=all.filter(s=>(state.mastery?.[s]?.attempts||0)>0);
+ if(attempted.length){
+  return [...attempted].sort((a,b)=>{
+   const ma=state.mastery[a],mb=state.mastery[b],aa=(ma.correct||0)/Math.max(1,ma.attempts),ab=(mb.correct||0)/Math.max(1,mb.attempts);
+   return aa-ab || (ma.correct||0)-(mb.correct||0)
+  })[0]
+ }
+ return pick(all)
+}
+function buildDailyMission(){
+ const primary=pickLearningSyllable(),review=weakestSyllable(primary);
+ const candidates=DATA.words.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),word=pick(candidates.length?candidates:DATA.words);
+ state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,steps:[
+  {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
+  {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
+  {type:"bubbles",target:review,title:"Je révise",detail:"Éclate la bonne bulle"},
+  {type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"},
+  {type:"build",target:word.w,title:"Défi final",detail:"Construis le mot "+word.w.toUpperCase()}
+ ]};
+ save();return state.dailyMission
+}
+function getDailyMission(){
+ const m=state.dailyMission;
+ if(!m||m.date!==localDayKey()||!Array.isArray(m.steps)||m.steps.length!==5)return buildDailyMission();
+ return m
+}
+function missionProgressHTML(m){
+ return '<div class="mission-progress">'+m.steps.map((_,i)=>'<span class="mission-dot '+(i<m.index?"done":i===m.index&&!m.completed?"current":"")+'"></span>').join("")+'</div>'
+}
+function missionStepsHTML(m){
+ return '<div class="mission-steps">'+m.steps.map((s,i)=>'<div class="mission-step '+(i<m.index||m.completed?"done":i===m.index?"current":"")+'"><span class="num">'+(i<m.index||m.completed?"✓":i+1)+'</span><div><b>'+s.title+'</b><small>'+s.detail+'</small></div></div>').join("")+'</div>'
+}
+function missionCardHTML(){
+ const m=getDailyMission(),done=m.completed||m.index>=m.steps.length;
+ return '<div class="daily-mission"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b style="font-size:20px">🎯 Mission du jour</b><div style="color:var(--muted);font-size:13px;margin-top:3px">'+(done?"Mission terminée !":"5 petites étapes • environ 8 à 12 min")+'</div></div><span class="pill">'+(done?"✅ Terminée":Math.min(m.index+1,5)+" / 5")+'</span></div>'+missionProgressHTML(m)+missionStepsHTML(m)+'<div class="actions" style="margin-top:12px"><button class="btn primary" data-action="'+(done?"mission-review":"mission-start")+'">'+(done?"⭐ Revoir mes exercices":m.index?"▶ Continuer ma mission":"🚀 Commencer ma mission")+'</button></div></div>'
+}
+function currentMissionStep(){const m=getDailyMission();return m.steps[Math.min(m.index,m.steps.length-1)]}
+function missionHub(){
+ missionMode=false;currentView="mission";state.lastView="mission";save();
+ const m=getDailyMission();
+ stage.innerHTML=title("Mission du jour","Une petite séance variée, adaptée à ce qui mérite d’être revu.","8–12 min")+
+ '<div class="card">'+missionProgressHTML(m)+missionStepsHTML(m)+'</div><div class="actions" style="margin-top:14px"><button class="btn gray" data-action="go" data-to="home">← Accueil</button><button class="btn primary" data-action="mission-next">▶ Étape '+Math.min(m.index+1,5)+'</button></div>'
+}
+function missionDiscover(target){
+ currentView="mission-discover";state.lastView="mission";currentAnswer=target;locked=false;
+ stage.innerHTML=title("Je découvre","Écoute tranquillement, puis répète à voix haute.","Étape 1")+
+ '<div class="card center"><div class="hero-emoji">👂✨</div><div class="big purple">'+colorSyl(target)+'</div><div class="actions"><button class="btn yellow" data-action="mission-discover-listen">🔊 Écouter</button><button class="btn primary" data-action="mission-discover-done">👍 J’ai écouté et répété</button></div><div class="tip">Échauffement : pas d’étoile ici. Les étapes suivantes vérifieront vraiment les réponses.</div></div>';
+ setTimeout(()=>speak(target,.58),180)
+}
+function startMissionStep(){
+ const m=getDailyMission();if(m.completed||m.index>=m.steps.length){missionComplete();return}
+ const s=currentMissionStep();missionMode=true;
+ if(s.type==="discover")missionDiscover(s.target);
+ else if(s.type==="listen")gameListen(s.target,true);
+ else if(s.type==="bubbles")gameBubbles(s.target,true);
+ else if(s.type==="memory")gameMemory([m.primary,m.review],true);
+ else if(s.type==="build")gameBuild(DATA.words.find(w=>w.w===s.target)||null,true)
+}
+function completeMissionStep(){
+ if(!missionMode)return;
+ const m=getDailyMission();m.index=Math.min(m.steps.length,m.index+1);
+ if(m.index>=m.steps.length){m.completed=true;state.dailyMission=m;save();missionMode=false;setTimeout(()=>missionComplete(),950);return}
+ state.dailyMission=m;save();missionMode=false;setTimeout(()=>missionHub(),850)
+}
+function missionComplete(){
+ const m=getDailyMission();missionMode=false;currentView="mission-complete";state.lastView="mission-complete";save();confetti();
+ stage.innerHTML=title("Mission terminée !","Tu as fini ta séance du jour.","Bravo !")+
+ '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p><div class="actions"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="games">🎮 Jouer encore</button></div></div>'
+}
 const COLLECTIBLES=[
  {id:"dragon",emoji:"🐉",name:"Bébé dragon"},{id:"fairy",emoji:"🧚",name:"Fée des étoiles"},
  {id:"knight",emoji:"🛡️",name:"Petit chevalier"},{id:"unicorn",emoji:"🦄",name:"Licorne nuage"},
