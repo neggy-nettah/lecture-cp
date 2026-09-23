@@ -39,6 +39,7 @@ const requiredFunctions=[
   "function recordAttempt(",
   "function scopedChallengeKey(",
   "function activeLearningSyllables(",
+  "function dueReviewSyllables(",
   "function activeSoundData(",
   "function fullyDecodableWords(",
   "function decodableSentencePool(",
