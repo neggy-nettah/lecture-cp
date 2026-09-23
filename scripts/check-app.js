@@ -85,6 +85,7 @@ for(const asset of ['styles.css?v='+version,'content.js?v='+version,'app.js?v='+
   if(!sw.includes(asset))fail("Service Worker shell is missing versioned asset:",asset);
 }
 if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Worker registration is missing.");
+if(!sw.includes('response.ok&&type.includes("text/html")'))fail("Navigation cache can accept invalid HTML responses.");
 
 if(!app.includes('function speakMission(text,rate=.60){speak(text,rate)}')){
   fail("Audio engine changed. Review the known Safari macOS issue before merging.");
