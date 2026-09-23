@@ -267,9 +267,17 @@ function masteryLevel(key){
  return 0
 }
 function masteryStars(key){const n=masteryLevel(key);return "★".repeat(n)+"☆".repeat(3-n)}
+function scopedChallengeKey(challengeKey=""){
+ if(!challengeKey)return "";
+ if(missionMode){
+  const m=state.dailyMission||{},step=Number.isInteger(m.index)?m.index:0;
+  return "mission:"+(m.date||localDayKey())+":"+step+":"+challengeKey
+ }
+ return "free:"+challengeKey
+}
 function recordAttempt(correct,key=null,challengeKey=""){
  state.attemptLedger=state.attemptLedger||{};
- const ledgerKey=correct&&challengeKey?localDayKey()+"|"+challengeKey:"";
+ const scoped=scopedChallengeKey(challengeKey),ledgerKey=correct&&scoped?localDayKey()+"|"+scoped:"";
  if(ledgerKey&&state.attemptLedger[ledgerKey])return false;
  if(ledgerKey){
   state.attemptLedger[ledgerKey]=1;
@@ -429,7 +437,7 @@ function advanceRewards(){
 }
 function rewardVerified(msg="Bravo !",challengeKey=""){
  state.rewardLedger=state.rewardLedger||{};
- const key=challengeKey?localDayKey()+"|"+challengeKey:"";
+ const scoped=scopedChallengeKey(challengeKey),key=scoped?localDayKey()+"|"+scoped:"";
  if(key&&state.rewardLedger[key]){
   tone("ok");toast("✅ "+msg+" Déjà récompensé aujourd’hui.","ok");return false
  }
