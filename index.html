@@ -97,7 +97,7 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
     </nav>
     <main class="stage" id="stage"></main>
   </div>
-  <div class="footer-note">Les audios utilisent la voix française disponible sur l'appareil.</div>
+  <div class="footer-note">Les audios utilisent la voix française disponible sur l'appareil. • <span id="appVersion"></span></div>
 </div>
 <div id="fx"></div>
 <div class="modal hidden" id="authModal"><div class="modal-card"><div id="authContent"></div></div></div>
@@ -151,6 +151,7 @@ const DATA={
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
+const APP_VERSION="0.6.0";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],rewardLedger:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
@@ -177,6 +178,7 @@ async function loadRemoteState(){
  state.name=currentChild.nickname;currentView=state.lastView||"home";saveLocal();render();topUI();
 }
 function topUI(){
+ const version=$("#appVersion");if(version)version.textContent="v"+APP_VERSION;
  $("#stars").textContent=state.stars||0;$("#streak").textContent=(state.streak||0)>=2?`🔥${state.streak}`:"";
  const displayName=currentChild?currentChild.nickname:(state.name||"");
  $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : devenir une super lectrice 🌟";
