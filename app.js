@@ -821,6 +821,7 @@ function diagnosticText(){
  const voices=("speechSynthesis" in window&&speechSynthesis.getVoices)?speechSynthesis.getVoices():[];
  return [
   "La Fabrique des Syllabes "+APP_VERSION,
+  "Schéma sauvegarde: "+STATE_SCHEMA_VERSION,
   "Navigateur: "+navigator.userAgent,
   "En ligne: "+navigator.onLine,
   "Écran: "+window.innerWidth+"x"+window.innerHeight,
