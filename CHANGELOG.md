@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.14.1 — 2026-09-24
+
+- Les syllabes récemment ratées ont davantage de chances de revenir comme sujet principal d’une mission.
+- Les deux derniers sujets sont moins susceptibles de revenir immédiatement.
+- Test automatisé de cette sélection, sans modification de l’audio Safari.
+
 ## 0.14.0 — 2026-09-24
 
 ### Contenu de lecture

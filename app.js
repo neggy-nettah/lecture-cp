@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.14.0";
+const APP_VERSION="0.14.1";
 const STATE_SCHEMA_VERSION=1;
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 const DEFAULT_STATE={schemaVersion:STATE_SCHEMA_VERSION,updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],attemptLedger:{},rewardLedger:{},soundPractice:{},wordPractice:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
@@ -257,8 +257,13 @@ function comprehensionSentencePool(){
 }
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
+ const recentPrimary=new Set((state.missionHistory||[]).slice(-2).map(m=>m.primary));
+ const errors=[...new Set((state.reviewQueue||[]).slice(-12).reverse())].filter(s=>all.includes(s));
+ // A recent mistake should be revisited soon, while avoiding the same mission focus every day.
+ const priority=errors.find(s=>!recentPrimary.has(s));
+ if(priority&&Math.random()<.5)return priority;
  all.forEach(s=>{
-  const level=masteryLevel(s),due=reviewDueInfo(s).due?3:0,weight=[5,4,2,1][level]+due;
+  const level=masteryLevel(s),due=reviewDueInfo(s).due?3:0,weight=Math.max(1,[5,4,2,1][level]+due-(recentPrimary.has(s)?3:0));
   for(let i=0;i<weight;i++)weighted.push(s)
  });
  (state.reviewQueue||[]).forEach(s=>{if(all.includes(s))for(let i=0;i<3;i++)weighted.push(s)});
