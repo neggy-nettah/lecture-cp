@@ -493,7 +493,7 @@ function memoryFlip(btn,index){
  const [a,b]=memoryOpen,match=a.card.pair===b.card.pair&&a.card.type!==b.card.type;
  if(match){
   a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryOpen=[];
-  tone("ok");
+  recordAttempt(true,a.card.pair);tone("ok");
   if(memoryMatches===3){
    locked=true;rewardVerified("Memory terminé !");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
   }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
