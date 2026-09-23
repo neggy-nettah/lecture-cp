@@ -130,8 +130,8 @@ if(!app.includes('extraBase=activeLearningSyllables()')){
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
-if(!app.includes('s.type==="missing"')||!app.includes('visualModes=["memory","family","missing"]')){
-  fail("Daily mission is missing the syllable-puzzle rotation.");
+if(!app.includes('s.type==="missing"')||!app.includes('s.type==="comprehension"')||!app.includes('["memory","family","missing",...(comprehensionPool.length?["comprehension"]:[])]')){
+  fail("Daily mission is missing the adaptive visual/comprehension rotation.");
 }
 if(!app.includes('sentence=item.sentence;currentAnswer=item.word.w')){
   fail("Comprehension game is not assigning its answer to shared state.");
