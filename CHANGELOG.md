@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.9.1 — 2026-09-23
+
+### Maintenabilité
+- extraction du contenu pédagogique dans `content.js`
+- `app.js` ne contient plus les banques de mots, phrases, collectibles et zones
+- cache-busting synchronisé pour `content.js`, `app.js` et `styles.css`
+- nouveau validateur `scripts/check-content.js`
+- CI étendue à la validation structurelle du contenu pédagogique
+
+### Statistiques
+- une seule erreur maximum enregistrée par question, même après plusieurs mauvais clics
+- les mauvais choix déjà essayés sont désactivés
+- statistiques de mission isolées des jeux libres
+- compatibilité avec une mission déjà commencée avant la migration
+- précision récente affichée dans le Coin parent en plus de la précision globale
+- test automatique empêchant les réponses de jeu libre de contaminer le score d'une mission
+
+### Contenu
+- densité du premier palier améliorée avec Lili, Mimi, Lola, Mila, Sami et safari
+- contrôle automatique des doublons de sons, syllabes, mots, phrases, collectibles et zones
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.9.0 — 2026-09-23
 
 ### Architecture
