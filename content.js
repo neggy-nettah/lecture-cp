@@ -53,7 +53,9 @@ const DATA={
    ["Papa","a","un","vélo."],["Lili","a","un","robot."],["Nina","a","un","piano."],["Papi","a","un","tuba."],
    ["Le","lama","a","un","bobo."],["Maman","a","un","tapis."],["Mémé","a","un","vélo."],["Lili","a","un","tutu."],
    ["Nina","a","un","polo."],["Maman","a","un","sari."],["Lili","a","un","polo."],["Lili","a","un","vélo."],["Papa","a","un","polo."],
-   ["Mila","a","un","vélo."],["Sami","a","un","polo."],["Lola","a","un","vélo."]
+   ["Mila","a","un","vélo."],["Sami","a","un","polo."],["Lola","a","un","vélo."],
+   ["Lili","a","un","lama."],["Sami","a","un","salami."],["Mila","a","un","sari."],
+   ["Lola","a","un","lama."],["Papa","a","un","sari."]
  ]
 };
 
