@@ -104,8 +104,11 @@ const probes=[
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
   'normalizeState({}).stars===0',
-  'decodableMissionWords().length>=20',
+  'unlockedFamilyCount()===3',
+  'activeLearningSyllables().length===15',
+  'decodableMissionWords().length>=1',
   'decodableMissionWords().every(w=>w.parts.join("")===w.w)',
+  'decodableMissionWords().every(w=>w.parts.every(p=>activeLearningSyllables().includes(p)||"aioué".includes(p)))',
   'getDailyMission().steps.length===5',
   'getDailyMission().startAttempts===null',
   '(startMissionStep(),getDailyMission().startAttempts!==null)',
@@ -136,4 +139,6 @@ console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
 console.log("- Duplicate mastery guard: OK");
 console.log("- Mission/free-play attempt scoping: OK");
+console.log("- Initial curriculum unlock: 3 families");
+console.log("- Mission words use currently unlocked syllables");
 console.log("- Mission words assemble exactly");
