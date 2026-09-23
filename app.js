@@ -23,8 +23,14 @@ function showRuntimeError(error){
 }
 window.addEventListener("error",e=>showRuntimeError(e.error||e.message));
 window.addEventListener("unhandledrejection",e=>showRuntimeError(e.reason||"Promise error"));
-window.addEventListener("offline",()=>{const s=$("#syncStatus");if(s){s.textContent="📴 Hors ligne • progression sauvegardée sur cet appareil";s.className="sync err"}});
-window.addEventListener("online",()=>{if(sb&&session&&currentChild)loadRemoteState();else topUI()});
+function updateConnectivityUI(){
+ const s=$("#syncStatus");if(!s)return;
+ if(!navigator.onLine){s.textContent="📴 Hors ligne • l’app reste utilisable et la progression est gardée sur cet appareil";s.className="sync err";return}
+ if(!session){s.textContent="Mode invité • sauvegarde locale";s.className="sync";return}
+ if(!currentChild){s.textContent="Compte connecté • choisissez un profil enfant";s.className="sync";return}
+}
+window.addEventListener("offline",updateConnectivityUI);
+window.addEventListener("online",()=>{if(sb&&session&&currentChild)loadRemoteState();else updateConnectivityUI()});
 function saveLocal(){
  try{localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state));return true}
  catch(e){console.error("Local save error",e);return false}
@@ -76,7 +82,7 @@ function topUI(){
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
  const keys=["sounds","syllables","words","listen","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order","comprehension"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
- if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
+ if(!navigator.onLine){updateConnectivityUI()}else if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
 function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
