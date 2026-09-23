@@ -104,9 +104,11 @@ const probes=[
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
   'normalizeState({}).stars===0',
-  'decodableMissionWords().length>0',
+  'decodableMissionWords().length>=20',
   'decodableMissionWords().every(w=>w.parts.join("")===w.w)',
-  'getDailyMission().steps.length===5'
+  'getDailyMission().steps.length===5',
+  'getDailyMission().startAttempts===null',
+  '(startMissionStep(),getDailyMission().startAttempts!==null)'
 ];
 
 for(const probe of probes){
@@ -125,5 +127,5 @@ for(const probe of probes){
 console.log("Runtime smoke test OK");
 console.log("- Application booted with Supabase unavailable");
 console.log("- Core functions callable");
-console.log("- Daily mission contains 5 steps");
+console.log("- Daily mission contains 5 steps");\nconsole.log("- Mission stats start only when the mission starts");
 console.log("- Mission words assemble exactly");
