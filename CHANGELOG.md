@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.10.2 — 2026-09-23
+
+### Sauvegarde portable
+- ajout de l'import d'une progression JSON exportée depuis l'application
+- sauvegarde automatique de l'état courant avant import
+- import limité à 2 Mo et refus des fichiers non reconnus
+- ancienne mission du jour supprimée automatiquement si elle est périmée
+
+### Validation des données importées
+- normalisation des statistiques et refus de valeurs incohérentes
+- suppression des syllabes inconnues dans la maîtrise
+- déduplication de l'historique des missions
+- nettoyage des pratiques sons/mots et des journaux anti-farming
+- nettoyage des collectibles inconnus et des valeurs de puzzle invalides
+- tests automatiques couvrant les fichiers valides, invalides et corrompus
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.10.1 — 2026-09-23
 
 ### Corrections
