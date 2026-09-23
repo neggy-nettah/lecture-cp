@@ -54,6 +54,12 @@ if(/service[_-]?role/i.test(html)){
 if(!/sb_publishable_/.test(html)){
   fail("Expected Supabase publishable key is missing.");
 }
+if(!html.includes('.eq("parent_id",session.user.id)')){
+  fail("Child profile query is missing the explicit parent_id filter.");
+}
+if(!html.includes('x.parent_id===session?.user?.id')){
+  fail("Child selection ownership guard is missing.");
+}
 
 const wordBlock=html.match(/words:\[([\s\S]*?)\],\n sentences:/)?.[1]||"";
 const words=[...wordBlock.matchAll(/\{w:"([^"]+)",parts:\[([^\]]*)\],emoji:"([^"]+)"\}/g)].map(m=>({
