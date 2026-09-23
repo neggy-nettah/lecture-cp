@@ -874,7 +874,11 @@ function collectionView(){
 }
 function backupKey(){return (currentChild?childKey(currentChild.id):guestKey())+"_backup"}
 function saveBackup(){
- try{localStorage.setItem(backupKey(),JSON.stringify(state));return true}catch(e){console.error("Backup error",e);return false}
+ try{
+  const meaningful=(state.stars||0)>0||(state.stats?.attempts||0)>0||(state.missionHistory||[]).length>0||Object.keys(state.mastery||{}).length>0;
+  if(!meaningful&&hasBackup())return true;
+  localStorage.setItem(backupKey(),JSON.stringify(state));return true
+ }catch(e){console.error("Backup error",e);return false}
 }
 function hasBackup(){try{return !!localStorage.getItem(backupKey())}catch(e){return false}}
 function restoreBackup(){
@@ -908,12 +912,12 @@ function diagnosticText(){
 }
 async function copyDiagnostic(){
  const txt=diagnosticText();
- try{await navigator.clipboard.writeText(txt);toast("Diagnostic copié.","ok")}
+ try{await navigator.clipboard.writeText(txt);alert("Diagnostic copié.")}
  catch(e){prompt("Copie ce diagnostic :",txt)}
 }
 function resetDailyMission(){
  if(!confirm("Recréer seulement la mission du jour ? La progression générale sera conservée."))return;
- state.dailyMission=null;missionMode=false;currentView="home";save();render();toast("Nouvelle mission créée.","ok")
+ state.dailyMission=null;missionMode=false;currentView="home";save();render();alert("Nouvelle mission créée.")
 }
 function parents(){
  const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0;
