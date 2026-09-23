@@ -171,6 +171,17 @@ function daysSinceDayKey(key){
  const d=new Date(key+"T00:00:00"),today=new Date();today.setHours(0,0,0,0);
  return Math.max(0,Math.round((today-d)/86400000))
 }
+function reviewIntervalDays(key){
+ const level=masteryLevel(key);
+ return level===1?1:level===2?3:level===3?7:0
+}
+function reviewDueInfo(key){
+ const m=state.mastery?.[key],interval=reviewIntervalDays(key),age=m?.lastSeen?daysSinceDayKey(m.lastSeen):0;
+ return {interval,age,due:!!m?.lastSeen&&interval>0&&age>=interval,overdue:Math.max(0,age-interval)}
+}
+function dueReviewSyllables(){
+ return activeLearningSyllables().filter(s=>reviewDueInfo(s).due).sort((a,b)=>reviewDueInfo(b).overdue-reviewDueInfo(a).overdue)
+}
 function unlockedFamilyCount(){
  const missions=(state.missionHistory||[]).length;
  return Math.min(DATA.sets.length,3+Math.floor(missions/2))
@@ -215,7 +226,7 @@ function decodableSentencePool(){
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
  all.forEach(s=>{
-  const level=masteryLevel(s),m=state.mastery?.[s]||{},overdue=m.lastSeen&&daysSinceDayKey(m.lastSeen)>=7?2:0,weight=[5,4,2,1][level]+overdue;
+  const level=masteryLevel(s),due=reviewDueInfo(s).due?3:0,weight=[5,4,2,1][level]+due;
   for(let i=0;i<weight;i++)weighted.push(s)
  });
  (state.reviewQueue||[]).forEach(s=>{if(all.includes(s))for(let i=0;i<3;i++)weighted.push(s)});
@@ -246,9 +257,8 @@ function decodableMissionWords(){
 function pickReviewSyllable(exclude=""){
  const all=activeLearningSyllables(),recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&all.includes(s));
  if(recent.length)return recent[0];
- const overdue=all.filter(s=>s!==exclude&&masteryLevel(s)>=2&&state.mastery?.[s]?.lastSeen&&daysSinceDayKey(state.mastery[s].lastSeen)>=7)
-   .sort((a,b)=>daysSinceDayKey(state.mastery[b].lastSeen)-daysSinceDayKey(state.mastery[a].lastSeen));
- if(overdue.length)return overdue[0];
+ const due=dueReviewSyllables().filter(s=>s!==exclude);
+ if(due.length)return due[0];
  return weakestSyllable(exclude)
 }
 function buildDailyMission(){
