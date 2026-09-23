@@ -260,11 +260,12 @@ function weakestSyllable(exclude=""){
 function buildDailyMission(){
  const primary=pickLearningSyllable(),review=weakestSyllable(primary);
  const candidates=DATA.words.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),word=pick(candidates.length?candidates:DATA.words);
- state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,startAttempts:state.stats?.attempts||0,startCorrect:state.stats?.correct||0,steps:[
+ const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualType=Number(localDayKey().slice(-2))%2?"family":"memory";
+ state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:state.stats?.attempts||0,startCorrect:state.stats?.correct||0,steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
   {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
   {type:"bubbles",target:review,title:"Je révise",detail:"Éclate la bonne bulle"},
-  {type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"},
+  visualType==="memory"?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}:{type:"family",target:family[0][0],title:"J’observe",detail:"Trouve l’intrus de la famille "+family[0][0].toUpperCase()},
   {type:"build",target:word.w,title:"Défi final",detail:"Construis le mot "+word.w.toUpperCase()}
  ]};
  save();return state.dailyMission
@@ -272,6 +273,7 @@ function buildDailyMission(){
 function getDailyMission(){
  const m=state.dailyMission;
  if(!m||m.date!==localDayKey()||!Array.isArray(m.steps)||m.steps.length!==5)return buildDailyMission();
+ if(m.startAttempts==null){m.startAttempts=state.stats?.attempts||0;m.startCorrect=state.stats?.correct||0;state.dailyMission=m;save()}
  return m
 }
 function missionProgressHTML(m){
@@ -303,6 +305,7 @@ function startMissionStep(){
  else if(s.type==="listen")gameListen(s.target,true);
  else if(s.type==="bubbles")gameBubbles(s.target,true);
  else if(s.type==="memory")gameMemory([m.primary,m.review],true);
+ else if(s.type==="family"){const fam=DATA.sets.find(set=>set[0][0]===s.target)||DATA.sets[0];gameFamily(fam,true)}
  else if(s.type==="build")gameBuild(DATA.words.find(w=>w.w===s.target)||null,true)
 }
 function completeMissionStep(){
