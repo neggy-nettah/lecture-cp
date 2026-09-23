@@ -1,10 +1,9 @@
 const fs=require("fs");
 const vm=require("vm");
 
-const html=fs.readFileSync("index.html","utf8");
-const main=html.match(/<script>\s*"use strict";([\s\S]*?)<\/script>/);
-if(!main){
-  console.error("Main script not found");
+const main=fs.readFileSync("app.js","utf8");
+if(!main.trim()){
+  console.error("app.js is empty");
   process.exit(1);
 }
 
@@ -90,7 +89,7 @@ sandbox.window.supabase=undefined;
 const context=vm.createContext(sandbox);
 
 try{
-  vm.runInContext('"use strict";'+main[1],context,{timeout:2000});
+  vm.runInContext(main,context,{timeout:2000});
 }catch(error){
   console.error("Runtime boot failed:",error);
   process.exit(1);
@@ -156,10 +155,13 @@ const screenProbes=[
   'state=normalizeState({}),worldView(),stage.innerHTML.length>50',
   'state=normalizeState({}),collectionView(),stage.innerHTML.length>50',
   'state=normalizeState({}),parents(),stage.innerHTML.length>50',
+  'state=normalizeState({}),missionHub(),stage.innerHTML.length>50',
+  'state=normalizeState({}),missionDiscover(getDailyMission().primary),stage.innerHTML.length>50',
   'state=normalizeState({}),gameListen(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBubbles(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameMemory(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameFamily(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gamePronunciation(),stage.innerHTML.length>50',
   'state=normalizeState({}),gamePicture(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBuild(),stage.innerHTML.length>50',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameOrder(),stage.innerHTML.length>50'
@@ -181,7 +183,7 @@ for(const probe of screenProbes){
 console.log("Runtime smoke test OK");
 console.log("- Application booted with Supabase unavailable");
 console.log("- Core functions callable");
-console.log("- Main screens and games render without runtime errors");
+console.log("- Main screens, mission flow, microphone screen and games render without runtime errors");
 console.log("- Daily mission contains 5 steps");
 console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
