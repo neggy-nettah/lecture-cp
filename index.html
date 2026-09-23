@@ -525,7 +525,8 @@ function sounds(){
  <div class="nextbar"><button class="btn gray" data-action="sound-prev">← Avant</button><button class="btn primary" data-action="sound-next">Suivant →</button></div>`;
 }
 function syllables(){
- const set=DATA.sets[state.set%DATA.sets.length],first=set[0][0];
+ const max=Math.max(1,unlockedFamilyCount());if(state.set>=max)state.set=max-1;
+ const set=DATA.sets[state.set%max],first=set[0][0];
  stage.innerHTML=title("Fabrique les syllabes","Fais glisser le premier son jusqu'à la voyelle.","Niveau 2")+
  `<div class="card center">
    <div class="big" style="font-size:56px"><span class="red">${first}</span> + <span class="blue">a</span> = <span class="purple">${first}a</span></div>
@@ -534,6 +535,7 @@ function syllables(){
  </div>
  ${mission("🧩","Mini-jeu","Écoute une syllabe et retrouve-la parmi les cartes.")}
  <div class="card center"><button class="btn primary" data-action="syllable-quiz">🎧 Lancer l'exercice</button><div id="quizArea"></div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="tip">🔓 Familles disponibles : <b>${unlockedFamilyCount()} / ${DATA.sets.length}</b>. Les suivantes se débloquent avec les missions.</div>
  <div class="nextbar"><button class="btn gray" data-action="set-prev">← Série</button><button class="btn primary" data-action="set-next">Série suivante →</button></div>`;
 }
 function startSyllableQuiz(){
@@ -565,7 +567,7 @@ function gamesMenu(){
   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
-  <button class="level" data-action="game-order"><div class="ico">💬</div><b>La phrase</b><small>Remets les mots dans l'ordre</small></button>
+  <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":"Se débloque après 8 missions"}</small></button>
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
@@ -805,6 +807,7 @@ function updateBuild(){
  }
 }
 function gameOrder(){
+ if(!sentenceUnlocked()){activate("games");return}
  currentView="order";state.lastView="order";save(false);const arr=pick(DATA.sentences);orderTarget=arr;orderMade=[];locked=false;const opts=shuffle(arr);
  stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase.","Jeu 4")+
  `<div class="card center"><div class="hero-emoji">💬</div>
