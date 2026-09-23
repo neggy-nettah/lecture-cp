@@ -988,7 +988,18 @@ $("#accountBtn").addEventListener("click",()=>openAuth());
 $("#switchChildBtn").addEventListener("click",async()=>{if(!session)openAuth("login");else{await loadChildren();openAuth()}});
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("#authModal").classList.add("hidden")});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
-async function bootstrap(){const {data:{session:s}}=await sb.auth.getSession();session=s;if(session){await loadChildren();const remembered=localStorage.getItem("lastChildId");if(remembered)currentChild=children.find(c=>c.id===remembered)||null;if(!currentChild&&children.length===1)currentChild=children[0];if(currentChild){localStorage.setItem("lastChildId",currentChild.id);await loadRemoteState()}}sb.auth.onAuthStateChange((event,newSession)=>{session=newSession;setTimeout(async()=>{if(session){await loadChildren();if(!currentChild&&children.length===1){currentChild=children[0];localStorage.setItem("lastChildId",currentChild.id);await loadRemoteState()}else{render();topUI()}}else{currentChild=null;children=[];try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}currentView=state.lastView||"home";render();topUI()}},0)});if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener?.("voiceschanged",()=>speechSynthesis.getVoices())}render();topUI()}
+async function bootstrap(){
+ if(sb){
+  try{
+   const {data:{session:s}}=await sb.auth.getSession();session=s;
+   if(session){await loadChildren();const remembered=localStorage.getItem("lastChildId");if(remembered)currentChild=children.find(c=>c.id===remembered)||null;if(!currentChild&&children.length===1)currentChild=children[0];if(currentChild){localStorage.setItem("lastChildId",currentChild.id);await loadRemoteState()}}
+   sb.auth.onAuthStateChange((event,newSession)=>{session=newSession;setTimeout(async()=>{if(session){await loadChildren();if(!currentChild&&children.length===1){currentChild=children[0];localStorage.setItem("lastChildId",currentChild.id);await loadRemoteState()}else{render();topUI()}}else{currentChild=null;children=[];try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}currentView=state.lastView||"home";render();topUI()}},0)})
+  }catch(e){console.error("Supabase bootstrap error",e);session=null;currentChild=null}
+ }
+ if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener?.("voiceschanged",()=>speechSynthesis.getVoices())}
+ render();topUI();
+ if(!sb){$("#syncStatus").textContent="Mode local • service de synchronisation indisponible";$("#syncStatus").className="sync err"}
+}
 bootstrap();
 </script>
 </body>
