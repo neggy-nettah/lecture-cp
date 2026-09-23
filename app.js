@@ -75,7 +75,7 @@ function topUI(){
  $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : devenir une super lectrice 🌟";
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
- const keys=["sounds","syllables","words","listen","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
+ const keys=["sounds","syllables","words","listen","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order","comprehension"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
  if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
@@ -222,6 +222,13 @@ function decodableSentencePool(){
   const clean=String(token).toLowerCase().replace(/[.!?,;:]/g,"");
   return parts.join("")===clean&&parts.every(p=>allowed.has(p))
  }))
+}
+function comprehensionSentencePool(){
+ return decodableSentencePool().map(sentence=>{
+  const targetToken=[...sentence].reverse().find(token=>DATA.words.some(w=>w.w===String(token).toLowerCase().replace(/[.!?,;:]/g,"")));
+  const clean=targetToken?String(targetToken).toLowerCase().replace(/[.!?,;:]/g,""):"",word=DATA.words.find(w=>w.w===clean);
+  return word?{sentence,word}:null
+ }).filter(Boolean)
 }
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
@@ -484,6 +491,7 @@ function gamesMenu(){
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
   <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":"Se débloque après 8 missions"}</small></button>
+  <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Lis la phrase et choisis l’image":"Se débloque après 8 missions"}</small></button>
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
@@ -733,6 +741,17 @@ function updateBuild(){
    else{recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
+function gameComprehension(){
+ if(!sentenceUnlocked()){activate("games");return}
+ const pool=comprehensionSentencePool();if(!pool.length){activate("games");return}
+ currentView="comprehension";state.lastView="comprehension";save(false);locked=false;resetQuestionTracking();
+ const item=pick(pool),sentence=item.sentence,currentAnswer=item.word.w;
+ const available=decodableMissionWords().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
+ stage.innerHTML=title("Je comprends la phrase","Lis la phrase puis choisis la bonne image.","Compréhension")+
+ '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button></div>'
+}
+
 function gameOrder(){
  if(!sentenceUnlocked()){activate("games");return}
  const pool=decodableSentencePool();if(!pool.length){activate("games");return}
@@ -910,7 +929,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","family","missing","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","family","missing","pronunciation","pictures","build","order","comprehension"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -929,6 +948,7 @@ function render(){
  else if(currentView==="pictures")gamePicture();
  else if(currentView==="build")gameBuild();
  else if(currentView==="order")gameOrder();
+ else if(currentView==="comprehension")gameComprehension();
  else if(currentView==="parents")parents();
  else{currentView="home";state.lastView="home";save(false);home()}
  topUI();window.scrollTo({top:0,behavior:"smooth"});
@@ -1016,6 +1036,14 @@ document.addEventListener("click",e=>{
  if(a==="game-picture"){gamePicture();return}
  if(a==="game-build"){gameBuild();return}
  if(a==="game-order"){gameOrder();return}
+ if(a==="game-comprehension"){gameComprehension();return}
+ if(a==="comprehension-answer"){
+   if(locked)return;
+   const value=b.dataset.value,key="comprehension:"+currentAnswer;
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,key);rewardVerified("Phrase comprise !",key);setDone("comprehension");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as bien compris la phrase !</div>'}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Relis la phrase tranquillement.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   return
+ }
  if(a==="repeat-answer"){speak(typeof currentAnswer==="string"?currentAnswer:currentAnswer.w,.60);return}
  if(a==="listen-answer"){checkChoice(b,b.dataset.value,"listen");return}
  if(a==="picture-answer"){checkChoice(b,b.dataset.value,"pictures");return}
