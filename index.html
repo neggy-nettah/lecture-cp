@@ -131,10 +131,18 @@ const DATA={
   {w:"tomate",parts:["to","ma","te"],emoji:"🍅"},{w:"banane",parts:["ba","na","ne"],emoji:"🍌"},
   {w:"pirate",parts:["pi","ra","te"],emoji:"🏴‍☠️"},{w:"valise",parts:["va","li","se"],emoji:"🧳"},
   {w:"domino",parts:["do","mi","no"],emoji:"🁢"},{w:"salami",parts:["sa","la","mi"],emoji:"🥓"},
-  {w:"cabane",parts:["ca","ba","ne"],emoji:"🛖"},{w:"minute",parts:["mi","nu","te"],emoji:"⏱️"}
+  {w:"cabane",parts:["ca","ba","ne"],emoji:"🛖"},{w:"minute",parts:["mi","nu","te"],emoji:"⏱️"},
+  {w:"bébé",parts:["bé","bé"],emoji:"👶"},{w:"loto",parts:["lo","to"],emoji:"🎟️"},
+  {w:"robot",parts:["ro","bo"],emoji:"🤖"},{w:"navire",parts:["na","vi","re"],emoji:"🚢"},
+  {w:"piano",parts:["pi","a","no"],emoji:"🎹"},{w:"vélo",parts:["vé","lo"],emoji:"🚲"},
+  {w:"tapis",parts:["ta","pi"],emoji:"🧶"},{w:"papi",parts:["pa","pi"],emoji:"👴"},
+  {w:"puma",parts:["pu","ma"],emoji:"🐆"},{w:"tuba",parts:["tu","ba"],emoji:"🎺"},
+  {w:"lama",parts:["la","ma"],emoji:"🦙"},{w:"bobo",parts:["bo","bo"],emoji:"🩹"}
  ],
  sentences:[
-   ["Papa","a","une","moto."],["Maman","a","une","valise."],["Lili","a","une","banane."],["Nina","a","une","jolie","robe."]
+   ["Papa","a","une","moto."],["Maman","a","une","valise."],["Lili","a","une","banane."],["Nina","a","une","jolie","robe."],
+   ["Papa","a","un","vélo."],["Lili","a","un","robot."],["Nina","a","un","piano."],["Papi","a","un","tuba."],
+   ["Le","lama","a","un","bobo."],["Maman","a","un","tapis."]
  ]
 };
 
@@ -142,9 +150,9 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
+function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
