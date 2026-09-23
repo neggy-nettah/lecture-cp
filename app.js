@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.17.0";
+const APP_VERSION="0.18.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -856,7 +856,23 @@ function masterySummary(){
   const aa=a.m.correct/Math.max(1,a.m.attempts),ab=b.m.correct/Math.max(1,b.m.attempts);
   return aa-ab || b.m.attempts-a.m.attempts
  });
- return {total:syllables.length,mastered,learning,unseen,weakest:attempted.slice(0,6)}
+ return {total:syllables.length,mastered,learning,unseen,weakest:attempted.filter(x=>x.level<3).slice(0,6)}
+}
+function parentReviewSuggestions(){
+ const active=activeLearningSyllables(),queued=new Set(state.reviewQueue||[]),due=new Set(dueReviewSyllables());
+ return active.filter(s=>queued.has(s)||due.has(s)||(state.mastery?.[s]?.attempts>0&&masteryLevel(s)<3))
+ .map(s=>({s,priority:queued.has(s)?0:due.has(s)?1:2,reason:queued.has(s)?"À revoir après une erreur":due.has(s)?"Révision espacée arrivée à échéance":"En cours d’apprentissage"}))
+ .sort((a,b)=>a.priority-b.priority||masteryLevel(a.s)-masteryLevel(b.s)||active.indexOf(a.s)-active.indexOf(b.s)).slice(0,3)
+}
+function parentSyllableStatus(s){
+ if(!activeLearningSyllables().includes(s))return "À découvrir plus tard";
+ if(!state.mastery?.[s]?.attempts)return "Pas encore évaluée";
+ return ["À reprendre", "Découverte", "En progression", "Maîtrisée"][masteryLevel(s)]
+}
+function parentReviewHTML(){
+ const suggestions=parentReviewSuggestions();
+ const cards=suggestions.map(x=>`<div class="parent-box"><h3>${esc(x.s.toUpperCase())} <span aria-label="${masteryLevel(x.s)} étoiles sur 3">${masteryStars(x.s)}</span></h3><p>${x.reason}</p><button class="btn good" data-action="parent-review" data-target="${esc(x.s)}">Revoir ${esc(x.s.toUpperCase())}</button></div>`).join("");
+ return `<div class="card"><h3>📌 Quoi travailler maintenant ?</h3><p>Une proposition à la fois suffit. Arrêtez si l’enfant se fatigue.</p>${suggestions.length?`<div class="parent-grid">${cards}</div>`:`<p>${Object.keys(state.mastery||{}).length?"Aucune révision prioritaire pour le moment. La mission du jour poursuit le parcours.":"Commencez par la mission du jour : les premières réponses permettront de proposer des révisions adaptées."}</p><button class="btn primary" data-action="go" data-to="home">Voir la mission du jour</button>`}<p style="color:var(--muted);font-size:13px">Ces exercices sont libres : ils ne remplacent pas une étape de la mission en cours.</p></div>`
 }
 function missionDayStreak(){
  const dates=[...new Set((state.missionHistory||[]).map(x=>x.date))].sort().reverse();
@@ -1028,16 +1044,18 @@ function resetDailyMission(){
 }
 function parents(){
  const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
- const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses pour repérer les difficultés.</span>`;
+ const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Aucune difficulté repérée dans les réponses enregistrées. Les syllabes non évaluées restent à découvrir.</span>`;
  stage.innerHTML=title("Coin parent","Suivi simple de la progression réelle.","Tableau de bord")+
  `<div class="parent-grid">
-  <div class="parent-box"><h3>🎯 Précision récente</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${accuracy} % (${correct}/${attempts})</small></p></div>
-  <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
+  <div class="parent-box"><h3>🎯 Réussite des tentatives</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${attempts?accuracy+" % ("+correct+"/"+attempts+")":"pas encore de réponse"}</small></p></div>
+  <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée dans les exercices de l’app.</p></div>
   <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumNextText()}</p></div>
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
  </div>
+ ${parentReviewHTML()}
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>
- <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les ${DATA.sets.flat().length} syllabes en détail</summary><div class="mastery-grid">${DATA.sets.flat().map(s=>`<div class="mastery-chip">${s.toUpperCase()}<small>${masteryStars(s)}</small></div>`).join("")}</div></details>
+ <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les ${DATA.sets.flat().length} syllabes en détail</summary><div class="mastery-grid">${DATA.sets.flat().map(s=>`<div class="mastery-chip">${s.toUpperCase()}<small>${masteryStars(s)}</small><small>${parentSyllableStatus(s)}</small></div>`).join("")}</div></details>
+ <div class="card"><b>Comment lire ce bilan ?</b><p>Le pourcentage de réussite compte les tentatives, y compris les réponses corrigées après une erreur. Il ne mesure pas à lui seul l’autonomie.</p><p>Les étoiles de maîtrise suivent les réponses vérifiées. Depuis la version 0.17, corriger une erreur dans la même question ne les fait plus monter. Les résultats plus anciens sont conservés.</p><p>☆☆☆ peut signifier « pas encore évaluée » : ce n’est pas un échec. Les récompenses valorisent l’effort et sont distinctes de la maîtrise.</p></div>
  <div class="card"><b>📚 7 dernières missions</b>${recentMissionHTML()}</div>
  <div class="parent-grid">
   <div class="parent-box"><h3>📅 Routine simple</h3><p>Une mission courte par jour suffit. On s’arrête avant la fatigue et on privilégie la régularité.</p></div>
@@ -1234,6 +1252,11 @@ document.addEventListener("click",e=>{
  if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");words();return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-bubbles"){gameBubbles();return}
+ if(a==="parent-review"){
+   const target=b.dataset.target;
+   if(activeLearningSyllables().includes(target)){gameListen(target);topUI()}
+   return
+ }
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
  if(a==="bubble-answer"){
    if(locked)return;

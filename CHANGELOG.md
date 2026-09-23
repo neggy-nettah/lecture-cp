@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.18.0 — 2026-09-23
+
+- bilan parent : trois propositions de révision avec lancement direct, erreurs prioritaires puis révisions espacées et apprentissages en cours
+- distinction explicite entre réussite des tentatives, maîtrise et récompenses
+- syllabes non évaluées et familles à découvrir identifiées dans le détail
+- les syllabes déjà maîtrisées ne sont plus listées parmi les difficultés
+- contrôles navigateur des priorités et de la séparation entre exercice libre et mission
+
 ## 0.17.0 — 2026-09-23
 
 - distinction entre réponse autonome et correction après une erreur dans les choix, syllabes manquantes, mots et phrases à construire

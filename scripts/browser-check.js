@@ -59,6 +59,29 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>state.missionHistory.length),1);
   assert.equal(await page.evaluate(()=>state.rewards.pieces),1);
   await page.evaluate(()=>missionComplete());assert.equal(await page.evaluate(()=>state.rewards.pieces),1);
+  // Parent suggestions prioritize errors, keep unassessed syllables neutral and preserve the mission.
+  await page.evaluate(()=>{state=normalizeState({mastery:{ma:{attempts:1,correct:0,lastSeen:localDayKey()},mi:{attempts:4,correct:4,lastSeen:'2020-01-01'},mo:{attempts:1,correct:1,lastSeen:localDayKey()}},reviewQueue:['ma','ma']});buildDailyMission();activate('parents')});
+  assert.deepEqual(await page.evaluate(()=>parentReviewSuggestions().map(x=>x.s)),['ma','mi','mo']);
+  assert(!(await page.evaluate(()=>masterySummary().weakest.some(x=>x.s==='mi'))));
+  assert.equal(await page.evaluate(()=>parentSyllableStatus('mu')),'Pas encore évaluée');
+  assert.equal(await page.evaluate(()=>parentSyllableStatus(DATA.sets.at(-1)[0])),'À découvrir plus tard');
+  for(const width of [320,768,1280]){
+   await page.setViewportSize({width,height:900});
+   await page.locator('details.card summary').click();
+   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Parent detail overflows at ${width}px`);
+   await page.locator('details.card summary').click();
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'/tmp/caly-parent-018.png',fullPage:true});
+  const missionBefore=await page.evaluate(()=>JSON.stringify(state.dailyMission));
+  await page.locator('[data-action="parent-review"][data-target="ma"]').click();
+  assert.equal(await page.evaluate(()=>currentAnswer),'ma');
+  assert.equal(await page.evaluate(()=>missionMode),false);
+  await page.locator('[data-action="listen-answer"][data-value="ma"]').click();
+  assert.equal(await page.evaluate(()=>JSON.stringify(state.dailyMission)),missionBefore);
+  await page.evaluate(()=>{state=normalizeState({});activate('parents')});
+  assert.equal(await page.locator('[data-action="parent-review"]').count(),0);
+  assert(await page.getByText('Commencez par la mission du jour', {exact:false}).isVisible());
   // Correcting an error must not award mastery, including after a mission reload.
   await page.evaluate(()=>{state=normalizeState({});buildDailyMission();state.dailyMission.index=1;gameListen(state.dailyMission.primary,true)});
   let target=await page.evaluate(()=>currentAnswer);

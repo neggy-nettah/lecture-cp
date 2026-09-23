@@ -229,3 +229,7 @@ Références techniques :
 
 Test manuel restant : ouvrir un vrai email de récupération Supabase et vérifier
 le changement de mot de passe. Les tests automatiques simulent ce service.
+
+### Révisions depuis le coin parent
+
+Le bilan propose jusqu’à trois syllabes déjà travaillées parmi les familles accessibles : erreurs à revoir, échéances de révision, puis apprentissages en cours. Chaque bouton lance un exercice libre ciblé sans avancer la mission. Les syllabes non évaluées et les familles à découvrir sont nommées séparément ; une absence de données ne vaut pas un échec. Le pourcentage de tentatives inclut les corrections, contrairement aux nouvelles preuves de maîtrise.
