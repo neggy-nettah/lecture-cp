@@ -45,3 +45,15 @@ jobs:
             sleep 1
           done
           node scripts/browser-check.js
+      - name: Check installed app offline
+        run: |
+          pwa_root=$(mktemp -d)
+          ln -s "$PWD" "$pwa_root/lecture-cp"
+          python3 -m http.server 8766 --bind 127.0.0.1 --directory "$pwa_root" > /tmp/caly-pwa.log 2>&1 &
+          pwa_pid=$!
+          trap 'kill "$pwa_pid"' EXIT
+          for attempt in 1 2 3 4 5; do
+            curl --silent --fail http://127.0.0.1:8766/lecture-cp/ > /dev/null && break
+            sleep 1
+          done
+          node scripts/offline-check.js
