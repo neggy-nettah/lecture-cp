@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.13.0 — 2026-09-24
+
+### Progression pédagogique
+- le déblocage d'une nouvelle famille dépend maintenant de deux conditions : la cadence des missions terminées et la préparation réelle de l'enfant
+- la cadence maximale reste d'environ une famille toutes les 2 missions, mais un nouveau palier peut attendre si les syllabes actuelles sont encore trop fragiles
+- l'écran Syllabes et le Coin parent indiquent désormais quand il faut surtout consolider avant d'ouvrir la suite
+
+### Compatibilité des anciennes progressions
+- une famille déjà réellement travaillée dans une ancienne version reste accessible
+- une syllabe avec des tentatives enregistrées ou un mot réellement pratiqué peut préserver cet ancien accès
+- la simple répétition d'un son isolé ne suffit pas à ouvrir artificiellement les familles suivantes
+
+### Tests
+- scénarios isolés pour le curriculum progressif
+- tests de blocage par manque de préparation et de déblocage après consolidation
+- garde-fou empêchant la pratique d'un simple son de contourner le curriculum
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.12.0 — 2026-09-23
 
 ### Missions avancées
