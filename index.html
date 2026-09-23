@@ -155,7 +155,7 @@ function saveLocal(){localStorage.setItem(currentChild?childKey(currentChild.id)
 async function saveRemoteNow(){
  saveLocal();topUI();if(!session||!currentChild)return;
  $("#syncStatus").textContent="☁️ Synchronisation…";$("#syncStatus").className="sync";
- const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=6,attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
+ const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=8,attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
  if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
 }
 function save(){saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
@@ -678,7 +678,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne et peut être retrouvée sur un autre appareil.</p></div><div class="card"><b>Test audio</b><p style="color:var(--muted);font-size:13px">Si la voix ne démarre pas automatiquement sur iPhone/iPad, toucher une première fois un bouton 🔊 l'autorise généralement.</p><div class="actions"><button class="btn primary" data-action="speak" data-text="Bonjour ! On va apprendre à lire ensemble.">🔊 Tester la voix</button><button class="btn gray" data-action="reset">Réinitialiser la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -779,7 +779,7 @@ document.addEventListener("click",e=>{
    if(confirm("Remettre les étoiles et la progression à zéro ?")){state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
  }
 });
-nav.addEventListener("click",e=>{const b=e.target.closest(".nav-btn");if(!b)return;activate(b.dataset.view)});
+nav.addEventListener("click",e=>{const b=e.target.closest(".nav-btn");if(!b)return;missionMode=false;activate(b.dataset.view)});
 $("#accountBtn").addEventListener("click",()=>openAuth());
 $("#switchChildBtn").addEventListener("click",async()=>{if(!session)openAuth("login");else{await loadChildren();openAuth()}});
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("#authModal").classList.add("hidden")});
