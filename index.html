@@ -469,15 +469,15 @@ function home(){
  ${missionCardHTML()}
  ${weeklyRhythmHTML()}
  ${(()=>{const r=state.rewards||DEFAULT_STATE.rewards;const next=COLLECTIBLES[r.puzzles%COLLECTIBLES.length];return `<div class="card"><div class="puzzle-wrap"><div class="puzzle-grid">${[0,1,2,3].map(i=>`<div class="puzzle-piece ${i<r.pieces?"on":""}">${i<r.pieces?"✨":"?"}</div>`).join("")}</div><div><b style="font-size:18px">🧩 Puzzle magique</b><p style="color:var(--muted);font-size:13px;line-height:1.45">Chaque mission du jour terminée donne un morceau. 4 morceaux complètent le puzzle et débloquent une nouvelle découverte.</p><div style="font-weight:900">Prochaine découverte : ${next.emoji} ???</div>${r.collection.length?`<div class="collection-row">${r.collection.map(x=>`<span class="collectible">${x.emoji} ${x.name}</span>`).join("")}</div>`:""}</div></div></div>`})()}
- <div class="levels">
-   <button class="level" data-action="go" data-to="sounds"><div class="ico">🔤</div><b>1. Les sons</b><small>J'écoute et je reconnais</small></button>
-   <button class="level" data-action="go" data-to="syllables"><div class="ico">🧩</div><b>2. Les syllabes</b><small>Je combine les sons</small></button>
-   <button class="level" data-action="go" data-to="words"><div class="ico">🐾</div><b>3. Les mots</b><small>Je lis par morceaux</small></button>
-   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>4. J'écoute</b><small>Je trouve ce que j'entends</small></button>
-   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>5. Je répète <span class="beta-pill">BÊTA</span></b><small>Entraînement vocal seulement</small></button>
-   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>6. Image-mot</b><small>Je relie mot et image</small></button>
-   <button class="level" data-action="game-order"><div class="ico">🧠</div><b>7. La phrase</b><small>Je remets les mots en ordre</small></button>
- </div>`;
+ <details class="card"><summary style="cursor:pointer;font-weight:1000;font-size:17px">🎮 Jouer librement</summary><p style="color:var(--muted);font-size:13px">Pour rejouer à un exercice en dehors de la mission du jour.</p><div class="levels">
+   <button class="level" data-action="go" data-to="sounds"><div class="ico">🔤</div><b>Les sons</b><small>J'écoute et je reconnais</small></button>
+   <button class="level" data-action="go" data-to="syllables"><div class="ico">🧩</div><b>Les syllabes</b><small>Je combine les sons</small></button>
+   <button class="level" data-action="go" data-to="words"><div class="ico">🐾</div><b>Les mots</b><small>Je lis par morceaux</small></button>
+   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>J'écoute</b><small>Je trouve ce que j'entends</small></button>
+   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Je répète <span class="beta-pill">BÊTA</span></b><small>Entraînement vocal seulement</small></button>
+   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Image-mot</b><small>Je relie mot et image</small></button>
+   <button class="level" data-action="game-order"><div class="ico">🧠</div><b>La phrase</b><small>Je remets les mots en ordre</small></button>
+ </div></details>`;
 }
 function sounds(){
  const x=DATA.sounds[state.sound%DATA.sounds.length];
