@@ -152,9 +152,9 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},rewardLedger:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
+function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},rewardLedger:(raw&&raw.rewardLedger)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
@@ -352,8 +352,15 @@ function advanceRewards(){
  if(!state.rewards.collection.some(x=>x.id===item.id))state.rewards.collection.push(item);
  return {piece:true,complete:true,item};
 }
-function rewardVerified(msg="Bravo !"){
- state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok")
+function rewardVerified(msg="Bravo !",challengeKey=""){
+ state.rewardLedger=state.rewardLedger||{};
+ const key=challengeKey?localDayKey()+"|"+challengeKey:"";
+ if(key&&state.rewardLedger[key]){
+  tone("ok");toast("✅ "+msg+" Déjà récompensé aujourd’hui.","ok");return false
+ }
+ if(key)state.rewardLedger[key]=1;
+ const keys=Object.keys(state.rewardLedger);if(keys.length>500)keys.slice(0,keys.length-300).forEach(k=>delete state.rewardLedger[k]);
+ state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok");return true
 }
 function rewardMissionPiece(){
  const gain=advanceRewards();save();tone("ok");starFx();if(gain.complete)confetti();return gain
@@ -510,7 +517,7 @@ function memoryFlip(btn,index){
   a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryOpen=[];
   recordAttempt(true,a.card.pair);tone("ok");
   if(memoryMatches===3){
-   locked=true;rewardVerified("Memory terminé !");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
+   locked=true;rewardVerified("Memory terminé !","memory");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
   }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
  }else{
   tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
@@ -685,7 +692,7 @@ function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
-   if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w);rewardVerified("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
+   if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
    else{recordAttempt(false,"word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
@@ -703,7 +710,7 @@ function updateOrder(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${esc(x)}</span>`).join(""):`<span class="empty">La phrase se construit ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join(" ")===orderTarget.join(" ");
-   if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "));rewardVerified("Phrase réussie !");setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
+   if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "));rewardVerified("Phrase réussie !","order:"+orderTarget.join(" "));setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
    else{recordAttempt(false,"sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
 }
@@ -832,7 +839,7 @@ function render(){
 function checkChoice(btn,value,kind){
  if(locked)return;
  if(value===currentAnswer){
-   locked=true;btn.classList.add("correct");recordAttempt(true,kind==="pictures"?"word:"+currentAnswer:currentAnswer);rewardVerified("Bonne réponse !");
+   locked=true;btn.classList.add("correct");recordAttempt(true,kind==="pictures"?"word:"+currentAnswer:currentAnswer);rewardVerified("Bonne réponse !",kind+":"+value);
    if(kind==="listen")setDone("listen");if(kind==="pictures")setDone("pictures");if(kind==="syllables")setDone("syllables");
    speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti();completeMissionStep()
  }else{
@@ -883,7 +890,7 @@ document.addEventListener("click",e=>{
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
  if(a==="bubble-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer);rewardVerified("Bonne bulle !");setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120);completeMissionStep()}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120);completeMissionStep()}
    else{recordAttempt(false,currentAnswer);b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
    return
  }
@@ -892,7 +899,7 @@ document.addEventListener("click",e=>{
  if(a==="game-family"){gameFamily();return}
  if(a==="family-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true);rewardVerified("Intrus trouvé !");setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true);rewardVerified("Intrus trouvé !","family");setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
    else{b.classList.add("wrong","wiggle");recordAttempt(false);miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
