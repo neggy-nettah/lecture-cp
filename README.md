@@ -18,7 +18,9 @@ L'application privilégie la précision, la répétition espacée et la progress
 - `content.js` : sons, syllabes, mots, phrases, collectibles et zones
 - `progression.js` : maîtrise, réponses, révisions, paliers et sélection du contenu
 - `rewards.js` : étoiles, récompenses, encouragements et séries
-- `app.js` : démarrage, navigation, Supabase, orchestration des missions et jeux
+- `exercises.js` : ateliers sons/syllabes/mots et mini-jeux, hors micro bêta
+- `missions.js` : composition, étapes et bilan des missions quotidiennes
+- `app.js` : démarrage, navigation générale, Supabase, audio/micro, écrans parent et dispatch des actions
 - `manifest.webmanifest` : métadonnées d'installation
 - `sw.js` : cache hors ligne versionné du shell applicatif
 - `icon.svg` : icône temporaire de l'application
@@ -248,6 +250,6 @@ Les questions visuelles utilisent uniquement `PICTURE_WORDS`. La syllabe manquan
 
 ### Organisation et ordre de chargement
 
-Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression.js`, `rewards.js`, `app.js`. Les deux fichiers extraits déclarent leurs fonctions sans accéder à la progression au chargement. Ils utilisent l’état actif et les fonctions de sauvegarde/affichage lors des appels. Cette séparation est une première étape : les dépendances globales restent explicites, et ne constituent pas encore des modules indépendants.
+Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression.js`, `rewards.js`, `exercises.js`, `missions.js`, `app.js`. Les fichiers extraits déclarent leurs fonctions sans accéder à la progression au chargement. Ils utilisent l’état actif et les fonctions de sauvegarde/affichage lors des appels. Cette séparation est une première étape : les dépendances globales restent explicites, et ne constituent pas encore des modules indépendants.
 
-Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
+Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`, les exercices dans `exercises.js` et les parcours quotidiens dans `missions.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.

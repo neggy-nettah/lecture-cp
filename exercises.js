@@ -1,0 +1,232 @@
+"use strict";
+// Exercise screens and game mechanics. Functions use active state and shared helpers at call time.
+// DOM event dispatch, microphone lifecycle and app boot remain in app.js.
+
+function sounds(){
+ const pool=activeSoundData();if(state.sound>=pool.length)state.sound=0;const x=pool[state.sound%pool.length];
+ stage.innerHTML=title("Les sons","Écoute le son, puis répète-le à voix haute.","Niveau 1")+
+ `<div class="card center">
+   <div class="streak">Carte ${state.sound+1} / ${pool.length}</div>
+   <div class="hero-emoji">${x.emoji}</div>
+   <div class="big ${"aeioué".includes(x.g)?"blue":"red"}">${x.g}</div>
+   <div class="actions"><button class="btn primary speaker" data-action="speak" data-text="${esc(x.say)}" data-rate=".58">🔊 Écouter le son</button><button class="btn good" data-action="sound-repeat">🎙️ J'ai répété</button></div>
+   <div class="tip">${x.hint}. Pour les consonnes, on cherche le <b>son</b>, pas le nom de la lettre.<br><b>${pool.filter(s=>state.soundPractice?.[s.g]).length} / ${pool.length}</b> sons pratiqués dans le palier actuel.</div>
+ </div>
+ <div class="card">
+   <b>Touche une lettre pour l'entendre :</b>
+   <div class="sound-grid">${pool.map(s=>`<button class="sound-tile ${state.soundPractice?.[s.g]?"practiced":""}" data-action="speak" data-text="${esc(s.say)}" data-rate=".58">${s.g}</button>`).join("")}</div>
+ </div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+ <div class="nextbar"><button class="btn gray" data-action="sound-prev">← Avant</button><button class="btn primary" data-action="sound-next">Suivant →</button></div>`;
+}
+function syllables(){
+ const max=Math.max(1,unlockedFamilyCount());if(state.set>=max)state.set=max-1;
+ const set=DATA.sets[state.set%max],first=set[0][0];
+ stage.innerHTML=title("Fabrique les syllabes","Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.","Niveau 2")+
+ `<div class="card center">
+   <div class="big" style="font-size:56px"><span class="red">${first}</span> + <span class="blue">a</span> = <span class="purple">${first}a</span></div>
+   <button class="btn primary" data-action="speak" data-text="${first+first+first+'a'}" data-rate=".55">🔊 Écouter : ${first}…a → ${first}a</button>
+   <div style="margin-top:12px">${set.map(s=>`<button class="syllable" data-action="speak" data-text="${s}" data-rate=".62"><span>${colorSyl(s)}</span><small>${masteryStars(s)}</small></button>`).join("")}</div>
+ </div>
+ <div class="card"><b>🗺️ Mes familles de syllabes</b><p style="color:var(--muted);font-size:13px;margin:5px 0">Les nouvelles familles arrivent petit à petit avec les missions.</p>${familyRoadmapHTML()}</div>
+ ${mission("🧩","Mini-jeu","Écoute une syllabe et retrouve-la parmi les cartes.")}
+ <div class="card center"><button class="btn primary" data-action="syllable-quiz">🎧 Lancer l'exercice</button><div id="quizArea"></div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="tip">🔓 Familles disponibles : <b>${unlockedFamilyCount()} / ${DATA.sets.length}</b>. Les suivantes se débloquent avec les missions.</div>
+ <div class="nextbar"><button class="btn gray" data-action="set-prev">← Série</button><button class="btn primary" data-action="set-next">Série suivante →</button></div>`;
+}
+function startSyllableQuiz(){
+ const set=DATA.sets[state.set%DATA.sets.length];currentAnswer=pick(set);locked=false;resetQuestionTracking();
+ const opts=nextRandom(set,currentAnswer,4);
+ $("#quizArea").innerHTML=`<div class="choices">${opts.map(x=>`<button class="choice" data-action="syllable-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>`;
+ $("#feedback").innerHTML="";speak(currentAnswer,.60)
+}
+function words(){
+ const pool=decodableMissionWords(),x=pool[state.word%pool.length];
+ stage.innerHTML=title("Lis le mot","Lis chaque morceau puis colle-les.","Niveau 3")+
+ `<div class="card center">
+   <div class="emojis">${x.emoji}</div>
+   <div class="word">${wordHTML(x.parts)}</div>
+   <div class="word-parts">${x.parts.map(p=>`<button class="part" data-action="speak" data-text="${p}" data-rate=".62">🔊 ${p}</button>`).join("")}</div>
+   <div class="actions" style="margin-top:13px"><button class="btn primary" data-action="speak" data-text="${x.w}" data-rate=".70">🔊 Le mot entier</button><button class="btn good" data-action="word-read">🙋 J'ai essayé de le lire</button></div>
+   <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.<br><b>${Math.min(pool.filter(w=>state.wordPractice?.[w.w]).length,Math.min(5,pool.length))} / ${Math.min(5,pool.length)}</b> mots pratiqués pour valider cet atelier.</div>
+ </div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+ <div class="nextbar"><button class="btn gray" data-action="word-prev">← Mot</button><button class="btn primary" data-action="word-next">Mot suivant →</button></div>`;
+}
+function gamesMenu(){
+ stage.innerHTML=title("Les mini-jeux","Des exercices très courts pour garder l'envie de lire.","À toi de jouer !")+
+ `<div class="levels">
+  <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
+  <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
+  <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
+  <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
+  <button class="level" data-action="game-missing"><div class="ico">🕵️</div><b>Syllabe manquante</b><small>Complète le mot avec la bonne syllabe</small></button>
+  <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
+  <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
+  <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
+  <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":"Se débloque après 8 missions"}</small></button>
+  <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Lis la phrase et choisis l’image":"Se débloque après 8 missions"}</small></button>
+ </div>
+ ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
+}
+function gameListen(forcedTarget=null,fromMission=false){
+ missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
+ const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
+ stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
+ `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
+ <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
+ if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
+}
+
+function gameBubbles(forcedTarget=null,fromMission=false){
+ missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
+ const opts=nextRandom(activeLearningSyllables(),currentAnswer,6);
+ stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
+ `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
+ <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
+ if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
+}
+function gameFamily(forcedFamily=null,fromMission=false){
+ missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;resetQuestionTracking();
+ const availableFamilies=DATA.sets.slice(0,unlockedFamilyCount()),family=forcedFamily||pick(availableFamilies),base=activeLearningSyllables(),others=base.filter(x=>!family.includes(x));
+ const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
+ const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
+ stage.innerHTML=title("Trouve l’intrus","Trois syllabes commencent par "+initial+". Une seule n’est pas de la même famille.","Jeu visuel")+
+ '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-family">Nouvel intrus →</button>')+'</div>'
+}
+function makeMemoryDeck(preferred=[],allowedPool=DATA.sets.flat()){
+ const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(allowedPool.filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
+ memoryDeck=shuffle(pool.flatMap((s,i)=>[
+  {id:i+"-sound",pair:s,type:"sound",label:"🔊"},
+  {id:i+"-text",pair:s,type:"text",label:s}
+ ]));memoryOpen=[];memoryMatches=0;memoryMissedPairs=new Set();memoryMatchedPairs=new Set()
+}
+function restoreMemoryRound(){
+ const m=state.dailyMission,r=missionMode?m?.memoryRound:null,allowed=activeLearningSyllables();
+ if(!r||r.step!==m.index||!Array.isArray(r.cards)||r.cards.length!==6)return false;
+ if(!r.cards.every(c=>c&&allowed.includes(c.pair)&&["sound","text"].includes(c.type)))return false;
+ const pairs=[...new Set(r.cards.map(c=>c.pair))];
+ if(pairs.length!==3||pairs.some(p=>["sound","text"].some(t=>r.cards.filter(c=>c.pair===p&&c.type===t).length!==1)))return false;
+ memoryDeck=r.cards.map((c,i)=>({id:String(i),pair:c.pair,type:c.type,label:c.type==="sound"?"🔊":c.pair}));
+ memoryMatchedPairs=new Set((Array.isArray(r.matched)?r.matched:[]).filter(p=>pairs.includes(p)));
+ memoryMissedPairs=new Set((Array.isArray(r.missed)?r.missed:[]).filter(p=>pairs.includes(p)));
+ memoryMatches=memoryMatchedPairs.size;memoryOpen=[];return true
+}
+function saveMemoryRound(){
+ if(!missionMode||!state.dailyMission)return;
+ state.dailyMission.memoryRound={step:state.dailyMission.index,cards:memoryDeck.map(c=>({pair:c.pair,type:c.type})),matched:[...memoryMatchedPairs],missed:[...memoryMissedPairs]}
+}
+function finishMemory(){
+ locked=true;rewardVerified("Memory terminé !","memory");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
+}
+function gameMemory(preferred=[],fromMission=false){
+ missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;resetQuestionTracking();
+ if(!restoreMemoryRound()){
+  makeMemoryDeck(preferred,activeLearningSyllables());
+  // Old/interrupted rounds without pair details must not erase a recorded error.
+  if(fromMission&&questionErrorRecorded)memoryMissedPairs=new Set(memoryDeck.map(c=>c.pair))
+ }
+ saveMemoryRound();save(false);
+ stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
+ `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
+ <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card ${memoryMatchedPairs.has(x.pair)?"matched":""}" data-action="memory-card" data-index="${i}" aria-label="${memoryMatchedPairs.has(x.pair)?"Paire trouvée : "+esc(x.pair):"Carte "+(i+1)+" masquée"}">${memoryMatchedPairs.has(x.pair)?(x.type==="sound"?"🔊":colorSyl(x.label)):"?"}</button>`).join("")}</div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`;
+ if(memoryMatches===3)finishMemory()
+}
+function memoryFlip(btn,index){
+ if(locked||btn.classList.contains("matched")||btn.classList.contains("open")||memoryOpen.length>=2)return;
+ const card=memoryDeck[index];if(!card)return;btn.setAttribute("aria-label",card.type==="sound"?"Carte son":card.label);btn.classList.add("open");btn.innerHTML=card.type==="sound"?"🔊":colorSyl(card.label);
+ if(card.type==="sound")speak(card.pair,.60);
+ memoryOpen.push({btn,index,card});
+ if(memoryOpen.length<2)return;
+ const [a,b]=memoryOpen,match=a.card.pair===b.card.pair&&a.card.type!==b.card.type;
+ if(match){
+  a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryMatchedPairs.add(a.card.pair);memoryOpen=[];saveMemoryRound();
+  a.btn.setAttribute("aria-label","Paire trouvée : "+a.card.pair);b.btn.setAttribute("aria-label","Paire trouvée : "+b.card.pair);
+  const masteryKey=memoryMissedPairs.has(a.card.pair)?null:a.card.pair;if(!recordAttempt(true,masteryKey,"memory:"+a.card.pair))save();tone("ok");
+  if(memoryMatches===3){finishMemory()}else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
+ }else{
+  memoryMissedPairs.add(a.card.pair);memoryMissedPairs.add(b.card.pair);saveMemoryRound();if(!recordQuestionError())save();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
+  screenTask(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";a.btn.setAttribute("aria-label","Carte "+(a.index+1)+" masquée");b.btn.setAttribute("aria-label","Carte "+(b.index+1)+" masquée");memoryOpen=[]},750)
+ }
+}
+
+function gameMissing(forcedWord=null,fromMission=false){
+ missionMode=fromMission;currentView="missing";state.lastView=fromMission?"mission":"missing";save(false);locked=false;resetQuestionTracking();
+ const active=activeLearningSyllables(),activeSet=new Set(active),pool=missingSyllableWords(),word=forcedWord||pick(pool);
+ missingWord=word;const hideable=word.parts.map((p,i)=>activeSet.has(p)?i:-1).filter(i=>i>=0);missingIndex=pick(hideable);currentAnswer=word.parts[missingIndex];
+ const opts=nextRandom(active,currentAnswer,4);
+ const puzzle=word.parts.map((p,i)=>i===missingIndex?'<span class="missing-slot">?</span>':'<span>'+esc(p)+'</span>').join("·");
+ stage.innerHTML=title("La syllabe manquante","Écoute le mot à compléter, puis retrouve le morceau qui manque.","Mot à compléter")+
+ '<div class="card center"><button class="btn primary" data-action="missing-listen">🔊 Écouter le mot à compléter</button><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-missing">Nouveau mot →</button>')+'</div>'
+}
+
+function pictureWordPool(){return decodableMissionWords().filter(w=>PICTURE_WORDS.includes(w.w))}
+function gamePicture(){
+ missionMode=false;currentView="pictures";state.lastView="pictures";save(false);const pool=pictureWordPool(),answer=pick(pool);currentAnswer=answer.w;locked=false;resetQuestionTracking();
+ const opts=nextRandom(pool.map(x=>x.w),answer.w,4);
+ stage.innerHTML=title("Quel est ce mot ?","Lis les mots et touche celui qui correspond à l'image.","Jeu 2")+
+ `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
+ <div class="choices">${opts.map(w=>`<button class="choice" data-action="picture-answer" data-value="${w}">${w}</button>`).join("")}</div>
+ <div class="actions" style="margin-top:11px"><button class="btn yellow" data-action="picture-hint">🔊 Indice audio</button></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
+}
+function gameBuild(forcedAnswer=null,fromMission=false){
+ missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=decodableMissionWords().filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool);currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;resetQuestionTracking();
+ const extraCount=Math.max(1,4-answer.parts.length),extraBase=activeLearningSyllables(),extraPool=extraBase.filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
+ const opts=shuffle([...answer.parts,...extras]);
+ stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
+ `<div class="card center"><div class="emojis">${answer.emoji}</div><div style="font-size:16px;color:var(--muted)">Modèle : <b>${answer.w}</b> — assemble les morceaux.</div>
+ <div class="order-zone" id="orderZone"><span class="empty">Les syllabes arrivent ici…</span></div>
+ <div class="choices" id="buildChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:27px" data-action="build-token" data-value="${x}" data-id="${i}">${colorSyl(x)}</button>`).join("")}</div>
+ <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="build-reset">↩ Recommencer</button><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Écouter le mot</button></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-build">Nouveau mot →</button>`}</div>`;
+}
+function updateBuild(){
+ const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
+ if(orderMade.length===orderTarget.length){
+   const ok=orderMade.join("")===orderTarget.join("");
+   if(ok){locked=true;recordQuestionSuccess(null,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
+   else{locked=true;recordQuestionError();miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
+ }
+}
+function gameComprehension(forcedTarget=null,fromMission=false){
+ if(!sentenceUnlocked()){if(fromMission)missionHub();else activate("games");return}
+ const pool=comprehensionSentencePool();if(!pool.length){if(fromMission)missionHub();else activate("games");return}
+ missionMode=fromMission;currentView="comprehension";state.lastView=fromMission?"mission":"comprehension";save(false);locked=false;resetQuestionTracking();
+ const forcedPool=forcedTarget?pool.filter(x=>x.word.w===forcedTarget):[],item=pick(forcedPool.length?forcedPool:pool),sentence=item.sentence;currentAnswer=item.word.w;
+ const available=pictureWordPool().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
+ stage.innerHTML=title("Je comprends la phrase","Lis la phrase : que possède le personnage ? Les petits mots peuvent être lus avec un adulte.","Compréhension")+
+ '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>'
+}
+
+function gameOrder(){
+ if(!sentenceUnlocked()){activate("games");return}
+ const pool=decodableSentencePool();if(!pool.length){activate("games");return}
+ missionMode=false;currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;resetQuestionTracking();const opts=shuffle(arr);
+ stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Les petits mots comme « un » ou « une » sont lus avec un adulte au besoin.","Jeu 4")+
+ `<div class="card center"><div class="hero-emoji">💬</div>
+ <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
+ <div class="choices" id="orderChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:21px" data-action="order-token" data-value="${esc(x)}" data-id="${i}">${esc(x)}</button>`).join("")}</div>
+ <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="order-reset">↩ Recommencer</button></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-order">Nouvelle phrase →</button></div>`;
+}
+function updateOrder(){
+ const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${esc(x)}</span>`).join(""):`<span class="empty">La phrase se construit ici…</span>`;
+ if(orderMade.length===orderTarget.length){
+   const ok=orderMade.join(" ")===orderTarget.join(" ");
+   if(ok){locked=true;recordQuestionSuccess("sentence:"+orderTarget.join(" "),"order:"+orderTarget.join(" "));rewardVerified("Phrase réussie !","order:"+orderTarget.join(" "));setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
+   else{locked=true;recordQuestionError("sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
+ }
+}

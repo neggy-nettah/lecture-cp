@@ -13,7 +13,7 @@ const version=fs.readFileSync('app.js','utf8').match(/APP_VERSION="([^"]+)"/)[1]
   await page.evaluate(()=>navigator.serviceWorker.ready);
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
   const paths=await page.evaluate(async()=>{const cache=await caches.open('lecture-cp-shell-v'+APP_VERSION);return (await cache.keys()).map(r=>new URL(r.url).pathname+new URL(r.url).search)});
-  for(const file of ['content.js','progression.js','rewards.js','app.js'])assert(paths.includes('/lecture-cp/'+file+'?v='+version),'Missing offline script '+file);
+  for(const file of ['content.js','progression.js','rewards.js','exercises.js','missions.js','app.js'])assert(paths.includes('/lecture-cp/'+file+'?v='+version),'Missing offline script '+file);
   await page.evaluate(()=>{state.name='Test hors ligne';save();activate('home')});
   await context.setOffline(true);await page.reload();
   await page.waitForFunction(()=>document.querySelector('#appVersion').textContent.length>1);

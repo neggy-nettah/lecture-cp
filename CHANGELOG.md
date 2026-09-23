@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.22.0 — 2026-09-23
+
+- extraction à l’identique des ateliers et mini-jeux dans exercises.js
+- composition et parcours des missions quotidiennes regroupés dans missions.js
+- ordre de chargement, documentation et cache hors ligne mis à jour
+- audit des exercices et vérification hors ligne conservés sur la nouvelle organisation
+
 ## 0.21.0 — 2026-09-23
 
 - extraction sans changement de logique des règles de progression et des récompenses dans deux fichiers dédiés
