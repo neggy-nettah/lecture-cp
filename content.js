@@ -5,6 +5,7 @@ const DATA={
   {g:"i",say:"i",hint:"comme dans image",emoji:"🖼️"},
   {g:"o",say:"o",hint:"comme dans olive",emoji:"🫒"},
   {g:"u",say:"u",hint:"comme dans lune",emoji:"🌙"},
+  {g:"e",say:"e",hint:"comme dans le",emoji:"📖"},
   {g:"é",say:"é",hint:"comme dans école",emoji:"🏫"},
   {g:"m",say:"mmmm",hint:"le son mmmm",emoji:"🐑"},
   {g:"l",say:"llll",hint:"le son llll",emoji:"🌙"},
@@ -18,9 +19,9 @@ const DATA={
   {g:"b",say:"be",hint:"le son b",emoji:"🎈"}
  ],
  sets:[
-  ["ma","mi","mo","mu","mé"],["la","li","lo","lu","lé"],["sa","si","so","su","sé"],
-  ["ra","ri","ro","ru","ré"],["fa","fi","fo","fu","fé"],["va","vi","vo","vu","vé"],
-  ["pa","pi","po","pu","pé"],["ta","ti","to","tu","té"],["na","ni","no","nu","né"],["ba","bi","bo","bu","bé"]
+  ["ma","me","mi","mo","mu","mé"],["la","le","li","lo","lu","lé"],["sa","se","si","so","su","sé"],
+  ["ra","re","ri","ro","ru","ré"],["fa","fe","fi","fo","fu","fé"],["va","ve","vi","vo","vu","vé"],
+  ["pa","pe","pi","po","pu","pé"],["ta","te","ti","to","tu","té"],["na","ne","ni","no","nu","né"],["ba","be","bi","bo","bu","bé"]
  ],
  words:[
   {w:"maman",parts:["ma","man"],emoji:"👩"},{w:"papa",parts:["pa","pa"],emoji:"👨"},
