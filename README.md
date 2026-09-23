@@ -43,6 +43,18 @@ Principaux champs de l'état :
 
 `normalizeState()` doit rester rétrocompatible avec les anciennes sauvegardes.
 
+## Curriculum progressif
+
+Les missions ne tirent plus dans les 50 syllabes dès le premier jour.
+
+- départ : 3 familles de syllabes débloquées
+- puis 1 nouvelle famille tous les 2 jours de mission terminée
+- une syllabe déjà travaillée reste dans le pool même si elle n'appartient pas au palier normalement ouvert
+- les distracteurs des missions utilisent uniquement les familles actuellement débloquées
+- le mot final de mission doit être entièrement décodable avec les syllabes actives et les voyelles isolées disponibles
+
+Les jeux libres restent plus ouverts, mais les écrans de lecture et de construction utilisent seulement des mots dont les morceaux se recomposent exactement.
+
 ## Maîtrise des syllabes
 
 Niveaux :
