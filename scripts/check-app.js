@@ -4,6 +4,9 @@ const html=fs.readFileSync("index.html","utf8");
 const content=fs.readFileSync("content.js","utf8");
 const app=fs.readFileSync("app.js","utf8");
 const css=fs.readFileSync("styles.css","utf8");
+const manifestText=fs.readFileSync("manifest.webmanifest","utf8");
+const sw=fs.readFileSync("sw.js","utf8");
+const icon=fs.readFileSync("icon.svg","utf8");
 const source=html+"\n"+content+"\n"+app;
 
 function fail(message,details=""){
@@ -14,6 +17,8 @@ function fail(message,details=""){
 if(!html.includes('href="./styles.css?v='))fail("index.html is not loading styles.css.");
 if(!html.includes('src="./content.js?v='))fail("index.html is not loading content.js.");
 if(!html.includes('src="./app.js?v='))fail("index.html is not loading app.js.");
+if(!html.includes('rel="manifest" href="./manifest.webmanifest"'))fail("index.html is not loading the web app manifest.");
+if(!html.includes('rel="icon" href="./icon.svg"'))fail("index.html is not loading the app icon.");
 if(html.includes("<style>"))fail("Large inline style block returned to index.html.");
 if(/<script>\s*"use strict"/.test(html))fail("Large inline application script returned to index.html.");
 if(css.length<5000)fail("styles.css looks unexpectedly small.");
@@ -25,6 +30,17 @@ try{
 }catch(error){
   fail("JavaScript syntax error:",error.message);
 }
+try{
+  new Function(sw);
+}catch(error){
+  fail("Service Worker syntax error:",error.message);
+}
+let manifest;
+try{manifest=JSON.parse(manifestText)}catch(error){fail("Manifest JSON is invalid:",error.message)}
+if(manifest.name!=="La Fabrique des Syllabes"||manifest.display!=="standalone")fail("Manifest identity/display is invalid.");
+if(manifest.start_url!=="./"||manifest.scope!=="./")fail("Manifest start_url/scope is invalid.");
+if(!Array.isArray(manifest.icons)||!manifest.icons.some(x=>x.src==="./icon.svg"))fail("Manifest icon is missing.");
+if(!icon.includes("<svg")||!icon.includes('viewBox="0 0 512 512"'))fail("App icon SVG is invalid.");
 
 const requiredFunctions=[
   "function migrateState(",
@@ -64,6 +80,11 @@ if(!version)fail("APP_VERSION is missing.");
 if(!html.includes('styles.css?v='+version)||!html.includes('content.js?v='+version)||!html.includes('app.js?v='+version)){
   fail("Asset cache-busting version does not match APP_VERSION:",version);
 }
+if(!sw.includes('lecture-cp-shell-v'+version))fail("Service Worker cache version does not match APP_VERSION:",version);
+for(const asset of ['styles.css?v='+version,'content.js?v='+version,'app.js?v='+version]){
+  if(!sw.includes(asset))fail("Service Worker shell is missing versioned asset:",asset);
+}
+if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Worker registration is missing.");
 
 if(!app.includes('function speakMission(text,rate=.60){speak(text,rate)}')){
   fail("Audio engine changed. Review the known Safari macOS issue before merging.");
@@ -162,3 +183,4 @@ console.log("- Reading words:",words.length);
 console.log("- Curriculum guards: OK");
 console.log("- Client credential/ownership guards: OK");
 console.log("- Audio guard: unchanged");
+console.log("- PWA manifest/service worker: OK");
