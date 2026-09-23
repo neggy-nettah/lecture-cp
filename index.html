@@ -152,9 +152,9 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},rewardLedger:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],rewardLedger:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},rewardLedger:(raw&&raw.rewardLedger)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
+function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},reviewQueue:Array.isArray(raw?.reviewQueue)?raw.reviewQueue:[],rewardLedger:(raw&&raw.rewardLedger)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
@@ -234,13 +234,19 @@ function recordAttempt(correct,key=null){
  state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;
  if(key){
   state.mastery=state.mastery||{};const m=state.mastery[key]||{attempts:0,correct:0};
-  m.attempts++;if(correct)m.correct++;state.mastery[key]=m
+  m.attempts++;if(correct)m.correct++;state.mastery[key]=m;
+  if(DATA.sets.flat().includes(key)){
+   state.reviewQueue=Array.isArray(state.reviewQueue)?state.reviewQueue:[];
+   if(correct){const i=state.reviewQueue.indexOf(key);if(i>=0)state.reviewQueue.splice(i,1)}
+   else{state.reviewQueue.push(key,key);state.reviewQueue=state.reviewQueue.slice(-24)}
+  }
  }
  save()
 }
 function pickLearningSyllable(){
  const all=DATA.sets.flat(),weighted=[];
  all.forEach(s=>{const level=masteryLevel(s),weight=[5,4,2,1][level];for(let i=0;i<weight;i++)weighted.push(s)});
+ (state.reviewQueue||[]).forEach(s=>{if(all.includes(s))for(let i=0;i<3;i++)weighted.push(s)});
  return pick(weighted.length?weighted:all)
 }
 function localDayKey(){
