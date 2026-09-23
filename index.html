@@ -170,6 +170,8 @@ function showRuntimeError(error){
 }
 window.addEventListener("error",e=>showRuntimeError(e.error||e.message));
 window.addEventListener("unhandledrejection",e=>showRuntimeError(e.reason||"Promise error"));
+window.addEventListener("offline",()=>{const s=$("#syncStatus");if(s){s.textContent="📴 Hors ligne • progression sauvegardée sur cet appareil";s.className="sync err"}});
+window.addEventListener("online",()=>{if(sb&&session&&currentChild)loadRemoteState();else topUI()});
 function saveLocal(){
  try{localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state));return true}
  catch(e){console.error("Local save error",e);return false}
@@ -847,6 +849,7 @@ function diagnosticText(){
   "Mission étape: "+(m.index??"-")+"/"+((m.steps||[]).length||"-"),
   "Mission terminée: "+!!m.completed,
   "Missions historique: "+(state.missionHistory||[]).length,
+  "Dernière sauvegarde: "+(state.updatedAt?new Date(state.updatedAt).toISOString():"ancienne sauvegarde"),
   "Étoiles: "+(state.stars||0)
  ].join("\n")
 }
