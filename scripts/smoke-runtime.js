@@ -147,9 +147,41 @@ for(const probe of probes){
   }
 }
 
+const screenProbes=[
+  'state=normalizeState({}),home(),stage.innerHTML.length>50',
+  'state=normalizeState({}),sounds(),stage.innerHTML.length>50',
+  'state=normalizeState({}),syllables(),stage.innerHTML.length>50',
+  'state=normalizeState({}),words(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gamesMenu(),stage.innerHTML.length>50',
+  'state=normalizeState({}),worldView(),stage.innerHTML.length>50',
+  'state=normalizeState({}),collectionView(),stage.innerHTML.length>50',
+  'state=normalizeState({}),parents(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameListen(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameBubbles(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameMemory(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameFamily(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gamePicture(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameBuild(),stage.innerHTML.length>50',
+  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameOrder(),stage.innerHTML.length>50'
+];
+
+for(const probe of screenProbes){
+  let ok=false;
+  try{ok=!!vm.runInContext(probe,context,{timeout:500})}
+  catch(error){
+    console.error("Screen smoke probe threw:",probe,error);
+    process.exit(1);
+  }
+  if(!ok){
+    console.error("Screen smoke probe failed:",probe);
+    process.exit(1);
+  }
+}
+
 console.log("Runtime smoke test OK");
 console.log("- Application booted with Supabase unavailable");
 console.log("- Core functions callable");
+console.log("- Main screens and games render without runtime errors");
 console.log("- Daily mission contains 5 steps");
 console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
