@@ -126,6 +126,7 @@ const probes=[
   '(state=normalizeState({}),unlockedFamilyCount()===3)',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),unlockedFamilyCount()===3)',
   '(state=normalizeState({missionHistory:Array.from({length:2},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),unlockedFamilyCount()===4)',
+  '(state=normalizeState({mastery:{ba:{attempts:1,correct:1,lastSeen:localDayKey()}}}),unlockedFamilyCount()===10)',
   '(state=normalizeState({}),activeLearningSyllables().length===15)',
   'fullyDecodableWords().length>=4',
   'fullyDecodableWords().every(w=>w.parts.join("")===w.w)',
@@ -244,6 +245,7 @@ console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
 console.log("- Curriculum expands only when missions and mastery are both ready");
+console.log("- Previously practiced later families remain accessible");
 console.log("- Free reading words are fully decodable");
 console.log("- Mission words use currently unlocked syllables");
 console.log("- Unknown saved views recover to home");
