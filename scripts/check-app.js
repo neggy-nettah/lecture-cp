@@ -108,6 +108,12 @@ if(!app.includes('const pool=decodableSentencePool()')){
 if(!app.includes('s.type==="missing"')||!app.includes('visualModes=["memory","family","missing"]')){
   fail("Daily mission is missing the syllable-puzzle rotation.");
 }
+if(!app.includes('sentence=item.sentence;currentAnswer=item.word.w')){
+  fail("Comprehension game is not assigning its answer to shared state.");
+}
+if(!app.includes('memoryMissedPairs.has(a.card.pair)?null:a.card.pair')){
+  fail("Memory mistakes can inflate syllable mastery again.");
+}
 
 const requiredViews=["home","sounds","syllables","words","games","world","collection","parents"];
 for(const view of requiredViews){
