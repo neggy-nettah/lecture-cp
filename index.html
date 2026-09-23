@@ -320,9 +320,15 @@ function completeMissionStep(){
  setTimeout(()=>box.scrollIntoView({behavior:"smooth",block:"center"}),80)
 }
 function missionComplete(){
- const m=getDailyMission();missionMode=false;currentView="mission-complete";state.lastView="mission-complete";save();confetti();
+ const m=getDailyMission();missionMode=false;currentView="mission-complete";state.lastView="mission-complete";
+ state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
+ if(!state.missionHistory.some(x=>x.date===m.date)){
+  state.missionHistory.push({date:m.date,primary:m.primary,review:m.review,word:m.word,attempts:state.stats?.attempts||0,correct:state.stats?.correct||0});
+  state.missionHistory=state.missionHistory.slice(-60)
+ }
+ save();confetti();
  stage.innerHTML=title("Mission terminée !","Tu as fini ta séance du jour.","Bravo !")+
- '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p><div class="actions"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="games">🎮 Jouer encore</button></div></div>'
+ '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p><p style="color:var(--muted);font-size:13px">Mission enregistrée dans le suivi parent.</p><div class="actions"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="games">🎮 Jouer encore</button></div></div>'
 }
 const COLLECTIBLES=[
  {id:"dragon",emoji:"🐉",name:"Bébé dragon"},{id:"fairy",emoji:"🧚",name:"Fée des étoiles"},
@@ -684,6 +690,20 @@ function updateOrder(){
    if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "));rewardVerified("Phrase réussie !");setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
    else{recordAttempt(false,"sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
+}
+function masterySummary(){
+ const syllables=DATA.sets.flat(),levels=syllables.map(s=>({s,level:masteryLevel(s),m:state.mastery?.[s]||{attempts:0,correct:0}}));
+ const mastered=levels.filter(x=>x.level===3).length,learning=levels.filter(x=>x.level===1||x.level===2).length,unseen=levels.filter(x=>x.level===0).length;
+ const attempted=levels.filter(x=>x.m.attempts>0).sort((a,b)=>{
+  const aa=a.m.correct/Math.max(1,a.m.attempts),ab=b.m.correct/Math.max(1,b.m.attempts);
+  return aa-ab || b.m.attempts-a.m.attempts
+ });
+ return {total:syllables.length,mastered,learning,unseen,weakest:attempted.slice(0,6)}
+}
+function recentMissionHTML(){
+ const hist=(state.missionHistory||[]).slice(-7).reverse();
+ if(!hist.length)return '<p style="color:var(--muted);font-size:13px">Aucune mission terminée pour le moment.</p>';
+ return '<div class="mission-steps">'+hist.map(x=>'<div class="mission-step"><span class="num">✓</span><div><b>'+esc(x.date)+'</b><small>'+esc((x.primary||"").toUpperCase())+' • révision '+esc((x.review||"").toUpperCase())+' • '+esc((x.word||"").toUpperCase())+'</small></div></div>').join("")+'</div>'
 }
 function parents(){
  stage.innerHTML=title("Coin parent","Une lecture courte, régulière et positive.","5–10 min / jour")+
