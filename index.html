@@ -324,7 +324,7 @@ function missionComplete(){
  state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
  if(!state.missionHistory.some(x=>x.date===m.date)){
   state.missionHistory.push({date:m.date,primary:m.primary,review:m.review,word:m.word,attempts:state.stats?.attempts||0,correct:state.stats?.correct||0});
-  state.missionHistory=state.missionHistory.slice(-60)
+  state.missionHistory=state.missionHistory.slice(-60);rewardMissionPiece()
  }
  save();confetti();
  stage.innerHTML=title("Mission terminée !","Tu as fini ta séance du jour.","Bravo !")+
@@ -337,8 +337,6 @@ const COLLECTIBLES=[
 ];
 function advanceRewards(){
  state.rewards=state.rewards||{towardPiece:0,pieces:0,puzzles:0,collection:[]};
- state.rewards.towardPiece++;
- if(state.rewards.towardPiece<3)return {piece:false,complete:false};
  state.rewards.towardPiece=0;state.rewards.pieces++;
  if(state.rewards.pieces<4)return {piece:true,complete:false};
  state.rewards.pieces=0;state.rewards.puzzles++;
@@ -347,10 +345,12 @@ function advanceRewards(){
  return {piece:true,complete:true,item};
 }
 function rewardVerified(msg="Bravo !"){
- state.stars++;state.streak++;const gain=advanceRewards();save();tone("ok");starFx();
+ state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok")
+}
+function rewardMissionPiece(){
+ const gain=advanceRewards();save();tone("ok");starFx();
  if(gain.complete){confetti();toast("🎁 Puzzle terminé ! "+gain.item.emoji+" "+gain.item.name+" rejoint ta collection !","ok")}
- else if(gain.piece)toast("🧩 "+msg+" Tu gagnes un morceau de puzzle !","ok");
- else toast("🌟 "+msg,"ok")
+ else toast("🧩 Mission terminée ! Tu gagnes un morceau de puzzle !","ok")
 }
 function practiceDone(msg="Bravo pour ton effort !"){
  tone("ok");toast("👏 "+msg,"ok")
@@ -375,7 +375,7 @@ function home(){
    <div class="actions"><button class="btn primary" data-action="mission-start">🚀 Ma mission du jour</button><button class="btn yellow" data-action="speak" data-text="Prête pour la mission lecture ?">🔊 Écouter</button></div>
  </div>
  ${missionCardHTML()}
- ${(()=>{const r=state.rewards||DEFAULT_STATE.rewards;const next=COLLECTIBLES[r.puzzles%COLLECTIBLES.length];return `<div class="card"><div class="puzzle-wrap"><div class="puzzle-grid">${[0,1,2,3].map(i=>`<div class="puzzle-piece ${i<r.pieces?"on":""}">${i<r.pieces?"✨":"?"}</div>`).join("")}</div><div><b style="font-size:18px">🧩 Puzzle magique</b><p style="color:var(--muted);font-size:13px;line-height:1.45">3 bonnes réponses vérifiées donnent un morceau. Encore ${Math.max(0,3-(r.towardPiece||0))} réussite(s) avant le prochain morceau.</p><div style="font-weight:900">Prochaine découverte : ${next.emoji} ???</div>${r.collection.length?`<div class="collection-row">${r.collection.map(x=>`<span class="collectible">${x.emoji} ${x.name}</span>`).join("")}</div>`:""}</div></div></div>`})()}
+ ${(()=>{const r=state.rewards||DEFAULT_STATE.rewards;const next=COLLECTIBLES[r.puzzles%COLLECTIBLES.length];return `<div class="card"><div class="puzzle-wrap"><div class="puzzle-grid">${[0,1,2,3].map(i=>`<div class="puzzle-piece ${i<r.pieces?"on":""}">${i<r.pieces?"✨":"?"}</div>`).join("")}</div><div><b style="font-size:18px">🧩 Puzzle magique</b><p style="color:var(--muted);font-size:13px;line-height:1.45">Chaque mission du jour terminée donne un morceau. 4 morceaux complètent le puzzle et débloquent une nouvelle découverte.</p><div style="font-weight:900">Prochaine découverte : ${next.emoji} ???</div>${r.collection.length?`<div class="collection-row">${r.collection.map(x=>`<span class="collectible">${x.emoji} ${x.name}</span>`).join("")}</div>`:""}</div></div></div>`})()}
  <div class="levels">
    <button class="level" data-action="go" data-to="sounds"><div class="ico">🔤</div><b>1. Les sons</b><small>J'écoute et je reconnais</small></button>
    <button class="level" data-action="go" data-to="syllables"><div class="ico">🧩</div><b>2. Les syllabes</b><small>Je combine les sons</small></button>
