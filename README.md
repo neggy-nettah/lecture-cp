@@ -17,6 +17,9 @@ L'application privilégie la précision, la répétition espacée et la progress
 - `styles.css` : styles et responsive
 - `content.js` : sons, syllabes, mots, phrases, collectibles et zones
 - `app.js` : logique pédagogique, navigation, Supabase et jeux
+- `manifest.webmanifest` : métadonnées d'installation
+- `sw.js` : cache hors ligne versionné du shell applicatif
+- `icon.svg` : icône temporaire de l'application
 - Supabase :
   - authentification parent
   - profils enfants
@@ -24,6 +27,8 @@ L'application privilégie la précision, la répétition espacée et la progress
 - localStorage comme sauvegarde locale / mode invité
 - GitHub Pages pour l'hébergement
 - version courante des assets ajoutée en query string pour limiter les problèmes de cache
+- Service Worker réseau-d'abord pour les navigations et cache local des assets versionnés
+- les appels Supabase et les données de progression ne sont jamais mis en cache par le Service Worker
 - branche de travail : `develop-caly`
 - branche publiée : `main`
 
