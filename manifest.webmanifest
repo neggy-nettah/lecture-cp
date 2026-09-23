@@ -1,0 +1,19 @@
+{
+  "name": "La Fabrique des Syllabes",
+  "short_name": "Syllabes",
+  "description": "Jeux courts de lecture syllabique pour le CP.",
+  "lang": "fr-FR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffaf6",
+  "theme_color": "#6C63FF",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
