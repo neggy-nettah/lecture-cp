@@ -15,7 +15,8 @@ L'application privilégie la précision, la répétition espacée et la progress
 - Application statique sans framework
 - `index.html` : structure HTML et chargement des assets
 - `styles.css` : styles et responsive
-- `app.js` : données, logique pédagogique, navigation, Supabase et jeux
+- `content.js` : sons, syllabes, mots, phrases, collectibles et zones
+- `app.js` : logique pédagogique, navigation, Supabase et jeux
 - Supabase :
   - authentification parent
   - profils enfants
