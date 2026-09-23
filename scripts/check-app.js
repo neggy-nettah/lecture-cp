@@ -51,7 +51,9 @@ const requiredFunctions=[
   "function gameFamily(",
   "function worldView(",
   "function collectionView(",
-  "function parents("
+  "function parents(",
+  "function parseProgressImport(",
+  "function importProgressFile("
 ];
 
 const missingFunctions=requiredFunctions.filter(token=>!app.includes(token));
