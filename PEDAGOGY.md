@@ -33,7 +33,7 @@ Les structures plus complexes seront ajoutées progressivement.
 
 Un mot utilisé comme exercice de lecture autonome doit pouvoir être reconstruit avec les correspondances déjà disponibles.
 
-Le code applique cette règle avec :
+Les données pédagogiques sont centralisées dans `content.js`. Le code applique cette règle avec :
 
 - `fullyDecodableWords()`
 - `decodableMissionWords()`
@@ -135,3 +135,15 @@ Avant d'ajouter un mot ou une phrase, vérifier :
 3. si l'enfant est censé les connaître au palier où le contenu apparaît ;
 4. si l'image ne donne pas la réponse à la place de la lecture ;
 5. si l'exercice mesure bien la compétence annoncée.
+
+## Validation automatique du contenu
+
+Le script `scripts/check-content.js` vérifie à chaque push :
+
+- unicité des sons, syllabes, mots et phrases ;
+- structure des 10 familles de syllabes ;
+- présence des champs nécessaires ;
+- quantité minimale de mots assemblables exactement ;
+- ponctuation des phrases ;
+- unicité des collectibles et zones du monde ;
+- progression croissante des seuils de déblocage des zones.
