@@ -26,6 +26,9 @@ const requiredFunctions=[
   "function rewardMissionPiece(",
   "function masteryLevel(",
   "function recordAttempt(",
+  "function scopedChallengeKey(",
+  "function activeLearningSyllables(",
+  "function fullyDecodableWords(",
   "function gameMemory(",
   "function gameFamily(",
   "function worldView(",
@@ -65,6 +68,12 @@ if(invalidWords.length)fail("Word entries with missing parts found.");
 
 if(!html.includes('w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w')){
   fail("Mission build pool no longer guarantees exact decodable word assembly.");
+}
+if(!html.includes('fromMission?activeLearningSyllables():DATA.sets.flat()')){
+  fail("Mission distractors are no longer constrained to unlocked syllables.");
+}
+if(!html.includes('extraBase=fromMission?activeLearningSyllables():DATA.sets.flat()')){
+  fail("Mission build distractors can escape the unlocked curriculum.");
 }
 
 const requiredViews=["home","sounds","syllables","words","games","world","collection","parents"];
