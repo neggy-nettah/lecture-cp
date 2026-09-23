@@ -113,7 +113,7 @@ const handled=new Set([...app.matchAll(/a==="([^"]+)"/g)].map(m=>m[1]));
 const missingActions=literalActions.filter(action=>!handled.has(action));
 if(missingActions.length)fail("Buttons without click handlers:",missingActions.join(", "));
 
-if(!app.includes("rewardLedger")||!app.includes("reviewQueue")||!app.includes("soundPractice")){
+if(!app.includes("rewardLedger")||!app.includes("reviewQueue")||!app.includes("soundPractice")||!app.includes("wordPractice")){
   fail("Adaptive/reward state protections are missing.");
 }
 if(!app.includes("missionHistory")||!app.includes("startAttempts")||!app.includes("startCorrect")){
