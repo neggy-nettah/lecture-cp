@@ -140,9 +140,9 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})}}}
+function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
@@ -208,8 +208,27 @@ function confetti(){
  for(let i=0;i<20;i++){const x=document.createElement("i");x.textContent=pick(bits);x.style.left=Math.random()*100+"%";x.style.animationDelay=Math.random()*.35+"s";x.style.fontSize=(14+Math.random()*17)+"px";box.appendChild(x)}
  fx.appendChild(box);setTimeout(()=>box.remove(),1900)
 }
-function recordAttempt(correct){
- state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;save()
+function masteryLevel(key){
+ const m=(state.mastery||{})[key];if(!m||!m.attempts)return 0;
+ const accuracy=m.correct/m.attempts;
+ if(m.correct>=4&&accuracy>=.75)return 3;
+ if(m.correct>=2&&accuracy>=.60)return 2;
+ if(m.correct>=1)return 1;
+ return 0
+}
+function masteryStars(key){const n=masteryLevel(key);return "★".repeat(n)+"☆".repeat(3-n)}
+function recordAttempt(correct,key=null){
+ state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;
+ if(key){
+  state.mastery=state.mastery||{};const m=state.mastery[key]||{attempts:0,correct:0};
+  m.attempts++;if(correct)m.correct++;state.mastery[key]=m
+ }
+ save()
+}
+function pickLearningSyllable(){
+ const all=DATA.sets.flat(),weighted=[];
+ all.forEach(s=>{const level=masteryLevel(s),weight=[5,4,2,1][level];for(let i=0;i<weight;i++)weighted.push(s)});
+ return pick(weighted.length?weighted:all)
 }
 function rewardVerified(msg="Bravo !"){
  state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok")
@@ -307,7 +326,7 @@ function gamesMenu(){
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
 function gameListen(){
- currentView="listen";state.lastView="listen";save();currentAnswer=pick(DATA.sets.flat());locked=false;
+ currentView="listen";state.lastView="listen";save();currentAnswer=pickLearningSyllable();locked=false;
  const opts=nextRandom(DATA.sets.flat(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="repeat-answer">🔊 Écouter</button>
@@ -339,12 +358,12 @@ function pronunciationMatches(expected,heard){
  return (aliases[e]||[]).some(x=>normalizeHeard(x)===h) || (h.startsWith(e)&&h.length<=e.length+2);
 }
 function gamePronunciation(){
- currentView="pronunciation";state.lastView="pronunciation";save();currentAnswer=pick(DATA.sets.flat());locked=false;
+ currentView="pronunciation";state.lastView="pronunciation";save();currentAnswer=pickLearningSyllable();locked=false;
  const supported=!!speechRecognitionCtor();
  stage.innerHTML=title("Écoute & répète","Écoute la syllabe, puis dis-la dans le micro.","Jeu micro")+
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
  <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${supported?"":"disabled"}>🎙️ À toi !</button></div>
- <div id="micStatus" class="mic-status">${supported?"Appuie sur « À toi ! », puis prononce seulement la syllabe.":"Le micro vocal n’est pas disponible sur ce navigateur. Tu peux quand même écouter et t’entraîner."}</div>
+ <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${supported?"Appuie sur « À toi ! », puis prononce seulement la syllabe.":"Le micro vocal n’est pas disponible sur ce navigateur. Tu peux quand même écouter et t’entraîner."}</div>
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-pronunciation">Nouvelle syllabe →</button></div>`;
  setTimeout(()=>speak(currentAnswer,.60),120)
@@ -353,7 +372,7 @@ function startPronunciationRecognition(){
  if(locked)return;
  const Ctor=speechRecognitionCtor(),status=$("#micStatus");
  if(!Ctor){if(status){status.className="mic-status error";status.textContent="Micro vocal non disponible sur ce navigateur."}return}
- speechSynthesis?.cancel?.();
+ window.speechSynthesis?.cancel?.();
  const recognition=new Ctor();recognition.lang="fr-FR";recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=5;
  let finished=false;
  if(status){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> J’écoute…'}
@@ -362,11 +381,11 @@ function startPronunciationRecognition(){
   const alternatives=[];for(let i=0;i<e.results[0].length;i++)alternatives.push(e.results[0][i].transcript);
   const heard=alternatives[0]||"",ok=alternatives.some(x=>pronunciationMatches(currentAnswer,x));
   if(ok){
-   locked=true;recordAttempt(true);rewardVerified("Très bien prononcé !");setDone("pronunciation");
+   locked=true;recordAttempt(true,currentAnswer);rewardVerified("Très bien prononcé !");setDone("pronunciation");
    if(status){status.className="mic-status success";status.textContent='✅ J’ai entendu « '+heard+' »'}
    confetti();
   }else{
-   recordAttempt(false);miss("Presque ! Écoute encore et réessaie.");
+   recordAttempt(false,currentAnswer);miss("Presque ! Écoute encore et réessaie.");
    if(status){status.className="mic-status error";status.textContent='J’ai entendu « '+(heard||"…")+' ». Réessaie.'}
    setTimeout(()=>speak(currentAnswer,.60),250);
   }
@@ -406,8 +425,8 @@ function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
-   if(ok){locked=true;recordAttempt(true);rewardVerified("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`}
-   else{recordAttempt(false);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
+   if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w);rewardVerified("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`}
+   else{recordAttempt(false,"word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
 function gameOrder(){
@@ -424,8 +443,8 @@ function updateOrder(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${esc(x)}</span>`).join(""):`<span class="empty">La phrase se construit ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join(" ")===orderTarget.join(" ");
-   if(ok){locked=true;recordAttempt(true);rewardVerified("Phrase réussie !");setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
-   else{recordAttempt(false);miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
+   if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "));rewardVerified("Phrase réussie !");setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
+   else{recordAttempt(false,"sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
 }
 function parents(){
@@ -457,11 +476,11 @@ function render(){
 function checkChoice(btn,value,kind){
  if(locked)return;
  if(value===currentAnswer){
-   locked=true;btn.classList.add("correct");recordAttempt(true);rewardVerified("Bonne réponse !");
+   locked=true;btn.classList.add("correct");recordAttempt(true,kind==="pictures"?"word:"+currentAnswer:currentAnswer);rewardVerified("Bonne réponse !");
    if(kind==="listen")setDone("listen");if(kind==="pictures")setDone("pictures");if(kind==="syllables")setDone("syllables");
    speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti()
  }else{
-   btn.classList.add("wrong","wiggle");recordAttempt(false);miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
+   btn.classList.add("wrong","wiggle");recordAttempt(false,kind==="pictures"?"word:"+currentAnswer:currentAnswer);miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
  }
 }
 
