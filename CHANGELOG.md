@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.8.1 — 2026-09-23
+
+### Corrections
+- séparation des tentatives entre jeu libre et mission pour éviter de fausser le score d'une mission
+- récupération automatique vers l'accueil si une ancienne sauvegarde contient une vue inconnue
+- distracteurs du jeu Construis le mot dédupliqués
+- tous les distracteurs de mission restent désormais dans les familles de syllabes débloquées
+
+### Pédagogie
+- déblocage progressif des familles de syllabes dans les missions
+- les syllabes déjà travaillées restent disponibles même si elles sont hors du palier courant
+- lecture de mots, image-mot et construction limités aux mots entièrement décodables avec le corpus actuel
+- enrichissement du premier palier avec : silo, solo, miso, sumo, salé
+- 8 mots finaux possibles dès le premier palier au lieu de 3
+
+### Tests
+- smoke test du curriculum progressif
+- smoke test de la séparation jeu libre / mission
+- vérification automatique des distracteurs de mission
+- vérification de la récupération d'une vue inconnue
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée dans cette version.
+
 ## 0.8.0 — 2026-09-23
 
 ### Pédagogie
