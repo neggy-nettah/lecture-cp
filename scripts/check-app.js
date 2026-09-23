@@ -1,9 +1,10 @@
 const fs=require("fs");
 
 const html=fs.readFileSync("index.html","utf8");
+const content=fs.readFileSync("content.js","utf8");
 const app=fs.readFileSync("app.js","utf8");
 const css=fs.readFileSync("styles.css","utf8");
-const source=html+"\n"+app;
+const source=html+"\n"+content+"\n"+app;
 
 function fail(message,details=""){
   console.error("VALIDATION FAILED:",message,details);
@@ -11,10 +12,12 @@ function fail(message,details=""){
 }
 
 if(!html.includes('href="./styles.css?v='))fail("index.html is not loading styles.css.");
+if(!html.includes('src="./content.js?v='))fail("index.html is not loading content.js.");
 if(!html.includes('src="./app.js?v='))fail("index.html is not loading app.js.");
 if(html.includes("<style>"))fail("Large inline style block returned to index.html.");
 if(/<script>\s*"use strict"/.test(html))fail("Large inline application script returned to index.html.");
 if(css.length<5000)fail("styles.css looks unexpectedly small.");
+if(content.length<3000)fail("content.js looks unexpectedly small.");
 if(app.length<20000)fail("app.js looks unexpectedly small.");
 
 try{
@@ -50,7 +53,7 @@ if(missingFunctions.length)fail("Missing required app functions:",missingFunctio
 
 const version=app.match(/const APP_VERSION="([^"]+)"/)?.[1];
 if(!version)fail("APP_VERSION is missing.");
-if(!html.includes('styles.css?v='+version)||!html.includes('app.js?v='+version)){
+if(!html.includes('styles.css?v='+version)||!html.includes('content.js?v='+version)||!html.includes('app.js?v='+version)){
   fail("Asset cache-busting version does not match APP_VERSION:",version);
 }
 
@@ -71,7 +74,7 @@ if(!app.includes('x.parent_id===session?.user?.id')){
   fail("Child selection ownership guard is missing.");
 }
 
-const wordBlock=app.match(/words:\[([\s\S]*?)\],\n sentences:/)?.[1]||"";
+const wordBlock=content.match(/words:\[([\s\S]*?)\],\n sentences:/)?.[1]||"";
 const words=[...wordBlock.matchAll(/\{w:"([^"]+)",parts:\[([^\]]*)\],emoji:"([^"]+)"\}/g)].map(m=>({
   word:m[1],
   parts:[...m[2].matchAll(/"([^"]+)"/g)].map(x=>x[1])
@@ -128,7 +131,7 @@ if(!app.includes("window.supabase?.createClient")){
 
 console.log("App validation OK");
 console.log("- Version:",version);
-console.log("- Split architecture: index.html + styles.css + app.js");
+console.log("- Split architecture: index.html + styles.css + content.js + app.js");
 console.log("- JavaScript syntax: OK");
 console.log("- Core functions: OK");
 console.log("- Navigation/actions: OK");
