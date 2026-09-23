@@ -315,6 +315,7 @@ function activeSoundGraphemes(){
  const consonants=DATA.sets.slice(0,unlockedFamilyCount()).map(set=>set[0][0]);
  return new Set(["a","i","o","u","é",...consonants])
 }
+function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
@@ -508,10 +509,10 @@ function home(){
  </div></details>`;
 }
 function sounds(){
- const x=DATA.sounds[state.sound%DATA.sounds.length];
+ const pool=activeSoundData();if(state.sound>=pool.length)state.sound=0;const x=pool[state.sound%pool.length];
  stage.innerHTML=title("Les sons","Écoute le son, puis répète-le à voix haute.","Niveau 1")+
  `<div class="card center">
-   <div class="streak">Carte ${state.sound+1} / ${DATA.sounds.length}</div>
+   <div class="streak">Carte ${state.sound+1} / ${pool.length}</div>
    <div class="hero-emoji">${x.emoji}</div>
    <div class="big ${"aeioué".includes(x.g)?"blue":"red"}">${x.g}</div>
    <div class="actions"><button class="btn primary speaker" data-action="speak" data-text="${esc(x.say)}" data-rate=".58">🔊 Écouter le son</button><button class="btn good" data-action="sound-repeat">🎙️ J'ai répété</button></div>
@@ -519,7 +520,7 @@ function sounds(){
  </div>
  <div class="card">
    <b>Touche une lettre pour l'entendre :</b>
-   <div class="sound-grid">${DATA.sounds.slice(0,15).map(s=>`<button class="sound-tile" data-action="speak" data-text="${esc(s.say)}" data-rate=".58">${s.g}</button>`).join("")}</div>
+   <div class="sound-grid">${pool.map(s=>`<button class="sound-tile" data-action="speak" data-text="${esc(s.say)}" data-rate=".58">${s.g}</button>`).join("")}</div>
  </div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  <div class="nextbar"><button class="btn gray" data-action="sound-prev">← Avant</button><button class="btn primary" data-action="sound-next">Suivant →</button></div>`;
@@ -1036,9 +1037,9 @@ document.addEventListener("click",e=>{
  if(a==="mission-bubble-repeat"){speakMission(currentAnswer,.60);return}
  if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
- if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;save(false);sounds();return}
- if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save(false);sounds();return}
- if(a==="sound-repeat"){const g=DATA.sounds[state.sound%DATA.sounds.length].g;state.soundPractice=state.soundPractice||{};state.soundPractice[g]=true;const needed=activeSoundGraphemes();if([...needed].every(x=>state.soundPractice[x]))setDone("sounds");else save();practiceDone("Bien répété ! Continue comme ça.");return}
+ if(a==="sound-next"){const n=activeSoundData().length;state.sound=(state.sound+1)%n;save(false);sounds();return}
+ if(a==="sound-prev"){const n=activeSoundData().length;state.sound=(state.sound-1+n)%n;save(false);sounds();return}
+ if(a==="sound-repeat"){const pool=activeSoundData(),g=pool[state.sound%pool.length].g;state.soundPractice=state.soundPractice||{};state.soundPractice[g]=true;const needed=activeSoundGraphemes();if([...needed].every(x=>state.soundPractice[x]))setDone("sounds");else save();practiceDone("Bien répété ! Continue comme ça.");return}
  if(a==="set-next"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set+1)%n;save(false);syllables();return}
  if(a==="set-prev"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set-1+n)%n;save(false);syllables();return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
