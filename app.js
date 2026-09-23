@@ -449,7 +449,7 @@ function sounds(){
 function syllables(){
  const max=Math.max(1,unlockedFamilyCount());if(state.set>=max)state.set=max-1;
  const set=DATA.sets[state.set%max],first=set[0][0];
- stage.innerHTML=title("Fabrique les syllabes","Fais glisser le premier son jusqu'à la voyelle.","Niveau 2")+
+ stage.innerHTML=title("Fabrique les syllabes","Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.","Niveau 2")+
  `<div class="card center">
    <div class="big" style="font-size:56px"><span class="red">${first}</span> + <span class="blue">a</span> = <span class="purple">${first}a</span></div>
    <button class="btn primary" data-action="speak" data-text="${first+first+first+'a'}" data-rate=".55">🔊 Écouter : ${first}…a → ${first}a</button>
