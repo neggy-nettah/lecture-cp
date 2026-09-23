@@ -386,13 +386,15 @@ function missionComplete(){
  state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
  let gain=null,record=state.missionHistory.find(x=>x.date===m.date)||null;
  if(!record){
-  const attempts=Math.max(0,(state.stats?.attempts||0)-(m.startAttempts||0)),correct=Math.max(0,(state.stats?.correct||0)-(m.startCorrect||0));
-  record={date:m.date,primary:m.primary,review:m.review,word:m.word,attempts,correct,accuracy:attempts?Math.round(correct/attempts*100):100};
+  const measured=typeof m.startAttempts==="number"&&typeof m.startCorrect==="number";
+  const attempts=measured?Math.max(0,(state.stats?.attempts||0)-m.startAttempts):0,correct=measured?Math.max(0,(state.stats?.correct||0)-m.startCorrect):0;
+  record={date:m.date,primary:m.primary,review:m.review,word:m.word,attempts,correct,accuracy:measured?(attempts?Math.round(correct/attempts*100):100):null};
   state.missionHistory.push(record);state.missionHistory=state.missionHistory.slice(-60);gain=rewardMissionPiece()
  }
  save();confetti();
  const reward=gain?(gain.complete?'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">'+gain.item.emoji+'</div><h3 style="margin:5px">Nouveau trésor !</h3><b>'+gain.item.name+'</b><p style="color:var(--muted)">Le puzzle est terminé et ce personnage rejoint ta collection.</p><button class="btn yellow" data-action="go" data-to="collection">🎁 Voir ma collection</button></div>':'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">🧩</div><h3 style="margin:5px">Tu gagnes un morceau !</h3><b>'+(state.rewards?.pieces||0)+' / 4 morceaux</b><p style="color:var(--muted)">Encore '+Math.max(0,4-(state.rewards?.pieces||0))+' mission(s) pour terminer le puzzle.</p></div>'):'<div class="tip">Cette mission a déjà donné sa récompense aujourd’hui.</div>';
- const score='<div class="parent-grid" style="margin-top:13px"><div class="parent-box"><h3>✅ Bonnes réponses</h3><p><b style="font-size:25px">'+(record?.correct||0)+' / '+(record?.attempts||0)+'</b></p></div><div class="parent-box"><h3>🎯 Réussite</h3><p><b style="font-size:25px">'+(record?.accuracy??100)+' %</b></p></div></div>';
+ const measured=record?.accuracy!=null;
+ const score='<div class="parent-grid" style="margin-top:13px"><div class="parent-box"><h3>✅ Bonnes réponses</h3><p><b style="font-size:25px">'+(measured?(record.correct+" / "+record.attempts):"—")+'</b></p></div><div class="parent-box"><h3>🎯 Réussite</h3><p><b style="font-size:25px">'+(measured?(record.accuracy+" %"):"Ancien suivi")+'</b></p></div></div>';
  stage.innerHTML=title("Mission terminée !","Tu as fini ta séance du jour.","Bravo !")+
  '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p>'+score+'<p style="color:var(--muted);font-size:13px">Mission enregistrée dans le suivi parent.</p></div>'+reward+'<div class="actions" style="margin-top:14px"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="world">🗺️ Mon monde</button></div>'
 }
@@ -794,7 +796,7 @@ function missionDayStreak(){
 function recentMissionHTML(){
  const hist=(state.missionHistory||[]).slice(-7).reverse();
  if(!hist.length)return '<p style="color:var(--muted);font-size:13px">Aucune mission terminée pour le moment.</p>';
- return '<div class="mission-steps">'+hist.map(x=>{const acc=x.accuracy!=null?x.accuracy:(x.attempts?Math.round((x.correct||0)/x.attempts*100):100);return '<div class="mission-step"><span class="num">✓</span><div><b>'+esc(x.date)+' • '+acc+' %</b><small>'+esc((x.primary||"").toUpperCase())+' • révision '+esc((x.review||"").toUpperCase())+' • '+esc((x.word||"").toUpperCase())+'</small></div></div>'}).join("")+'</div>'
+ return '<div class="mission-steps">'+hist.map(x=>{const label=x.accuracy!=null?(x.accuracy+" %"):"ancien suivi";return '<div class="mission-step"><span class="num">✓</span><div><b>'+esc(x.date)+' • '+label+'</b><small>'+esc((x.primary||"").toUpperCase())+' • révision '+esc((x.review||"").toUpperCase())+' • '+esc((x.word||"").toUpperCase())+'</small></div></div>'}).join("")+'</div>'
 }
 function missionsLast7Days(){
  const start=new Date();start.setHours(0,0,0,0);start.setDate(start.getDate()-6);
