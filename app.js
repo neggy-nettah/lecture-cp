@@ -254,6 +254,7 @@ function decodableMissionWords(){
  const allowed=new Set([...activeLearningSyllables(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
+function missingSyllableWords(){const active=new Set(activeLearningSyllables());return decodableMissionWords().filter(w=>w.parts.some(p=>active.has(p)))}
 function pickReviewSyllable(exclude=""){
  const all=activeLearningSyllables(),recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&all.includes(s));
  if(recent.length)return recent[0];
@@ -267,7 +268,7 @@ function buildDailyMission(){
  const related=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualModes=["memory","family","missing"],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
- const missingPool=decodable.filter(w=>w.parts.length>=2&&w.w!==word.w),missingWord=pick(missingPool.length?missingPool:decodable.filter(w=>w.parts.length>=2))||word;
+ const missingCandidates=missingSyllableWords(),missingPool=missingCandidates.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingCandidates)||word;
  const visualStep=visualType==="memory"
   ?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}
   :visualType==="family"
@@ -693,9 +694,9 @@ async function startPronunciationRecognition(){
 
 function gameMissing(forcedWord=null,fromMission=false){
  missionMode=fromMission;currentView="missing";state.lastView=fromMission?"mission":"missing";save(false);locked=false;resetQuestionTracking();
- const pool=decodableMissionWords().filter(w=>w.parts.length>=2),word=forcedWord||pick(pool);
- missingWord=word;missingIndex=Math.floor(Math.random()*word.parts.length);currentAnswer=word.parts[missingIndex];
- const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
+ const active=activeLearningSyllables(),activeSet=new Set(active),pool=missingSyllableWords(),word=forcedWord||pick(pool);
+ missingWord=word;const hideable=word.parts.map((p,i)=>activeSet.has(p)?i:-1).filter(i=>i>=0);missingIndex=pick(hideable);currentAnswer=word.parts[missingIndex];
+ const opts=nextRandom(active,currentAnswer,4);
  const puzzle=word.parts.map((p,i)=>i===missingIndex?'<span class="missing-slot">?</span>':'<span>'+esc(p)+'</span>').join("·");
  stage.innerHTML=title("La syllabe manquante","Lis le mot et retrouve le morceau qui manque.","Jeu visuel")+
  '<div class="card center"><div class="emojis" style="font-size:78px">'+word.emoji+'</div><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
