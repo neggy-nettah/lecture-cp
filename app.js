@@ -61,7 +61,7 @@ function topUI(){
  $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : devenir une super lectrice 🌟";
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
- const keys=["sounds","syllables","words","listen","bubbles","memory","families","pictures",...(sentenceUnlocked()?["order"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
+ const keys=["sounds","syllables","words","listen","bubbles","memory","families","pictures",...(sentenceUnlocked()?["order"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
  if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
@@ -182,6 +182,7 @@ function familyRoadmapHTML(){
  return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count,isNext=i===count;return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:isNext&&status.remaining?"dans "+status.remaining+" mission(s)":"à venir")+'</small></div>'}).join("")+'</div>'
 }
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
+function wordPracticeComplete(){const pool=decodableMissionWords(),practiced=state.wordPractice||{},target=Math.min(5,pool.length);return target>0&&pool.filter(w=>practiced[w.w]).length>=target}
 function learningCourseCompleted(){return (state.missionHistory||[]).length>=14&&masterySummary().mastered>=40}
 const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
 function phraseTokenParts(token){
@@ -434,7 +435,7 @@ function words(){
    <div class="word">${wordHTML(x.parts)}</div>
    <div class="word-parts">${x.parts.map(p=>`<button class="part" data-action="speak" data-text="${p}" data-rate=".62">🔊 ${p}</button>`).join("")}</div>
    <div class="actions" style="margin-top:13px"><button class="btn primary" data-action="speak" data-text="${x.w}" data-rate=".70">🔊 Le mot entier</button><button class="btn good" data-action="word-read">🙋 J'ai essayé de le lire</button></div>
-   <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.</div>
+   <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.<br><b>${pool.filter(w=>state.wordPractice?.[w.w]).length} / ${Math.min(5,pool.length)}</b> mots pratiqués pour valider cet atelier.</div>
  </div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  <div class="nextbar"><button class="btn gray" data-action="word-prev">← Mot</button><button class="btn primary" data-action="word-next">Mot suivant →</button></div>`;
@@ -935,7 +936,7 @@ document.addEventListener("click",e=>{
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
  if(a==="word-next"){const n=decodableMissionWords().length;state.word=(state.word+1)%n;save(false);words();return}
  if(a==="word-prev"){const n=decodableMissionWords().length;state.word=(state.word-1+n)%n;save(false);words();return}
- if(a==="word-read"){practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
+ if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");words();return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-bubbles"){gameBubbles();return}
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
