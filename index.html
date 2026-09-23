@@ -153,7 +153,7 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const APP_VERSION="0.7.0";
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],rewardLedger:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],rewardLedger:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
 function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},reviewQueue:Array.isArray(raw?.reviewQueue)?raw.reviewQueue:[],rewardLedger:(raw&&raw.rewardLedger)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
@@ -180,12 +180,20 @@ async function saveRemoteNow(){
  const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=8,attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
  if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
 }
-function save(){saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
+function save(){state.updatedAt=Date.now();saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
 async function loadRemoteState(){
  if(!sb||!session||!currentChild)return;$("#syncStatus").textContent="☁️ Chargement…";
+ let cached=null;try{cached=JSON.parse(localStorage.getItem(childKey(currentChild.id))||"null")}catch(e){console.error("Local cache read error",e)}
  const {data,error}=await sb.from("progress").select("lesson_state").eq("child_id",currentChild.id).eq("lesson_id","app_state").maybeSingle();
  if(error)console.error(error);
- if(data&&data.lesson_state)state=normalizeState(data.lesson_state);else{try{const cached=JSON.parse(localStorage.getItem(childKey(currentChild.id))||"null");state=normalizeState(cached||{name:currentChild.nickname})}catch(e){state=normalizeState({name:currentChild.nickname})}await saveRemoteNow()}
+ const remote=data?.lesson_state||null,local=cached||null;
+ if(remote&&local){
+  const remoteTs=Number(remote.updatedAt||0),localTs=Number(local.updatedAt||0);
+  if(localTs>remoteTs){state=normalizeState(local);await saveRemoteNow()}
+  else state=normalizeState(remote)
+ }else if(remote)state=normalizeState(remote);
+ else if(local){state=normalizeState(local);await saveRemoteNow()}
+ else{state=normalizeState({name:currentChild.nickname});save();await saveRemoteNow()}
  state.name=currentChild.nickname;currentView=state.lastView||"home";saveLocal();render();topUI();
 }
 function topUI(){
