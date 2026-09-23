@@ -924,6 +924,11 @@ function parseProgressImport(text){
  });
  imported.mastery=cleanMastery;
  imported.reviewQueue=(imported.reviewQueue||[]).filter(s=>validSyllables.has(s)).slice(-50);
+ const validSounds=new Set(DATA.sounds.map(x=>x.g)),validWords=new Set(DATA.words.map(x=>x.w));
+ imported.soundPractice=Object.fromEntries(Object.entries(imported.soundPractice||{}).filter(([k,v])=>validSounds.has(k)&&!!v));
+ imported.wordPractice=Object.fromEntries(Object.entries(imported.wordPractice||{}).filter(([k,v])=>validWords.has(k)&&!!v));
+ imported.attemptLedger=Object.fromEntries(Object.entries(imported.attemptLedger||{}).filter(([,v])=>!!v).slice(-400));
+ imported.rewardLedger=Object.fromEntries(Object.entries(imported.rewardLedger||{}).filter(([,v])=>!!v).slice(-300));
  const rewardIds=new Set(COLLECTIBLES.map(x=>x.id)),seenRewards=new Set(),collection=[];
  (imported.rewards?.collection||[]).forEach(x=>{if(x&&rewardIds.has(x.id)&&!seenRewards.has(x.id)){collection.push(COLLECTIBLES.find(c=>c.id===x.id));seenRewards.add(x.id)}});
  imported.rewards={towardPiece:0,pieces:Math.min(3,Math.max(0,Math.floor(Number(imported.rewards?.pieces||0)))),puzzles:Math.max(0,Math.floor(Number(imported.rewards?.puzzles||0))),collection};
