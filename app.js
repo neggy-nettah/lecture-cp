@@ -746,7 +746,7 @@ function gameComprehension(){
  if(!sentenceUnlocked()){activate("games");return}
  const pool=comprehensionSentencePool();if(!pool.length){activate("games");return}
  currentView="comprehension";state.lastView="comprehension";save(false);locked=false;resetQuestionTracking();
- const item=pick(pool),sentence=item.sentence,currentAnswer=item.word.w;
+ const item=pick(pool),sentence=item.sentence;currentAnswer=item.word.w;
  const available=decodableMissionWords().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
  stage.innerHTML=title("Je comprends la phrase","Lis la phrase puis choisis la bonne image.","Compréhension")+
  '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
