@@ -959,15 +959,15 @@ document.addEventListener("click",e=>{
  if(a==="mission-bubble-repeat"){speakMission(currentAnswer,.60);return}
  if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
- if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save();sounds();return}
- if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save();sounds();return}
+ if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save(false);sounds();return}
+ if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save(false);sounds();return}
  if(a==="sound-repeat"){practiceDone("Bien répété ! Continue comme ça.");return}
- if(a==="set-next"){state.set=(state.set+1)%DATA.sets.length;save();syllables();return}
- if(a==="set-prev"){state.set=(state.set-1+DATA.sets.length)%DATA.sets.length;save();syllables();return}
+ if(a==="set-next"){state.set=(state.set+1)%DATA.sets.length;save(false);syllables();return}
+ if(a==="set-prev"){state.set=(state.set-1+DATA.sets.length)%DATA.sets.length;save(false);syllables();return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
- if(a==="word-next"){state.word=(state.word+1)%DATA.words.length;if(state.word===0)setDone("words");save();words();return}
- if(a==="word-prev"){state.word=(state.word-1+DATA.words.length)%DATA.words.length;save();words();return}
+ if(a==="word-next"){state.word=(state.word+1)%DATA.words.length;if(state.word===0)setDone("words");save(false);words();return}
+ if(a==="word-prev"){state.word=(state.word-1+DATA.words.length)%DATA.words.length;save(false);words();return}
  if(a==="word-read"){practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-bubbles"){gameBubbles();return}
