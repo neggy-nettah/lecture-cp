@@ -143,6 +143,7 @@ const probes=[
   '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stars:4,stats:{attempts:2,correct:1}}}));return s.stars===4&&s.stats.attempts===2&&s.stats.correct===1})()',
   '(()=>{try{parseProgressImport(JSON.stringify({app:"Autre application",state:{stars:1}}));return false}catch(e){return true}})()',
   '(()=>{try{parseProgressImport("{bad json");return false}catch(e){return true}})()',
+  '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{mastery:{ma:{attempts:2,correct:1},zz:{attempts:9,correct:9}},dailyMission:{date:"2000-01-01"}}}));return !!s.mastery.ma&&!s.mastery.zz&&s.dailyMission===null})()',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5],sessionStats:{attempts:0,correct:0}}}),missionMode=false,recordAttempt(true,"ma","free:test"),missionMode=true,recordAttempt(false,"mi"),recordAttempt(true,"mi","mission:test"),state.dailyMission.sessionStats.attempts===2&&state.dailyMission.sessionStats.correct===1&&state.stats.attempts===3)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
