@@ -111,6 +111,7 @@ const probes=[
   '(state=normalizeState({mastery:{ma:{attempts:2,correct:2,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===3)',
   '(state=normalizeState({mastery:{ma:{attempts:4,correct:4,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===7)',
   'typeof worldView==="function"',
+  'typeof gameMissing==="function"',
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
   'normalizeState({}).stars===0',
@@ -146,6 +147,7 @@ const probes=[
   '(state=normalizeState({}),buildDailyMission(),gameListen(state.dailyMission.primary,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),gameBubbles(state.dailyMission.review,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),gameMemory([state.dailyMission.primary,state.dailyMission.review],true),memoryDeck.every(x=>activeLearningSyllables().includes(x.pair)))',
+  '(state=normalizeState({}),gameMissing(),missingWord.parts.includes(currentAnswer)&&[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),state.dailyMission.index===5&&state.dailyMission.completed===true)',
   '(state=normalizeState({}),buildDailyMission(),state.dailyMission.completed=true,state.dailyMission.index=5,missionComplete(),state.missionHistory.length===1&&state.rewards.pieces===1&&missionComplete()===undefined&&state.missionHistory.length===1&&state.rewards.pieces===1)'
 ];
@@ -179,6 +181,7 @@ const screenProbes=[
   'state=normalizeState({}),gameMemory(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameFamily(),stage.innerHTML.length>50',
   'state=normalizeState({}),gamePronunciation(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameMissing(),stage.innerHTML.length>50',
   'state=normalizeState({}),gamePicture(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBuild(),stage.innerHTML.length>50',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameOrder(),stage.innerHTML.length>50'
@@ -221,6 +224,7 @@ console.log("- Sound browser follows unlocked curriculum");
 console.log("- Phrase game unlocks after 8 missions with decodable sentences");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
+console.log("- Missing-syllable game stays inside unlocked curriculum");
 console.log("- Mission words assemble exactly");
 console.log("- Five-step mission completion: OK");
 console.log("- Mission completion reward idempotency: OK");
