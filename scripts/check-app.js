@@ -102,6 +102,9 @@ if(!app.includes('extraBase=activeLearningSyllables()')){
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
+if(!app.includes('s.type==="missing"')||!app.includes('visualModes=["memory","family","missing"]')){
+  fail("Daily mission is missing the syllable-puzzle rotation.");
+}
 
 const requiredViews=["home","sounds","syllables","words","games","world","collection","parents"];
 for(const view of requiredViews){
