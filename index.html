@@ -317,6 +317,20 @@ function activeSoundGraphemes(){
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
+const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
+function phraseTokenParts(token){
+ const clean=String(token||"").toLowerCase().replace(/[.!?,;:]/g,"");
+ if(["a","un","une","le"].includes(clean))return [];
+ const word=DATA.words.find(w=>w.w===clean);return word?.parts||PHRASE_NAME_PARTS[clean]||null
+}
+function decodableSentencePool(){
+ const allowed=new Set([...activeLearningSyllables(),..."aioué"]);
+ return DATA.sentences.filter(arr=>arr.every(token=>{
+  const parts=phraseTokenParts(token);if(parts===null)return false;if(parts.length===0)return true;
+  const clean=String(token).toLowerCase().replace(/[.!?,;:]/g,"");
+  return parts.join("")===clean&&parts.every(p=>allowed.has(p))
+ }))
+}
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
  all.forEach(s=>{
@@ -809,8 +823,9 @@ function updateBuild(){
 }
 function gameOrder(){
  if(!sentenceUnlocked()){activate("games");return}
- currentView="order";state.lastView="order";save(false);const arr=pick(DATA.sentences);orderTarget=arr;orderMade=[];locked=false;const opts=shuffle(arr);
- stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase.","Jeu 4")+
+ const pool=decodableSentencePool();if(!pool.length){activate("games");return}
+ currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;const opts=shuffle(arr);
+ stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Les petits mots comme « un » ou « une » sont lus avec un adulte au besoin.","Jeu 4")+
  `<div class="card center"><div class="hero-emoji">💬</div>
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
  <div class="choices" id="orderChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:21px" data-action="order-token" data-value="${esc(x)}" data-id="${i}">${esc(x)}</button>`).join("")}</div>
