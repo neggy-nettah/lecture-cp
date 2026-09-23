@@ -188,11 +188,24 @@ function voice(){
 }
 function speak(text,rate=.72,cb){
  if(!("speechSynthesis" in window)){toast("🔈 Audio non disponible sur ce navigateur.");return}
- try{speechSynthesis.resume()}catch(e){}
- speechSynthesis.cancel();
- const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
+ const synth=window.speechSynthesis;
+ try{synth.resume()}catch(e){}
+ const u=new SpeechSynthesisUtterance(String(text||""));u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
  const v=voice();if(v)u.voice=v;if(cb)u.onend=cb;
- speechSynthesis.speak(u)
+ try{synth.cancel();synth.speak(u)}catch(e){console.error("Speech error",e)}
+}
+function speakMission(text,rate=.60){
+ if(!("speechSynthesis" in window))return;
+ const synth=window.speechSynthesis;let started=false;
+ const attempt=()=>{
+  try{synth.resume()}catch(e){}
+  const u=new SpeechSynthesisUtterance(String(text||""));u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
+  const v=voice();if(v)u.voice=v;u.onstart=()=>{started=true};
+  try{synth.speak(u)}catch(e){console.error("Mission speech error",e)}
+ };
+ try{synth.cancel()}catch(e){}
+ attempt();
+ setTimeout(()=>{if(!started){try{synth.cancel()}catch(e){};attempt()}},280)
 }
 function tone(kind="ok"){
  try{
@@ -285,8 +298,7 @@ function missionHub(){
 function missionDiscover(target){
  currentView="mission-discover";state.lastView="mission";currentAnswer=target;locked=false;
  stage.innerHTML=title("Je découvre","Écoute tranquillement, puis répète à voix haute.","Étape 1")+
- '<div class="card center"><div class="hero-emoji">👂✨</div><div class="big purple">'+colorSyl(target)+'</div><div class="actions"><button class="btn yellow" data-action="mission-discover-listen">🔊 Écouter</button><button class="btn primary" data-action="mission-discover-done">👍 J’ai écouté et répété</button></div><div class="tip">Échauffement : pas d’étoile ici. Les étapes suivantes vérifieront vraiment les réponses.</div></div>';
- speak(target,.58)
+ '<div class="card center"><div class="hero-emoji">👂✨</div><div class="big purple">'+colorSyl(target)+'</div><div class="actions"><button class="btn yellow" data-action="mission-discover-listen">🔊 Écouter la syllabe</button><button class="btn primary" data-action="mission-discover-done">👍 J’ai écouté et répété</button></div><div class="tip">Appuie sur 🔊 pour entendre la syllabe. Échauffement : pas d’étoile ici.</div></div>'
 }
 function startMissionStep(){
  const m=getDailyMission();if(m.completed||m.index>=m.steps.length){missionComplete();return}
@@ -429,22 +441,22 @@ function gameListen(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save();currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
  const opts=nextRandom(DATA.sets.flat(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
- `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="repeat-answer">🔊 Écouter</button>
+ `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
- if(fromMission)speak(currentAnswer,.60);else setTimeout(()=>speak(currentAnswer,.60),180)
+ if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
 }
 
 function gameBubbles(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save();currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
  const opts=nextRandom(DATA.sets.flat(),currentAnswer,6);
  stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
- `<div class="card center"><div class="actions"><button class="btn yellow" data-action="bubble-repeat">🔊 Réécouter</button></div>
+ `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
- if(fromMission)speak(currentAnswer,.60);else setTimeout(()=>speak(currentAnswer,.60),180)
+ if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
 }
 function makeMemoryDeck(preferred=[]){
  const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(DATA.sets.flat().filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
@@ -731,7 +743,9 @@ document.addEventListener("click",e=>{
  if(a==="mission-next"){startMissionStep();return}
  if(a==="mission-back"){missionHub();return}
  if(a==="mission-review"){missionMode=false;activate("games");return}
- if(a==="mission-discover-listen"){speak(currentAnswer,.58);return}
+ if(a==="mission-discover-listen"){speakMission(currentAnswer,.58);return}
+ if(a==="mission-repeat-answer"){speakMission(currentAnswer,.60);return}
+ if(a==="mission-bubble-repeat"){speakMission(currentAnswer,.60);return}
  if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
  if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save();sounds();return}
