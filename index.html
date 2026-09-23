@@ -469,7 +469,7 @@ function memoryFlip(btn,index){
   a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryOpen=[];
   tone("ok");
   if(memoryMatches===3){
-   locked=true;rewardVerified("Memory terminé !");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>'
+   locked=true;rewardVerified("Memory terminé !");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
   }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
  }else{
   tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
@@ -644,7 +644,7 @@ function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
-   if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w);rewardVerified("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`}
+   if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w);rewardVerified("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
    else{recordAttempt(false,"word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
@@ -701,7 +701,7 @@ function checkChoice(btn,value,kind){
  if(value===currentAnswer){
    locked=true;btn.classList.add("correct");recordAttempt(true,kind==="pictures"?"word:"+currentAnswer:currentAnswer);rewardVerified("Bonne réponse !");
    if(kind==="listen")setDone("listen");if(kind==="pictures")setDone("pictures");if(kind==="syllables")setDone("syllables");
-   speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti()
+   speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti();completeMissionStep()
  }else{
    btn.classList.add("wrong","wiggle");recordAttempt(false,kind==="pictures"?"word:"+currentAnswer:currentAnswer);miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
  }
@@ -745,7 +745,7 @@ document.addEventListener("click",e=>{
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
  if(a==="bubble-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer);rewardVerified("Bonne bulle !");setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120)}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer);rewardVerified("Bonne bulle !");setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120);completeMissionStep()}
    else{recordAttempt(false,currentAnswer);b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
    return
  }
