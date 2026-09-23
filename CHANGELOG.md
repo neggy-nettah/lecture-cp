@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.12.0 — 2026-09-23
+
+### Missions avancées
+- à partir de 8 missions terminées, l'étape 4 peut maintenant devenir un mini-défi de compréhension
+- la mission reste limitée à 5 étapes : compréhension remplace ponctuellement Memory, Intrus ou Syllabe manquante
+- la phrase choisie est décodable avec le curriculum actif
+- la cible de compréhension est enregistrée dans la mission pour permettre une reprise après fermeture
+- la réussite de compréhension valide correctement l'étape puis affiche Continuer
+
+### Tests
+- smoke test d'une mission avancée avec compréhension
+- isolation des tests de démarrage de mission pour éviter les dépendances entre scénarios
+- garde-fou statique sur le routage compréhension dans la mission
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.11.2 — 2026-09-23
 
 ### Mises à jour de l'app installée
