@@ -137,6 +137,7 @@ const probes=[
   'normalizeState({schemaVersion:0,stars:3}).stars===3&&normalizeState({schemaVersion:0}).wordPractice!=null',
   '(state=normalizeState({}),missionMode=false,recordAttempt(true,"ma","smoke:ma"),recordAttempt(true,"ma","smoke:ma"),state.stats.correct===1&&state.mastery.ma.correct===1)',
   '(state=normalizeState({}),resetQuestionTracking(),recordQuestionError("ma"),recordQuestionError("ma"),state.stats.attempts===1&&state.mastery.ma.attempts===1)',
+  '(state=normalizeState({}),missionMode=false,memoryMissedPairs=new Set(["ma"]),recordAttempt(true,memoryMissedPairs.has("ma")?null:"ma","memory:ma"),state.stats.correct===1&&!state.mastery.ma)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5],sessionStats:{attempts:0,correct:0}}}),missionMode=false,recordAttempt(true,"ma","free:test"),missionMode=true,recordAttempt(false,"mi"),recordAttempt(true,"mi","mission:test"),state.dailyMission.sessionStats.attempts===2&&state.dailyMission.sessionStats.correct===1&&state.stats.attempts===3)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
@@ -220,6 +221,7 @@ console.log("- Word practice tracking: OK");
 console.log("- Spaced review intervals: OK");
 console.log("- Duplicate mastery guard: OK");
 console.log("- One-error-per-question analytics: OK");
+console.log("- Memory mistakes do not inflate syllable mastery: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
