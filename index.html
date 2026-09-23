@@ -182,40 +182,57 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function colorSyl(s){return `<span class="red">${esc(s[0]||"")}</span><span class="blue">${esc(s.slice(1))}</span>`}
 function wordHTML(parts){return parts.map((p,i)=>`<span>${esc(p)}</span>`).join("·")}
 
-function voice(){
- const vs=window.speechSynthesis?.getVoices?.()||[];
- return vs.find(v=>/^fr[-_]/i.test(v.lang)&&/France|French|fr-FR/i.test(v.lang+" "+v.name))||vs.find(v=>/^fr/i.test(v.lang))||null
+function availableVoices(){return window.speechSynthesis?.getVoices?.()||[]}
+function voice(forceFallback=false){
+ const vs=availableVoices();
+ const french=vs.find(v=>/^fr[-_]/i.test(v.lang)&&/France|French|fr-FR|Thomas|Amélie|Audrey|Aurelie/i.test(v.lang+" "+v.name))||vs.find(v=>/^fr/i.test(v.lang));
+ return french||(forceFallback?vs[0]||null:null)
 }
 let activeSpeechUtterance=null;
 function isMacSafariAudio(){
  return /Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints<2&&/^((?!chrome|chromium|crios|edg).)*safari/i.test(navigator.userAgent)
 }
-function playSpeech(text,rate=.72,cb=null,retry=true){
+function waitForSpeechVoice(maxWait=1200){
+ return new Promise(resolve=>{
+  const first=voice(true);if(first){resolve(first);return}
+  let done=false;
+  const finish=()=>{if(done)return;done=true;resolve(voice(true))};
+  const onVoices=()=>{const v=voice(true);if(v){window.speechSynthesis?.removeEventListener?.("voiceschanged",onVoices);done=true;resolve(v)}};
+  window.speechSynthesis?.addEventListener?.("voiceschanged",onVoices);
+  [80,180,360,700].forEach(ms=>setTimeout(()=>{if(!done){const v=voice(true);if(v){window.speechSynthesis?.removeEventListener?.("voiceschanged",onVoices);done=true;resolve(v)}}},ms));
+  setTimeout(()=>{window.speechSynthesis?.removeEventListener?.("voiceschanged",onVoices);finish()},maxWait)
+ })
+}
+async function playSpeech(text,rate=.72,cb=null,retry=true){
  if(!("speechSynthesis" in window)){toast("🔈 Audio non disponible sur ce navigateur.");return}
  const synth=window.speechSynthesis,input=String(text||"");
+ const macSafari=isMacSafariAudio();
+ const explicitVoice=macSafari?await waitForSpeechVoice():voice(false);
+ if(macSafari&&!explicitVoice){
+  toast("🔈 Safari Mac ne fournit aucune voix système. Vérifie Réglages Système → Accessibilité → Contenu énoncé.","no");
+  return
+ }
  const launch=()=>{
   try{synth.resume()}catch(e){}
   const u=new SpeechSynthesisUtterance(input);activeSpeechUtterance=u;
-  u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
-  const v=voice();if(v)u.voice=v;
+  u.lang=explicitVoice?.lang||"fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
+  if(explicitVoice)u.voice=explicitVoice;
   let started=false;
   u.onstart=()=>{started=true};
   u.onend=()=>{if(activeSpeechUtterance===u)activeSpeechUtterance=null;if(cb)cb()};
   u.onerror=e=>{if(activeSpeechUtterance===u)activeSpeechUtterance=null;if(e?.error!=="canceled")console.error("Speech error",e)};
   try{synth.speak(u)}catch(e){console.error("Speech error",e)}
   if(retry)setTimeout(()=>{
-   if(!started&&!synth.speaking&&!synth.pending){
+   if(!started&&!synth.speaking){
     try{synth.resume()}catch(e){}
     playSpeech(input,rate,cb,false)
    }
-  },450)
+  },650)
  };
- if(isMacSafariAudio()&&(synth.speaking||synth.pending)){
+ if(macSafari&&(synth.speaking||synth.pending)){
   try{synth.cancel()}catch(e){}
-  setTimeout(launch,90)
- }else{
-  launch()
- }
+  setTimeout(launch,120)
+ }else launch()
 }
 function speak(text,rate=.72,cb){playSpeech(text,rate,cb,true)}
 function speakMission(text,rate=.60){playSpeech(text,rate,null,true)}
