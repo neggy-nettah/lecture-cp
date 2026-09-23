@@ -188,9 +188,11 @@ function voice(){
 }
 function speak(text,rate=.72,cb){
  if(!("speechSynthesis" in window)){toast("🔈 Audio non disponible sur ce navigateur.");return}
+ try{speechSynthesis.resume()}catch(e){}
  speechSynthesis.cancel();
  const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
- const v=voice();if(v)u.voice=v;if(cb)u.onend=cb;speechSynthesis.speak(u)
+ const v=voice();if(v)u.voice=v;if(cb)u.onend=cb;
+ speechSynthesis.speak(u)
 }
 function tone(kind="ok"){
  try{
@@ -284,7 +286,7 @@ function missionDiscover(target){
  currentView="mission-discover";state.lastView="mission";currentAnswer=target;locked=false;
  stage.innerHTML=title("Je découvre","Écoute tranquillement, puis répète à voix haute.","Étape 1")+
  '<div class="card center"><div class="hero-emoji">👂✨</div><div class="big purple">'+colorSyl(target)+'</div><div class="actions"><button class="btn yellow" data-action="mission-discover-listen">🔊 Écouter</button><button class="btn primary" data-action="mission-discover-done">👍 J’ai écouté et répété</button></div><div class="tip">Échauffement : pas d’étoile ici. Les étapes suivantes vérifieront vraiment les réponses.</div></div>';
- setTimeout(()=>speak(target,.58),180)
+ speak(target,.58)
 }
 function startMissionStep(){
  const m=getDailyMission();if(m.completed||m.index>=m.steps.length){missionComplete();return}
@@ -431,7 +433,7 @@ function gameListen(forcedTarget=null,fromMission=false){
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
- setTimeout(()=>speak(currentAnswer,.60),180)
+ if(fromMission)speak(currentAnswer,.60);else setTimeout(()=>speak(currentAnswer,.60),180)
 }
 
 function gameBubbles(forcedTarget=null,fromMission=false){
@@ -442,7 +444,7 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
- setTimeout(()=>speak(currentAnswer,.60),180)
+ if(fromMission)speak(currentAnswer,.60);else setTimeout(()=>speak(currentAnswer,.60),180)
 }
 function makeMemoryDeck(preferred=[]){
  const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(DATA.sets.flat().filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
