@@ -1036,14 +1036,14 @@ document.addEventListener("click",e=>{
  if(a==="mission-bubble-repeat"){speakMission(currentAnswer,.60);return}
  if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
- if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save(false);sounds();return}
+ if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;save(false);sounds();return}
  if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save(false);sounds();return}
- if(a==="sound-repeat"){practiceDone("Bien répété ! Continue comme ça.");return}
- if(a==="set-next"){state.set=(state.set+1)%DATA.sets.length;save(false);syllables();return}
- if(a==="set-prev"){state.set=(state.set-1+DATA.sets.length)%DATA.sets.length;save(false);syllables();return}
+ if(a==="sound-repeat"){const g=DATA.sounds[state.sound%DATA.sounds.length].g;state.soundPractice=state.soundPractice||{};state.soundPractice[g]=true;const needed=activeSoundGraphemes();if([...needed].every(x=>state.soundPractice[x]))setDone("sounds");else save();practiceDone("Bien répété ! Continue comme ça.");return}
+ if(a==="set-next"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set+1)%n;save(false);syllables();return}
+ if(a==="set-prev"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set-1+n)%n;save(false);syllables();return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
- if(a==="word-next"){const n=fullyDecodableWords().length;state.word=(state.word+1)%n;if(state.word===0)setDone("words");save(false);words();return}
+ if(a==="word-next"){const n=fullyDecodableWords().length;state.word=(state.word+1)%n;save(false);words();return}
  if(a==="word-prev"){const n=fullyDecodableWords().length;state.word=(state.word-1+n)%n;save(false);words();return}
  if(a==="word-read"){practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
