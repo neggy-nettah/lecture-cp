@@ -137,7 +137,9 @@ const probes=[
   '(state=normalizeState({set:9}),syllables(),state.set<unlockedFamilyCount())',
   '(state=normalizeState({}),buildDailyMission(),gameListen(state.dailyMission.primary,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),gameBubbles(state.dailyMission.review,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
-  '(state=normalizeState({}),buildDailyMission(),gameMemory([state.dailyMission.primary,state.dailyMission.review],true),memoryDeck.every(x=>activeLearningSyllables().includes(x.pair)))'
+  '(state=normalizeState({}),buildDailyMission(),gameMemory([state.dailyMission.primary,state.dailyMission.review],true),memoryDeck.every(x=>activeLearningSyllables().includes(x.pair)))',
+  '(state=normalizeState({}),buildDailyMission(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),missionMode=true,completeMissionStep(),state.dailyMission.index===5&&state.dailyMission.completed===true)',
+  '(state=normalizeState({}),buildDailyMission(),state.dailyMission.completed=true,state.dailyMission.index=5,missionComplete(),state.missionHistory.length===1&&state.rewards.pieces===1&&missionComplete()===undefined&&state.missionHistory.length===1&&state.rewards.pieces===1)'
 ];
 
 for(const probe of probes){
@@ -209,3 +211,5 @@ console.log("- Phrase game unlocks after 8 missions with decodable sentences");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
 console.log("- Mission words assemble exactly");
+console.log("- Five-step mission completion: OK");
+console.log("- Mission completion reward idempotency: OK");
