@@ -162,6 +162,14 @@ let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||
 let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,missionMode=false;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
+let runtimeErrorShown=false;
+function showRuntimeError(error){
+ console.error("Application runtime error",error);
+ if(runtimeErrorShown||!stage)return;runtimeErrorShown=true;
+ stage.innerHTML='<div class="card center"><div class="hero-emoji">🛠️</div><h2>Petit problème technique</h2><p style="color:var(--muted)">Ta progression est conservée. Retourne à l’accueil ou copie le diagnostic pour nous aider à retrouver le problème.</p><div class="actions"><button class="btn primary" data-action="recover-home">🏠 Retour à l’accueil</button><button class="btn gray" data-action="copy-diagnostic">📋 Copier diagnostic</button></div></div>'
+}
+window.addEventListener("error",e=>showRuntimeError(e.error||e.message));
+window.addEventListener("unhandledrejection",e=>showRuntimeError(e.reason||"Promise error"));
 function saveLocal(){
  try{localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state));return true}
  catch(e){console.error("Local save error",e);return false}
@@ -915,6 +923,7 @@ async function selectChild(id){const ch=children.find(x=>x.id===id);if(!ch)retur
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-action]");if(!b)return;
  const a=b.dataset.action;
+ if(a==="recover-home"){runtimeErrorShown=false;missionMode=false;activate("home");return}
  if(a==="go"){missionMode=false;activate(b.dataset.to);return}
  if(a==="mission-start"){missionHub();return}
  if(a==="mission-next"){startMissionStep();return}
