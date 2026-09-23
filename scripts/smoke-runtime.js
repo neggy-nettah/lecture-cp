@@ -110,6 +110,7 @@ const probes=[
   'typeof recordQuestionError==="function"',
   'typeof parseProgressImport==="function"',
   'typeof importProgressFile==="function"',
+  'typeof registerServiceWorker==="function"',
   'typeof dueReviewSyllables==="function"',
   '(state=normalizeState({mastery:{ma:{attempts:1,correct:1,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===1&&dueReviewSyllables().includes("ma"))',
   '(state=normalizeState({mastery:{ma:{attempts:2,correct:2,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===3)',
@@ -119,6 +120,7 @@ const probes=[
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
   'normalizeState({}).stars===0',
+  '(()=>{delete navigator.serviceWorker;registerServiceWorker();return true})()',
   'unlockedFamilyCount()===3',
   'activeLearningSyllables().length===15',
   'fullyDecodableWords().length>=4',
@@ -231,6 +233,7 @@ console.log("- Duplicate mastery guard: OK");
 console.log("- One-error-per-question analytics: OK");
 console.log("- Memory mistakes do not inflate syllable mastery: OK");
 console.log("- Portable progress import validation: OK");
+console.log("- Service Worker unsupported-browser fallback: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
