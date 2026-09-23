@@ -124,6 +124,8 @@ const probes=[
   '(()=>{delete navigator.serviceWorker;registerServiceWorker();return true})()',
   '(()=>{navigator.onLine=false;updateConnectivityUI();const ok=$("#syncStatus").textContent.includes("Hors ligne");navigator.onLine=true;return ok})()',
   'unlockedFamilyCount()===3',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),unlockedFamilyCount()===3)',
+  '(state=normalizeState({missionHistory:Array.from({length:2},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),unlockedFamilyCount()===4)',
   'activeLearningSyllables().length===15',
   'fullyDecodableWords().length>=4',
   'fullyDecodableWords().every(w=>w.parts.join("")===w.w)',
@@ -132,8 +134,8 @@ const probes=[
   'decodableMissionWords().every(w=>w.parts.every(p=>activeLearningSyllables().includes(p)||"aioué".includes(p)))',
   'getDailyMission().steps.length===5',
   '["memory","family","missing"].includes(getDailyMission().steps[3].type)',
-  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),buildDailyMission(),["memory","family","missing","comprehension"].includes(state.dailyMission.steps[3].type))',
-  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),dailyMission:{date:localDayKey(),index:3,completed:false,primary:"ma",review:"la",word:"polo",sessionStats:{attempts:0,correct:0},steps:[{type:"discover",target:"ma"},{type:"listen",target:"ma"},{type:"bubbles",target:"la"},{type:"comprehension",target:"polo"},{type:"build",target:"polo"}]}}),startMissionStep(),missionMode===true&&currentView==="comprehension"&&currentAnswer==="polo")',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),buildDailyMission(),["memory","family","missing","comprehension"].includes(state.dailyMission.steps[3].type))',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}])),dailyMission:{date:localDayKey(),index:3,completed:false,primary:"ma",review:"la",word:"polo",sessionStats:{attempts:0,correct:0},steps:[{type:"discover",target:"ma"},{type:"listen",target:"ma"},{type:"bubbles",target:"la"},{type:"comprehension",target:"polo"},{type:"build",target:"polo"}]}}),startMissionStep(),missionMode===true&&currentView==="comprehension"&&currentAnswer==="polo")',
   '(()=>{const s=getDailyMission().steps[3];return s.type!=="missing"||decodableMissionWords().some(w=>w.w===s.target)})()',
   '(state=normalizeState({}),buildDailyMission(),getDailyMission().startAttempts===null)',
   '(state=normalizeState({}),buildDailyMission(),startMissionStep(),getDailyMission().startAttempts!==null)',
@@ -155,15 +157,15 @@ const probes=[
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5],sessionStats:{attempts:0,correct:0}}}),missionMode=false,recordAttempt(true,"ma","free:test"),missionMode=true,recordAttempt(false,"mi"),recordAttempt(true,"mi","mission:test"),state.dailyMission.sessionStats.attempts===2&&state.dailyMission.sessionStats.correct===1&&state.stats.attempts===3)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
-  '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}]}),unlockedFamilyCount()===5)',
+  '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}],mastery:Object.fromEntries(["ma","mi","mo","mu"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),unlockedFamilyCount()===5)',
   '(state=normalizeState({lastView:"unknown-view"}),currentView="unknown-view",render(),currentView==="home")',
   '(state=normalizeState({}),state.sound=DATA.sounds.length-1,currentView="sounds",state.done.sounds!==true)',
   '(state=normalizeState({}),activeSoundData().length===8)',
   '(state=normalizeState({missionHistory:[{accuracy:50,attempts:2,correct:1},{accuracy:100,attempts:2,correct:2}]}),recentPerformance().accuracy===75)',
   '(state=normalizeState({}),sentenceUnlocked()===false)',
-  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),sentenceUnlocked()===true&&decodableSentencePool().length>=3)',
-  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),comprehensionSentencePool().length>=3&&comprehensionSentencePool().every(x=>x.word&&x.sentence.length>=3))',
-  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),new Set(comprehensionSentencePool().map(x=>x.word.w)).size>=5)',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),sentenceUnlocked()===true&&unlockedFamilyCount()===7&&decodableSentencePool().length>=3)',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),comprehensionSentencePool().length>=3&&comprehensionSentencePool().every(x=>x.word&&x.sentence.length>=3))',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),new Set(comprehensionSentencePool().map(x=>x.word.w)).size>=5)',
   '(state=normalizeState({set:9}),syllables(),state.set<unlockedFamilyCount())',
   '(state=normalizeState({}),buildDailyMission(),gameListen(state.dailyMission.primary,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),gameBubbles(state.dailyMission.review,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
@@ -241,7 +243,7 @@ console.log("- Service Worker unsupported-browser fallback: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
-console.log("- Curriculum expands with completed missions");
+console.log("- Curriculum expands only when missions and mastery are both ready");
 console.log("- Free reading words are fully decodable");
 console.log("- Mission words use currently unlocked syllables");
 console.log("- Unknown saved views recover to home");
