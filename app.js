@@ -12,7 +12,7 @@ function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...r
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,missionMode=false,questionErrorRecorded=false,missingWord=null,missingIndex=0;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),missionMode=false,questionErrorRecorded=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -531,7 +531,7 @@ function makeMemoryDeck(preferred=[],allowedPool=DATA.sets.flat()){
  memoryDeck=shuffle(pool.flatMap((s,i)=>[
   {id:i+"-sound",pair:s,type:"sound",label:"🔊"},
   {id:i+"-text",pair:s,type:"text",label:s}
- ]));memoryOpen=[];memoryMatches=0
+ ]));memoryOpen=[];memoryMatches=0;memoryMissedPairs=new Set()
 }
 function gameMemory(preferred=[],fromMission=false){
  missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;resetQuestionTracking();makeMemoryDeck(preferred,activeLearningSyllables());
@@ -550,12 +550,12 @@ function memoryFlip(btn,index){
  const [a,b]=memoryOpen,match=a.card.pair===b.card.pair&&a.card.type!==b.card.type;
  if(match){
   a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryOpen=[];
-  recordAttempt(true,a.card.pair,"memory:"+a.card.pair);tone("ok");
+  const masteryKey=memoryMissedPairs.has(a.card.pair)?null:a.card.pair;recordAttempt(true,masteryKey,"memory:"+a.card.pair);tone("ok");
   if(memoryMatches===3){
    locked=true;rewardVerified("Memory terminé !","memory");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
   }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
  }else{
-  recordQuestionError();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
+  memoryMissedPairs.add(a.card.pair);memoryMissedPairs.add(b.card.pair);recordQuestionError();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
   setTimeout(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";memoryOpen=[]},750)
  }
 }
