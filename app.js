@@ -2,8 +2,9 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.15.0";
+const APP_VERSION="0.16.0";
 const STATE_SCHEMA_VERSION=1;
+const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 const DEFAULT_STATE={schemaVersion:STATE_SCHEMA_VERSION,updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],attemptLedger:{},rewardLedger:{},soundPractice:{},wordPractice:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight=false;
@@ -928,7 +929,7 @@ function restoreBackup(){
  let raw=null;try{raw=localStorage.getItem(backupKey())}catch(e){}
  if(!raw){alert("Aucune sauvegarde locale à restaurer.");return}
  if(!confirm("Restaurer la dernière progression sauvegardée ?"))return;
- try{state=normalizeState(JSON.parse(raw));state.updatedAt=Date.now();currentView="home";save();render();alert("Progression restaurée.")}
+ try{const restored=normalizeState(JSON.parse(raw));if(!saveSnapshotBackup(state)){alert("Impossible de préserver la progression actuelle. Exporte-la avant de réessayer.");return}state=restored;state.updatedAt=Date.now();missionMode=false;currentView="home";state.lastView="home";save();render();alert("Progression restaurée.")}
  catch(e){console.error(e);alert("La sauvegarde locale est illisible.")}
 }
 function diagnosticText(){
@@ -1002,11 +1003,13 @@ function parseProgressImport(text){
 }
 async function importProgressFile(file){
  if(!file)return;
+ const profileId=currentChild?.id||null,ownerId=session?.user?.id||null;
  if(file.size>2*1024*1024){alert("Ce fichier est trop volumineux pour une sauvegarde de progression.");return}
  let imported;
  try{imported=parseProgressImport(await file.text())}catch(e){console.error("Import progress error",e);alert("Impossible d’importer ce fichier : "+e.message+".");return}
+ if(profileId!==(currentChild?.id||null)||ownerId!==(session?.user?.id||null)){alert("Le profil a changé pendant la lecture du fichier. Sélectionne le bon enfant puis recommence l’import.");return}
  if(!confirm("Remplacer la progression actuelle par celle de ce fichier ? Une sauvegarde locale de l’état actuel sera conservée."))return;
- saveBackup();imported.updatedAt=Date.now();if(currentChild)imported.name=currentChild.nickname;
+ if(!saveBackup()){alert("La copie de sécurité n’a pas pu être créée. Exporte d’abord la progression actuelle avant de réessayer.");return}imported.updatedAt=Date.now();if(currentChild)imported.name=currentChild.nickname;
  state=imported;missionMode=false;currentView="home";state.lastView="home";save();render();alert("Progression importée ✅")
 }
 function resetDailyMission(){
@@ -1073,14 +1076,19 @@ function checkChoice(btn,value,kind){
 }
 
 
-let authOpener=null;
+let authOpener=null,authViewId=0,authBusy=false,passwordRecovery=false,authBootstrapping=true,authEventSequence=0;
 function closeAuth(){
+ authViewId++;
  $("#authModal").classList.add("hidden");
  if(authOpener?.isConnected)authOpener.focus();authOpener=null
 }
 document.addEventListener("keydown",e=>{
  const modal=$("#authModal");if(modal.classList.contains("hidden"))return;
  if(e.key==="Escape"){e.preventDefault();closeAuth();return}
+ if(e.key==="Enter"&&e.target.tagName==="INPUT"){
+  const id=e.target.id,action=id.startsWith("recovery")?"update-password":id.startsWith("signup")?"signup":id.startsWith("login")?"login":id==="newChildName"?"create-child":null;
+  if(action){e.preventDefault();modal.querySelector('[data-action="'+action+'"]:not(:disabled)')?.click()}return
+ }
  if(e.key!=="Tab")return;
  const fields=[...modal.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]')].filter(el=>!el.hidden);
  const first=fields[0],last=fields[fields.length-1];if(!first)return;
@@ -1088,21 +1096,109 @@ document.addEventListener("keydown",e=>{
  else if(!e.shiftKey&&(document.activeElement===last||!modal.contains(document.activeElement))){e.preventDefault();first.focus()}
 });
 function authMsg(text,type=""){const el=$("#authMsg");if(el){el.textContent=text;el.className="auth-msg "+type}}
-function renderAuthForm(mode){const f=$("#authForm");if(!f)return;if(mode==="signup")f.innerHTML=`<div class="form"><div class="field"><label for="signupName">Votre prénom</label><input id="signupName"></div><div class="field"><label for="signupEmail">Email</label><input id="signupEmail" type="email"></div><div class="field"><label for="signupPassword">Mot de passe (8 caractères minimum)</label><input id="signupPassword" type="password"></div><button class="btn primary" data-action="signup">Créer mon compte</button></div>`;else f.innerHTML=`<div class="form"><div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email"></div><div class="field"><label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password"></div><button class="btn primary" data-action="login">Se connecter</button><button class="btn gray" data-action="forgot">Mot de passe oublié</button></div>`}
-function openAuth(mode="login"){const modal=$("#authModal"),content=$("#authContent");authOpener=document.activeElement;modal.classList.remove("hidden");if(session){renderAccountPanel();content.querySelector("button")?.focus();return}content.innerHTML=`<h2>Compte parent</h2><p>Connectez-vous pour synchroniser la progression entre plusieurs appareils.</p><div class="tabs"><button class="tab ${mode==="login"?"active":""}" data-auth-tab="login">Connexion</button><button class="tab ${mode==="signup"?"active":""}" data-auth-tab="signup">Créer un compte</button></div><div id="authForm"></div><div class="auth-msg" id="authMsg"></div><div class="actions" style="margin-top:10px"><button class="btn gray" data-action="close-modal">Continuer en invité</button></div>`;renderAuthForm(mode);content.querySelector("input")?.focus()}
-async function signUp(){if(!sb){authMsg("Connexion au service indisponible. Le mode invité reste utilisable.","error");return}const email=$("#signupEmail").value.trim(),password=$("#signupPassword").value,name=$("#signupName").value.trim();if(!email||password.length<8){authMsg("Email valide et mot de passe de 8 caractères minimum.","error");return}authMsg("Création du compte…");const {error}=await sb.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:APP_URL}});authMsg(error?error.message:"Compte créé ✅ Vérifiez votre boîte mail et cliquez sur le lien de confirmation.",error?"error":"good")}
-async function login(){if(!sb){authMsg("Connexion au service indisponible. Le mode invité reste utilisable.","error");return}const email=$("#loginEmail").value.trim(),password=$("#loginPassword").value;authMsg("Connexion…");const {error}=await sb.auth.signInWithPassword({email,password});if(error){authMsg(error.message,"error");return}closeAuth()}
-async function forgot(){if(!sb){authMsg("Service de connexion indisponible.","error");return}const email=$("#loginEmail").value.trim();if(!email){authMsg("Entrez d'abord votre email.","error");return}const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:APP_URL});authMsg(error?error.message:"Email de réinitialisation envoyé ✅",error?"error":"good")}
-async function logout(){clearTimeout(saveTimer);if(currentChild&&!profileLoading)await saveRemoteNow();profileLoadSequence++;profileLoading=false;if(sb)await sb.auth.signOut();session=null;currentChild=null;children=[];try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}currentView=state.lastView||"home";closeAuth();render();topUI()}
+function renderAuthForm(mode){authViewId++;const f=$("#authForm");if(!f)return;if(mode==="signup")f.innerHTML=`<div class="form"><div class="field"><label for="signupName">Votre prénom</label><input id="signupName" autocomplete="given-name"></div><div class="field"><label for="signupEmail">Email</label><input id="signupEmail" type="email" autocomplete="email" inputmode="email"></div><div class="field"><label for="signupPassword">Mot de passe (8 caractères minimum)</label><input id="signupPassword" type="password" autocomplete="new-password"></div><button class="btn primary" data-action="signup">Créer mon compte</button></div>`;else f.innerHTML=`<div class="form"><div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" inputmode="email"></div><div class="field"><label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password" autocomplete="current-password"></div><button class="btn primary" data-action="login">Se connecter</button><button class="btn gray" data-action="forgot">Mot de passe oublié</button></div>`}
+function openAuth(mode="login"){if(passwordRecovery&&session){openPasswordRecovery();return}const modal=$("#authModal"),content=$("#authContent");authOpener=document.activeElement;modal.classList.remove("hidden");if(session){renderAccountPanel();content.querySelector("button")?.focus();return}content.innerHTML=`<h2>Compte parent</h2><p>Connectez-vous pour synchroniser la progression entre plusieurs appareils.</p><div class="tabs"><button class="tab ${mode==="login"?"active":""}" data-auth-tab="login">Connexion</button><button class="tab ${mode==="signup"?"active":""}" data-auth-tab="signup">Créer un compte</button></div><div id="authForm"></div><div class="auth-msg" id="authMsg" role="status" aria-live="polite"></div><div class="actions" style="margin-top:10px"><button class="btn gray" data-action="close-modal">Continuer en invité</button></div>`;renderAuthForm(mode);content.querySelector("input")?.focus()}
+function authErrorMessage(error){
+ const code=error?.code||"";
+ const messages={invalid_credentials:"Email ou mot de passe incorrect.",email_not_confirmed:"Confirme ton email avec le lien reçu avant de te connecter.",over_email_send_rate_limit:"Un email vient déjà d’être demandé. Patiente un peu avant de réessayer.",over_request_rate_limit:"Trop de tentatives rapprochées. Patiente un peu avant de réessayer.",same_password:"Choisis un mot de passe différent du précédent.",weak_password:"Ce mot de passe est trop simple. Choisis un mot de passe plus long et moins prévisible.",session_not_found:"Le lien a expiré. Demande un nouveau lien de réinitialisation.",otp_expired:"Le lien a expiré. Demande un nouveau lien de réinitialisation."};
+ return messages[code]||"La demande n’a pas abouti. Vérifie ta connexion puis réessaie."
+}
+async function authRequest(task){
+ if(authBusy)return;
+ if(!sb){authMsg("Service de connexion indisponible. Le mode invité reste utilisable.","error");return}
+ authBusy=true;const view=authViewId,isCurrent=()=>view===authViewId;
+ const buttons=[...$("#authContent").querySelectorAll('button:not([data-action="close-modal"])')];
+ buttons.forEach(b=>b.disabled=true);
+ try{await task(isCurrent)}catch(error){if(isCurrent())authMsg(authErrorMessage(error),"error")}
+ finally{authBusy=false;buttons.forEach(b=>{if(b.isConnected)b.disabled=false})}
+}
+function validEmailInput(id){
+ const input=$(id),email=input?.value.trim()||"";
+ if(!email||!input.checkValidity()){authMsg("Indique une adresse email valide.","error");input?.focus();return null}
+ return email
+}
+async function signUp(){
+ const email=validEmailInput("#signupEmail"),password=$("#signupPassword").value,name=$("#signupName").value.trim();
+ if(!email)return;if(password.length<8){authMsg("Choisis un mot de passe de 8 caractères minimum.","error");return}
+ return authRequest(async isCurrent=>{
+  authMsg("Création du compte…");
+  const {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:APP_URL}});
+  if(!isCurrent())return;if(error){authMsg(authErrorMessage(error),"error");return}
+  $("#signupPassword").value="";
+  if(data?.session){session=data.session;renderAccountPanel();authMsg("Compte créé. Tu peux ajouter un profil enfant.","good")}
+  else authMsg("Vérifie ta boîte mail et clique sur le lien de confirmation pour continuer.","good")
+ })
+}
+async function login(){
+ const email=validEmailInput("#loginEmail"),password=$("#loginPassword").value;
+ if(!email)return;if(!password){authMsg("Indique ton mot de passe.","error");return}
+ return authRequest(async isCurrent=>{
+  authMsg("Connexion…");const {error}=await sb.auth.signInWithPassword({email,password});
+  if(!isCurrent())return;if(error){authMsg(authErrorMessage(error),"error");return}closeAuth()
+ })
+}
+async function forgot(){
+ const email=validEmailInput("#loginEmail");if(!email)return;
+ return authRequest(async isCurrent=>{
+  authMsg("Envoi du lien…");const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:APP_URL});
+  if(!isCurrent())return;
+  authMsg(error?authErrorMessage(error):"Si un compte correspond à cette adresse, tu recevras un lien pour choisir un nouveau mot de passe.",error?"error":"good")
+ })
+}
+function openPasswordRecovery(){
+ authViewId++;const modal=$("#authModal"),content=$("#authContent");
+ if(modal.classList.contains("hidden"))authOpener=document.activeElement;
+ modal.classList.remove("hidden");
+ content.innerHTML='<h2>Nouveau mot de passe</h2><p>Choisis un nouveau mot de passe pour ton compte parent.</p><div class="form"><div class="field"><label for="recoveryPassword">Nouveau mot de passe (8 caractères minimum)</label><input id="recoveryPassword" type="password" autocomplete="new-password" minlength="8"></div><div class="field"><label for="recoveryConfirm">Confirmer le mot de passe</label><input id="recoveryConfirm" type="password" autocomplete="new-password"></div><button class="btn primary" data-action="update-password">Enregistrer le mot de passe</button></div><div class="auth-msg" id="authMsg" role="status" aria-live="polite"></div><div class="actions"><button class="btn gray" data-action="close-modal">Fermer</button></div>';
+ $("#recoveryPassword").focus()
+}
+async function updatePassword(){
+ if(!session||!passwordRecovery){authMsg("Le lien a expiré. Demande un nouveau lien depuis « Mot de passe oublié ».","error");return}
+ const password=$("#recoveryPassword").value,confirmation=$("#recoveryConfirm").value;
+ if(password.length<8){authMsg("Choisis un mot de passe de 8 caractères minimum.","error");return}
+ if(password!==confirmation){authMsg("Les deux mots de passe ne sont pas identiques.","error");return}
+ const ownerId=session.user.id;
+ return authRequest(async isCurrent=>{
+  authMsg("Enregistrement…");const {error}=await sb.auth.updateUser({password});
+  if(!isCurrent()||session?.user?.id!==ownerId)return;
+  if(error){authMsg(authErrorMessage(error),"error");return}
+  passwordRecovery=false;$("#recoveryPassword").value="";$("#recoveryConfirm").value="";
+  authViewId++;$("#authContent").innerHTML='<h2>Mot de passe enregistré</h2><p>Ton nouveau mot de passe est prêt. Tu peux retrouver les profils de tes enfants.</p><button class="btn primary" data-action="account-open">Retrouver mes profils</button>';
+  $("#authContent").querySelector("button").focus()
+ })
+}
+async function logout(){
+ return authRequest(async isCurrent=>{
+  authMsg("Déconnexion…");clearTimeout(saveTimer);if(currentChild&&!profileLoading)await saveRemoteNow();
+  const {error}=await sb.auth.signOut();if(error){if(isCurrent())authMsg(authErrorMessage(error),"error");return}
+  profileLoadSequence++;profileLoading=false;passwordRecovery=false;session=null;currentChild=null;children=[];
+  try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
+  currentView=state.lastView||"home";closeAuth();render();topUI()
+ })
+}
+
 async function loadChildren(){if(!sb||!session)return;const ownerId=session.user.id;const {data,error}=await sb.from("children").select("id,parent_id,nickname,school_level,avatar,created_at").eq("parent_id",session.user.id).order("created_at",{ascending:true});if(ownerId!==session?.user?.id)return;if(error){console.error(error);return}children=(data||[]).filter(ch=>ch.parent_id===ownerId)}
-function renderAccountPanel(){const c=$("#authContent");c.innerHTML=`<h2>Mon compte</h2><p>${esc(session.user.email||"")}</p><div class="children-grid">${children.map(ch=>`<button class="child-card" data-action="select-child" data-id="${esc(ch.id)}"><div class="avatar">${esc(ch.avatar||"🦊")}</div><b>${esc(ch.nickname)}</b><small>${esc(ch.school_level||"CP")}</small></button>`).join("")}</div><div class="card"><h3 style="margin-top:0">Ajouter un enfant</h3><div class="form"><div class="field"><label for="newChildName">Prénom ou pseudo</label><input id="newChildName" maxlength="30"></div><div class="field"><label for="newChildLevel">Niveau</label><select id="newChildLevel"><option>CP</option><option>Grande section</option><option>CE1</option></select></div><div class="field"><label for="newChildAvatar">Avatar</label><select id="newChildAvatar"><option>🦊</option><option>🐼</option><option>🦄</option><option>🐯</option><option>🐨</option><option>🐰</option></select></div><button class="btn primary" data-action="create-child">Créer le profil</button></div><div class="auth-msg" id="authMsg"></div></div><div class="actions" style="margin-top:12px"><button class="btn gray" data-action="close-modal">Fermer</button><button class="btn redbtn" data-action="logout">Se déconnecter</button></div>`}
-async function createChild(){if(!sb){authMsg("Service de connexion indisponible.","error");return}const nickname=$("#newChildName").value.trim(),school_level=$("#newChildLevel").value,avatar=$("#newChildAvatar").value;if(!nickname){authMsg("Indiquez un prénom ou un pseudo.","error");return}const {data,error}=await sb.from("children").insert({parent_id:session.user.id,nickname,school_level,avatar}).select().single();if(error){authMsg(error.message,"error");return}await loadChildren();if(data.parent_id!==session?.user?.id)return;enterChildProfile(data);await loadRemoteState();if(session)renderAccountPanel();topUI()}
+function renderAccountPanel(){authViewId++;const c=$("#authContent");c.innerHTML=`<h2>Mon compte</h2><p>${esc(session.user.email||"")}</p><div class="children-grid">${children.map(ch=>`<button class="child-card" data-action="select-child" data-id="${esc(ch.id)}"><div class="avatar">${esc(ch.avatar||"🦊")}</div><b>${esc(ch.nickname)}</b><small>${esc(ch.school_level||"CP")}</small></button>`).join("")}</div><div class="card"><h3 style="margin-top:0">Ajouter un enfant</h3><div class="form"><div class="field"><label for="newChildName">Prénom ou pseudo</label><input id="newChildName" maxlength="30"></div><div class="field"><label for="newChildLevel">Niveau</label><select id="newChildLevel"><option>CP</option><option>Grande section</option><option>CE1</option></select></div><div class="field"><label for="newChildAvatar">Avatar</label><select id="newChildAvatar"><option>🦊</option><option>🐼</option><option>🦄</option><option>🐯</option><option>🐨</option><option>🐰</option></select></div><button class="btn primary" data-action="create-child">Créer le profil</button></div><div class="auth-msg" id="authMsg" role="status" aria-live="polite"></div></div><div class="actions" style="margin-top:12px"><button class="btn gray" data-action="close-modal">Fermer</button><button class="btn redbtn" data-action="logout">Se déconnecter</button></div>`}
+async function createChild(){
+ if(!session)return;
+ const nickname=$("#newChildName").value.trim(),school_level=$("#newChildLevel").value,avatar=$("#newChildAvatar").value,ownerId=session.user.id;
+ if(!nickname){authMsg("Indique un prénom ou un pseudo.","error");return}
+ return authRequest(async isCurrent=>{
+  authMsg("Création du profil…");
+  const {data,error}=await sb.from("children").insert({parent_id:ownerId,nickname,school_level,avatar}).select().single();
+  if(!isCurrent()||session?.user?.id!==ownerId)return;
+  if(error){authMsg(authErrorMessage(error),"error");return}
+  await loadChildren();if(data.parent_id!==session?.user?.id||!isCurrent())return;
+  enterChildProfile(data);await loadRemoteState();if(session?.user?.id===ownerId&&isCurrent())renderAccountPanel();topUI()
+ })
+}
+
 async function selectChild(id){const ch=children.find(x=>x.id===id&&x.parent_id===session?.user?.id);if(!ch)return;enterChildProfile(ch);closeAuth();await loadRemoteState();topUI()}
 
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-action]");if(!b)return;
  const a=b.dataset.action;
- if(profileLoading&&!["select-child","close-modal","logout"].includes(a))return;
+ if(profileLoading&&!["select-child","close-modal","logout","update-password","account-open"].includes(a))return;
  if(a==="recover-home"){runtimeErrorShown=false;missionMode=false;activate("home");return}
  if(a==="go"){missionMode=false;activate(b.dataset.to);return}
  if(a==="mission-start"){missionHub();return}
@@ -1178,6 +1274,8 @@ document.addEventListener("click",e=>{
  if(a==="signup"){signUp();return}
  if(a==="login"){login();return}
  if(a==="forgot"){forgot();return}
+ if(a==="update-password"){updatePassword();return}
+ if(a==="account-open"){openParentAccount();return}
  if(a==="logout"){logout();return}
  if(a==="create-child"){createChild();return}
  if(a==="select-child"){selectChild(b.dataset.id);return}
@@ -1188,42 +1286,59 @@ document.addEventListener("click",e=>{
  if(a==="import-progress"){const input=$("#progressImportInput");if(input)input.click();return}
  if(a==="restore-backup"){restoreBackup();return}
  if(a==="reset"){
-   if(confirm("Remettre les étoiles et la progression à zéro ? Une sauvegarde locale sera conservée.")){saveBackup();state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
+   if(confirm("Remettre les étoiles et la progression à zéro ? Une sauvegarde locale sera conservée.")){if(!saveBackup()){alert("La copie de sécurité n’a pas pu être créée. Exporte la progression avant de réessayer.");return}state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
  }
 });
 nav.addEventListener("click",e=>{const b=e.target.closest(".nav-btn");if(!b||profileLoading)return;missionMode=false;activate(b.dataset.view)});
-$("#accountBtn").addEventListener("click",()=>openAuth());
-$("#switchChildBtn").addEventListener("click",async()=>{if(!session)openAuth("login");else{await loadChildren();openAuth()}});
+async function openParentAccount(){
+ try{if(session&&!passwordRecovery)await loadChildren();openAuth()}catch(e){openAuth();authMsg("Impossible de charger les profils. Réessaie dans un instant.","error")}
+}
+$("#accountBtn").addEventListener("click",openParentAccount);
+$("#switchChildBtn").addEventListener("click",openParentAccount);
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")closeAuth()});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
 document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
+function handleAuthStateChange(event,newSession){
+ authEventSequence++;
+ const previousOwner=session?.user?.id;session=newSession;
+ if(event==="PASSWORD_RECOVERY"){
+  passwordRecovery=!!newSession;
+  if(previousOwner!==newSession?.user?.id){clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}}
+  if(newSession)openPasswordRecovery();return
+ }
+ if(authBootstrapping)return;
+ if(!newSession)passwordRecovery=false;
+ if(previousOwner===newSession?.user?.id){topUI();return}
+ clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;
+ try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
+ currentView=state.lastView||"home";render();topUI();
+ if(!newSession)return;
+ const ownerId=newSession.user.id;
+ setTimeout(()=>restoreSessionProfile(ownerId).catch(()=>authMsg("Le compte est connecté. Réessaie de choisir un profil.","error")),0)
+}
+async function restoreSessionProfile(ownerId){
+ await loadChildren();if(session?.user?.id!==ownerId||passwordRecovery)return;
+ const remembered=localStorage.getItem("lastChildId"),child=children.find(c=>c.id===remembered)||(children.length===1?children[0]:null);
+ if(child){enterChildProfile(child);await loadRemoteState()}else topUI()
+}
 async function bootstrap(){
  if(sb){
   try{
-   const {data:{session:s}}=await sb.auth.getSession();session=s;
-   if(session){await loadChildren();const remembered=localStorage.getItem("lastChildId");if(remembered)currentChild=children.find(c=>c.id===remembered)||null;if(!currentChild&&children.length===1)currentChild=children[0];if(currentChild){enterChildProfile(currentChild);await loadRemoteState()}}
-   sb.auth.onAuthStateChange((event,newSession)=>{
-    const previousOwner=session?.user?.id;session=newSession;
-    if(previousOwner===newSession?.user?.id){topUI();return}
-    clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;
-    try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-    currentView=state.lastView||"home";render();topUI();
-    if(!newSession)return;
-    const ownerId=newSession.user.id;
-    setTimeout(async()=>{
-     try{
-      await loadChildren();if(session?.user?.id!==ownerId)return;
-      const remembered=localStorage.getItem("lastChildId"),child=children.find(c=>c.id===remembered)||(children.length===1?children[0]:null);
-      if(child){enterChildProfile(child);await loadRemoteState()}else topUI()
-     }catch(e){console.error("Account refresh error",e);authMsg("Le compte est connecté. Réessaie de choisir un profil.","error")}
-    },0)
-   })
+   // Subscribe before getSession, otherwise a recovery event may already be over.
+   sb.auth.onAuthStateChange(handleAuthStateChange);
+   const sequence=authEventSequence,{data:{session:s}}=await sb.auth.getSession();
+   if(sequence===authEventSequence)session=s;
+   if(session&&!passwordRecovery)await restoreSessionProfile(session.user.id)
   }catch(e){console.error("Supabase bootstrap error",e);session=null;currentChild=null}
  }
+ authBootstrapping=false;
  if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener?.("voiceschanged",()=>speechSynthesis.getVoices())}
  render();topUI();
+ if(passwordRecovery&&session)openPasswordRecovery();
+ else if(incomingAuthLinkError&&!session){openAuth();authMsg("Ce lien est expiré ou invalide. Demande un nouveau lien depuis « Mot de passe oublié ».","error")}
  if(!sb&&!localSaveFailed){$("#syncStatus").textContent="Mode local • service de synchronisation indisponible";$("#syncStatus").className="sync err"}
 }
+
 function registerServiceWorker(){
  if(!("serviceWorker" in navigator))return;
  const hadController=!!navigator.serviceWorker.controller;

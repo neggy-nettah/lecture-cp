@@ -207,3 +207,23 @@ node scripts/browser-check.js
 Le test des voix Safari et de la synchronisation entre deux appareils reste manuel.
 Les écritures simultanées depuis plusieurs appareils restent basées sur l’horodatage
 le plus récent ; une fusion serveur des progrès reste une évolution à prévoir.
+
+
+## Compte parent et récupération
+
+Le retour d’un lien de réinitialisation affiche un formulaire de nouveau mot de passe.
+L’écoute de `PASSWORD_RECOVERY` est installée avant `getSession()` afin de couvrir
+l’arrivée directe depuis l’email. L’enregistrement utilise `auth.updateUser` uniquement
+avec une session de récupération active. Les mots de passe ne sont pas placés dans
+la progression, les sauvegardes exportées ou le diagnostic.
+
+Les formulaires empêchent les doubles demandes pendant un appel réseau et affichent
+les erreurs sans remplacer l’écran de jeu. L’import de progression vérifie que son
+profil cible est resté identique et exige une copie de sécurité avant remplacement.
+
+Références techniques :
+- https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail
+- https://supabase.com/docs/reference/javascript/auth-onauthstatechange
+
+Test manuel restant : ouvrir un vrai email de récupération Supabase et vérifier
+le changement de mot de passe. Les tests automatiques simulent ce service.

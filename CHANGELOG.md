@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.16.0 — 2026-09-24
+
+### Compte parent
+- parcours de récupération du mot de passe complet : détection du retour du lien, saisie et confirmation, validation puis accès aux profils
+- abonnement aux événements de connexion avant la lecture de session pour ne pas manquer PASSWORD_RECOVERY
+- messages d’erreur français, validation des emails et gestion des exceptions réseau dans les formulaires
+- protection contre les doubles soumissions, notamment lors de la création d’un profil enfant
+- prise en charge de la touche Entrée et des gestionnaires de mots de passe
+- indication claire lorsqu’un lien de connexion contient une erreur
+
+### Récupération de progression
+- un import est annulé si le compte ou le profil change pendant la lecture du fichier
+- import et remise à zéro annulés si la copie de sécurité échoue
+- la restauration conserve la progression remplacée, pour permettre de revenir en arrière
+
+### Tests
+- scénarios Chromium ajoutés : récupération pendant le démarrage, confirmation du mot de passe, double soumission, email invalide et erreur réseau
+- tests d’import lent, de stockage saturé et de restauration réversible
+- tous les appels de compte et de sauvegarde de ces scénarios sont simulés ; aucun email n’est envoyé
+
 ## 0.15.0 — 2026-09-24
 
 ### Progression et profils
