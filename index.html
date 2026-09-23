@@ -430,7 +430,7 @@ function gameListen(forcedTarget=null,fromMission=false){
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="repeat-answer">🔊 Écouter</button>
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button></div>`;
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
  setTimeout(()=>speak(currentAnswer,.60),180)
 }
 
@@ -441,7 +441,7 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  `<div class="card center"><div class="actions"><button class="btn yellow" data-action="bubble-repeat">🔊 Réécouter</button></div>
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button></div>`;
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
  setTimeout(()=>speak(currentAnswer,.60),180)
 }
 function makeMemoryDeck(preferred=[]){
@@ -457,7 +457,7 @@ function gameMemory(preferred=[],fromMission=false){
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
  <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
  <div id="feedback" class="feedback"></div></div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button></div>`
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`
 }
 function memoryFlip(btn,index){
  if(locked||btn.classList.contains("matched")||btn.classList.contains("open")||memoryOpen.length>=2)return;
@@ -639,7 +639,7 @@ function gameBuild(forcedAnswer=null,fromMission=false){
  <div class="choices" id="buildChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:27px" data-action="build-token" data-value="${x}" data-id="${i}">${colorSyl(x)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="build-reset">↩ Recommencer</button><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Écouter le mot</button></div>
  <div id="feedback" class="feedback"></div></div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-build">Nouveau mot →</button></div>`;
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-build">Nouveau mot →</button>`}</div>`;
 }
 function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
@@ -727,13 +727,14 @@ document.addEventListener("click",e=>{
  if(a==="go"){missionMode=false;activate(b.dataset.to);return}
  if(a==="mission-start"){missionHub();return}
  if(a==="mission-next"){startMissionStep();return}
+ if(a==="mission-back"){missionHub();return}
  if(a==="mission-review"){missionMode=false;activate("games");return}
  if(a==="mission-discover-listen"){speak(currentAnswer,.58);return}
  if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
  if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save();sounds();return}
  if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save();sounds();return}
- if(a==="sound-repeat"){practiceDone("Bien répété ! L’étoile sera gagnée quand le micro pourra valider la prononciation.");return}
+ if(a==="sound-repeat"){practiceDone("Bien répété ! Continue comme ça.");return}
  if(a==="set-next"){state.set=(state.set+1)%DATA.sets.length;save();syllables();return}
  if(a==="set-prev"){state.set=(state.set-1+DATA.sets.length)%DATA.sets.length;save();syllables();return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
