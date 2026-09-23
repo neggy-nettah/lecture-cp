@@ -321,9 +321,15 @@ function activeSoundGraphemes(){
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
+function curriculumStatus(){
+ const count=unlockedFamilyCount(),missions=(state.missionHistory||[]).length;
+ if(count>=DATA.sets.length)return {count,complete:true,next:null,remaining:0};
+ const next=DATA.sets[count],threshold=2*(count-2);
+ return {count,complete:false,next,nextInitial:(next?.[0]||"")[0]?.toUpperCase()||"?",remaining:Math.max(0,threshold-missions)}
+}
 function familyRoadmapHTML(){
- const count=unlockedFamilyCount();
- return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count;return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:"à venir")+'</small></div>'}).join("")+'</div>'
+ const status=curriculumStatus(),count=status.count;
+ return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count,isNext=i===count;return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:isNext&&status.remaining?"dans "+status.remaining+" mission(s)":"à venir")+'</small></div>'}).join("")+'</div>'
 }
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function learningCourseCompleted(){return (state.missionHistory||[]).length>=14&&masterySummary().mastered>=40}
@@ -987,7 +993,7 @@ function parents(){
  `<div class="parent-grid">
   <div class="parent-box"><h3>🎯 Précision</h3><p><b style="font-size:26px">${accuracy} %</b><br>${correct} bonnes réponses sur ${attempts} essais vérifiés.</p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
-  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.</p></div>
+  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumStatus().complete?"Toutes les familles sont ouvertes.":"Prochaine famille : "+curriculumStatus().nextInitial+" dans "+curriculumStatus().remaining+" mission(s)."}</p></div>
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
  </div>
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions.</p><div class="collection-row">${weak}</div></div>
