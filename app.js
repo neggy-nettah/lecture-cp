@@ -60,7 +60,7 @@ async function loadRemoteState(){
  if(remote&&local){
   const remoteTs=Number(remote.updatedAt||0),localTs=Number(local.updatedAt||0);
   if(localTs>remoteTs){state=normalizeState(local);await saveRemoteNow()}
-  else state=normalizeState(remote)
+  else{saveSnapshotBackup(normalizeState(local));state=normalizeState(remote)}
  }else if(remote)state=normalizeState(remote);
  else if(local){state=normalizeState(local);await saveRemoteNow()}
  else{state=normalizeState({name:currentChild.nickname});save();await saveRemoteNow()}
@@ -798,13 +798,14 @@ function collectionView(){
  <div class="card"><b>🏅 Mes badges</b><div class="badge-grid">${badges.map(x=>`<div class="badge-card ${x.ok?"":"locked"}"><div class="badge-emoji">${x.ok?x.emoji:"🔒"}</div><b>${x.name}</b><small>${x.ok?"Débloqué !":x.desc}</small></div>`).join("")}</div></div>`
 }
 function backupKey(){return (currentChild?childKey(currentChild.id):guestKey())+"_backup"}
-function saveBackup(){
+function stateMeaningful(snapshot=state){return (snapshot?.stars||0)>0||(snapshot?.stats?.attempts||0)>0||(snapshot?.missionHistory||[]).length>0||Object.keys(snapshot?.mastery||{}).length>0}
+function saveSnapshotBackup(snapshot=state){
  try{
-  const meaningful=(state.stars||0)>0||(state.stats?.attempts||0)>0||(state.missionHistory||[]).length>0||Object.keys(state.mastery||{}).length>0;
-  if(!meaningful&&hasBackup())return true;
-  localStorage.setItem(backupKey(),JSON.stringify(state));return true
+  if(!stateMeaningful(snapshot)&&hasBackup())return true;
+  localStorage.setItem(backupKey(),JSON.stringify(snapshot));return true
  }catch(e){console.error("Backup error",e);return false}
 }
+function saveBackup(){return saveSnapshotBackup(state)}
 function hasBackup(){try{return !!localStorage.getItem(backupKey())}catch(e){return false}}
 function restoreBackup(){
  let raw=null;try{raw=localStorage.getItem(backupKey())}catch(e){}
