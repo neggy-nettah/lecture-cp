@@ -54,6 +54,8 @@ const requiredFunctions=[
   "function masteryLevel(",
   "function recordAttempt(",
   "function scopedChallengeKey(",
+  "function curriculumMasteryPoints(",
+  "function knownFamilyFloor(",
   "function activeLearningSyllables(",
   "function dueReviewSyllables(",
   "function activeSoundData(",
@@ -129,6 +131,9 @@ if(!app.includes('extraBase=activeLearningSyllables()')){
 }
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
+}
+if(!app.includes('Math.min(missionCap,readinessCap)')||!app.includes('Math.max(knownFamilyFloor()')){
+  fail("Family unlocks are no longer gated by both mission cadence and learning readiness.");
 }
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="comprehension"')||!app.includes('["memory","family","missing",...(comprehensionPool.length?["comprehension"]:[])]')){
   fail("Daily mission is missing the adaptive visual/comprehension rotation.");
