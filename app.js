@@ -188,9 +188,19 @@ function reviewDueInfo(key){
 function dueReviewSyllables(){
  return activeLearningSyllables().filter(s=>reviewDueInfo(s).due).sort((a,b)=>reviewDueInfo(b).overdue-reviewDueInfo(a).overdue)
 }
+function curriculumMasteryPoints(){return DATA.sets.flat().reduce((sum,s)=>sum+masteryLevel(s),0)}
+function knownFamilyFloor(){
+ let floor=3;
+ DATA.sets.forEach((set,i)=>{
+  const initial=(set[0]||"")[0],known=set.some(s=>(state.mastery?.[s]?.attempts||0)>0)||!!state.soundPractice?.[initial];
+  if(known)floor=Math.max(floor,i+1)
+ });
+ return Math.min(DATA.sets.length,floor)
+}
 function unlockedFamilyCount(){
- const missions=(state.missionHistory||[]).length;
- return Math.min(DATA.sets.length,3+Math.floor(missions/2))
+ const missions=(state.missionHistory||[]).length,points=curriculumMasteryPoints();
+ const missionCap=Math.min(DATA.sets.length,3+Math.floor(missions/2)),readinessCap=Math.min(DATA.sets.length,3+Math.floor(points/6));
+ return Math.min(DATA.sets.length,Math.max(knownFamilyFloor(),Math.min(missionCap,readinessCap)))
 }
 function activeLearningSyllables(){
  const unlocked=DATA.sets.slice(0,unlockedFamilyCount()).flat(),known=Object.keys(state.mastery||{}).filter(k=>DATA.sets.flat().includes(k));
@@ -203,14 +213,21 @@ function activeSoundGraphemes(){
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
 function curriculumStatus(){
- const count=unlockedFamilyCount(),missions=(state.missionHistory||[]).length;
- if(count>=DATA.sets.length)return {count,complete:true,next:null,remaining:0};
- const next=DATA.sets[count],threshold=2*(count-2);
- return {count,complete:false,next,nextInitial:(next?.[0]||"")[0]?.toUpperCase()||"?",remaining:Math.max(0,threshold-missions)}
+ const count=unlockedFamilyCount(),missions=(state.missionHistory||[]).length,points=curriculumMasteryPoints();
+ if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
+ const next=DATA.sets[count],missionThreshold=2*(count-2),pointThreshold=6*(count-2);
+ return {count,complete:false,next,nextInitial:(next?.[0]||"")[0]?.toUpperCase()||"?",remainingMissions:Math.max(0,missionThreshold-missions),remainingPoints:Math.max(0,pointThreshold-points)}
+}
+function curriculumNextText(){
+ const s=curriculumStatus();if(s.complete)return "Toutes les familles sont ouvertes.";
+ if(s.remainingMissions>0&&s.remainingPoints>0)return "Prochaine famille "+s.nextInitial+" : encore "+s.remainingMissions+" mission(s) et un peu de consolidation.";
+ if(s.remainingMissions>0)return "Prochaine famille "+s.nextInitial+" dans "+s.remainingMissions+" mission(s).";
+ if(s.remainingPoints>0)return "Prochaine famille "+s.nextInitial+" : consolide encore les syllabes actuelles.";
+ return "Prochaine famille "+s.nextInitial+" bientôt."
 }
 function familyRoadmapHTML(){
  const status=curriculumStatus(),count=status.count;
- return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count,isNext=i===count;return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:isNext&&status.remaining?"dans "+status.remaining+" mission(s)":"à venir")+'</small></div>'}).join("")+'</div>'
+ return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count,isNext=i===count,nextLabel=status.remainingMissions>0?"dans "+status.remainingMissions+" mission(s)":status.remainingPoints>0?"à consolider":"bientôt";return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:isNext?nextLabel:"à venir")+'</small></div>'}).join("")+'</div>'
 }
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function wordPracticeComplete(){const pool=decodableMissionWords(),practiced=state.wordPractice||{},target=Math.min(5,pool.length);return target>0&&pool.filter(w=>practiced[w.w]).length>=target}
@@ -965,7 +982,7 @@ function parents(){
  `<div class="parent-grid">
   <div class="parent-box"><h3>🎯 Précision récente</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${accuracy} % (${correct}/${attempts})</small></p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
-  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumStatus().complete?"Toutes les familles sont ouvertes.":"Prochaine famille : "+curriculumStatus().nextInitial+" dans "+curriculumStatus().remaining+" mission(s)."}</p></div>
+  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumNextText()}</p></div>
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
  </div>
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>
