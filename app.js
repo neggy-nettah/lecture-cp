@@ -1137,8 +1137,15 @@ async function bootstrap(){
 }
 function registerServiceWorker(){
  if(!("serviceWorker" in navigator))return;
+ const hadController=!!navigator.serviceWorker.controller;
+ let updateNotified=false;
+ navigator.serviceWorker.addEventListener?.("controllerchange",()=>{
+  if(hadController&&!updateNotified){updateNotified=true;toast("✨ Mise à jour installée • elle sera utilisée au prochain rechargement.","ok")}
+ });
  window.addEventListener("load",()=>{
-  navigator.serviceWorker.register("./sw.js").catch(error=>console.error("Service Worker registration error",error))
+  navigator.serviceWorker.register("./sw.js")
+   .then(reg=>reg.update().catch(()=>{}))
+   .catch(error=>console.error("Service Worker registration error",error))
  })
 }
 bootstrap();
