@@ -58,6 +58,7 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
 .emojis{font-size:58px;margin:8px 0}
 .parent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.parent-box{border:1px solid var(--line);border-radius:17px;padding:13px;background:#fff}.parent-box h3{margin:0 0 7px;font-size:16px}.parent-box p,.parent-box li{font-size:13px;color:#5f6973;line-height:1.5}
 .mic-status{margin:13px auto 0;max-width:520px;padding:11px 13px;border-radius:14px;background:#f5f3ff;color:#554db5;font-weight:850;font-size:14px}.mic-status.listening{background:#fff3d5;color:#765600}.mic-status.success{background:#e9f9f0;color:#176d40}.mic-status.error{background:#fff1f4;color:#9f2145}.mic-pulse{display:inline-block;animation:micPulse .9s infinite alternate}@keyframes micPulse{to{transform:scale(1.16)}}.puzzle-wrap{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}.puzzle-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:140px;height:140px}.puzzle-piece{display:grid;place-items:center;border-radius:18px;border:2px dashed #d9d3ec;background:#f8f6ff;font-size:30px;color:#aaa}.puzzle-piece.on{border-style:solid;border-color:#f0c760;background:#fff4c8;color:#6a5000}.collection-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.collectible{padding:7px 9px;border-radius:12px;background:#f5f3ff;font-size:12px;font-weight:850;color:#554db5}@media(max-width:520px){.puzzle-wrap{grid-template-columns:1fr}.puzzle-grid{margin:auto}}
+.bubble-arena{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:620px;margin:18px auto}.bubble{aspect-ratio:1;border-radius:50%;border:3px solid #ded9ff;background:radial-gradient(circle at 32% 28%,#fff,#efedff 58%,#ddd8ff);font-size:clamp(26px,6vw,43px);font-weight:1000;color:#4d44d7;box-shadow:inset -7px -9px 16px #6c63ff13,0 8px 18px #6c63ff18;transition:.16s transform,.16s opacity}.bubble:active{transform:scale(.91)}.bubble.pop{transform:scale(1.18);opacity:0}.memory-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:600px;margin:16px auto}.memory-card{min-height:105px;border-radius:18px;border:2px solid #e6e0f7;background:#6c63ff;color:#fff;font-size:30px;font-weight:1000;display:grid;place-items:center;transition:.18s transform,.18s background}.memory-card:active{transform:scale(.96)}.memory-card.open,.memory-card.matched{background:#fff;color:#27313b}.memory-card.matched{border-color:#2fbd73;background:#e9f9f0}.beta-pill{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:999px;background:#fff1bd;color:#745a00;font-size:10px;font-weight:900}@media(max-width:520px){.bubble-arena,.memory-grid{grid-template-columns:repeat(2,1fr)}}
 .footer-note{text-align:center;color:#8c9299;font-size:11px;margin-top:16px}
 @media(max-width:760px){
  .app{padding:10px}.layout{grid-template-columns:1fr}.nav{position:static;display:grid;grid-template-columns:1fr 1fr;gap:5px}.name{grid-column:1/-1;margin:0}.nav-btn{margin:0;padding:10px;font-size:14px}.stage{padding:14px;min-height:auto}.sound-grid{grid-template-columns:repeat(4,1fr)}.levels{grid-template-columns:1fr 1fr}.parent-grid{grid-template-columns:1fr}.top{align-items:flex-start}.score{font-size:13px}.choices{gap:8px}.choice{min-height:66px}
@@ -146,7 +147,7 @@ function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&ra
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[];
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 function saveLocal(){localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state))}
@@ -170,7 +171,7 @@ function topUI(){
  $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : devenir une super lectrice 🌟";
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
- const keys=["sounds","syllables","words","listen","pronunciation","pictures","order"];const done=keys.filter(k=>state.done[k]).length;const pct=Math.round(done/keys.length*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
+ const keys=["sounds","syllables","words","listen","bubbles","memory","pictures","order"];const done=keys.filter(k=>state.done[k]).length;const pct=Math.round(done/keys.length*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
  if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
@@ -338,7 +339,9 @@ function gamesMenu(){
  stage.innerHTML=title("Les mini-jeux","Des exercices très courts pour garder l'envie de lire.","À toi de jouer !")+
  `<div class="levels">
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
-  <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète</b><small>Le micro vérifie la syllabe</small></button>
+  <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
+  <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
+  <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
   <button class="level" data-action="game-order"><div class="ico">💬</div><b>La phrase</b><small>Remets les mots dans l'ordre</small></button>
@@ -355,6 +358,51 @@ function gameListen(){
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button></div>`;
  setTimeout(()=>speak(currentAnswer,.60),180)
 }
+
+function gameBubbles(){
+ currentView="bubbles";state.lastView="bubbles";save();currentAnswer=pickLearningSyllable();locked=false;
+ const opts=nextRandom(DATA.sets.flat(),currentAnswer,6);
+ stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
+ `<div class="card center"><div class="actions"><button class="btn yellow" data-action="bubble-repeat">🔊 Réécouter</button></div>
+ <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
+ <div id="feedback" class="feedback"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button></div>`;
+ setTimeout(()=>speak(currentAnswer,.60),180)
+}
+function makeMemoryDeck(){
+ const pool=shuffle(DATA.sets.flat()).slice(0,3);
+ memoryDeck=shuffle(pool.flatMap((s,i)=>[
+  {id:i+"-sound",pair:s,type:"sound",label:"🔊"},
+  {id:i+"-text",pair:s,type:"text",label:s}
+ ]));memoryOpen=[];memoryMatches=0
+}
+function gameMemory(){
+ currentView="memory";state.lastView="memory";save();locked=false;makeMemoryDeck();
+ stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
+ `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
+ <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
+ <div id="feedback" class="feedback"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button></div>`
+}
+function memoryFlip(btn,index){
+ if(locked||btn.classList.contains("matched")||btn.classList.contains("open")||memoryOpen.length>=2)return;
+ const card=memoryDeck[index];btn.classList.add("open");btn.innerHTML=card.type==="sound"?"🔊":colorSyl(card.label);
+ if(card.type==="sound")speak(card.pair,.60);
+ memoryOpen.push({btn,index,card});
+ if(memoryOpen.length<2)return;
+ const [a,b]=memoryOpen,match=a.card.pair===b.card.pair&&a.card.type!==b.card.type;
+ if(match){
+  a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryOpen=[];
+  tone("ok");
+  if(memoryMatches===3){
+   locked=true;rewardVerified("Memory terminé !");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>'
+  }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
+ }else{
+  tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
+  setTimeout(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";memoryOpen=[]},750)
+ }
+}
+
 function speechRecognitionCtor(){return window.SpeechRecognition||window.webkitSpeechRecognition||null}
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)}
 function isSafariBrowser(){return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent)}
@@ -473,16 +521,16 @@ async function startPronunciationRecognition(){
   const alternatives=[];for(let i=0;i<e.results[0].length;i++)alternatives.push(e.results[0][i].transcript);
   const heard=alternatives[0]||"",ok=voiceDetected&&alternatives.some(x=>pronunciationMatches(currentAnswer,x));
   if(!voiceDetected){
-   recordAttempt(false,currentAnswer);miss("Je n’ai pas entendu ta voix.");
+   miss("Je n’ai pas entendu ta voix.");
    if(status){status.className="mic-status error";status.textContent="🎙️ Aucun son vocal détecté. Parle après l’apparition de « J’écoute »."}
    return
   }
   if(ok){
-   locked=true;recordAttempt(true,currentAnswer);rewardVerified("Très bien prononcé !");setDone("pronunciation");
+   locked=true;practiceDone("Très bien prononcé !");
    if(status){status.className="mic-status success";status.textContent='✅ J’ai entendu « '+heard+' »'}
    confetti();
   }else{
-   recordAttempt(false,currentAnswer);miss("Presque ! Écoute encore et réessaie.");
+   miss("Presque ! Écoute encore et réessaie.");
    if(status){status.className="mic-status error";status.textContent='J’ai entendu « '+(heard||"…")+' ». Réessaie.'}
    setTimeout(()=>speak(currentAnswer,.60),250);
   }
@@ -555,13 +603,15 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne et peut être retrouvée sur un autre appareil.</p></div><div class="card"><b>Test audio</b><p style="color:var(--muted);font-size:13px">Si la voix ne démarre pas automatiquement sur iPhone/iPad, toucher une première fois un bouton 🔊 l'autorise généralement.</p><div class="actions"><button class="btn primary" data-action="speak" data-text="Bonjour ! On va apprendre à lire ensemble.">🔊 Tester la voix</button><button class="btn gray" data-action="reset">Réinitialiser la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
  else if(currentView==="words")words();
  else if(currentView==="games")gamesMenu();
  else if(currentView==="listen")gameListen();
+ else if(currentView==="bubbles")gameBubbles();
+ else if(currentView==="memory")gameMemory();
  else if(currentView==="pronunciation")gamePronunciation();
  else if(currentView==="pictures")gamePicture();
  else if(currentView==="build")gameBuild();
@@ -610,6 +660,16 @@ document.addEventListener("click",e=>{
  if(a==="word-prev"){state.word=(state.word-1+DATA.words.length)%DATA.words.length;save();words();return}
  if(a==="word-read"){practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
+ if(a==="game-bubbles"){gameBubbles();return}
+ if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
+ if(a==="bubble-answer"){
+   if(locked)return;
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer);rewardVerified("Bonne bulle !");setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120)}
+   else{recordAttempt(false,currentAnswer);b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
+   return
+ }
+ if(a==="game-memory"){gameMemory();return}
+ if(a==="memory-card"){memoryFlip(b,Number(b.dataset.index));return}
  if(a==="game-pronunciation"){gamePronunciation();return}
  if(a==="pronunciation-listen"){speak(currentAnswer,.60);return}
  if(a==="pronunciation-record"){startPronunciationRecognition();return}
