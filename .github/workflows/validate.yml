@@ -18,5 +18,7 @@ jobs:
           node-version: "22"
       - name: Validate application
         run: node scripts/check-app.js
+      - name: Validate pedagogical content
+        run: node scripts/check-content.js
       - name: Runtime smoke test
         run: node scripts/smoke-runtime.js
