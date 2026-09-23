@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.19.0 — 2026-09-23
+
+- Memory de mission : reprise de la même disposition, des paires trouvées et des erreurs après navigation ou rechargement
+- les erreurs restent exclues des preuves de maîtrise après reprise
+- reprise sûre des anciennes parties et validation des cartes sauvegardées
+- noms accessibles des cartes masquées, retournées et appariées
+- tests navigateur de reprise, de fin de partie et de récompense unique
+
 ## 0.18.0 — 2026-09-23
 
 - bilan parent : trois propositions de révision avec lancement direct, erreurs prioritaires puis révisions espacées et apprentissages en cours

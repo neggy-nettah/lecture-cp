@@ -59,6 +59,40 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>state.missionHistory.length),1);
   assert.equal(await page.evaluate(()=>state.rewards.pieces),1);
   await page.evaluate(()=>missionComplete());assert.equal(await page.evaluate(()=>state.rewards.pieces),1);
+  // A mission Memory keeps its deck, matched pairs and mistakes across reloads.
+  await page.evaluate(()=>{state=normalizeState({});buildDailyMission();state.dailyMission.index=3;state.dailyMission.steps[3]={type:'memory',title:'Memory',detail:'Paires'};startMissionStep()});
+  const memoryCards=await page.evaluate(()=>memoryDeck.map(c=>({pair:c.pair,type:c.type})));
+  const memoryPairs=[...new Set(memoryCards.map(c=>c.pair))];
+  const positions=pair=>memoryCards.flatMap((c,i)=>c.pair===pair?[i]:[]);
+  for(const i of positions(memoryPairs[0]))await page.locator(`[data-action="memory-card"][data-index="${i}"]`).click();
+  const initialMemoryCorrect=await page.evaluate(()=>state.stats.correct);
+  for(const pair of memoryPairs.slice(1))await page.locator(`[data-action="memory-card"][data-index="${positions(pair)[0]}"]`).click();
+  await page.reload();await page.waitForFunction(()=>state.dailyMission?.index===3);
+  await page.locator('[data-action="mission-next"]').click();
+  assert.deepEqual(await page.evaluate(()=>memoryDeck.map(c=>({pair:c.pair,type:c.type}))),memoryCards);
+  assert.equal(await page.locator('.memory-card.matched').count(),2);
+  assert.equal(await page.locator('.memory-card.open').count(),0);
+  assert.deepEqual(await page.evaluate(()=>[...memoryMissedPairs].sort()),memoryPairs.slice(1).sort());
+  assert.equal(await page.evaluate(()=>state.stats.correct),initialMemoryCorrect);
+  for(const pair of memoryPairs.slice(1))for(const i of positions(pair))await page.locator(`[data-action="memory-card"][data-index="${i}"]`).click();
+  assert.equal(await page.evaluate(()=>state.dailyMission.index),4);
+  for(const pair of memoryPairs.slice(1))assert.equal(await page.evaluate(p=>state.mastery[p]?.correct||0,pair),0);
+  const memoryStars=await page.evaluate(()=>state.stars);
+  await page.locator('.memory-card').first().click();
+  assert.equal(await page.evaluate(()=>state.stars),memoryStars);
+  // A save made after the final pair but before advancing must finish only once.
+  const completedMemoryStats=await page.evaluate(()=>JSON.stringify(state.stats));
+  await page.evaluate(()=>{state.dailyMission.index=3;gameMemory([],true)});
+  assert.equal(await page.evaluate(()=>state.dailyMission.index),4);
+  assert.equal(await page.evaluate(()=>state.stars),memoryStars);
+  assert.equal(await page.evaluate(()=>JSON.stringify(state.stats)),completedMemoryStats);
+  // Invalid legacy decks are rebuilt; a recorded error still blocks mastery for that round.
+  await page.evaluate(()=>{state.dailyMission.index=3;state.dailyMission.memoryRound={step:3,cards:[{pair:'invalid',type:'text'}]};gameMemory([],true)});
+  assert.equal(await page.evaluate(()=>memoryDeck.length),6);
+  assert.equal(await page.evaluate(()=>memoryMissedPairs.size),3);
+  await page.evaluate(()=>gameMemory());
+  assert.equal(await page.evaluate(()=>memoryMissedPairs.size),0);
+  assert.equal(await page.evaluate(()=>memoryMatches),0);
   // Parent suggestions prioritize errors, keep unassessed syllables neutral and preserve the mission.
   await page.evaluate(()=>{state=normalizeState({mastery:{ma:{attempts:1,correct:0,lastSeen:localDayKey()},mi:{attempts:4,correct:4,lastSeen:'2020-01-01'},mo:{attempts:1,correct:1,lastSeen:localDayKey()}},reviewQueue:['ma','ma']});buildDailyMission();activate('parents')});
   assert.deepEqual(await page.evaluate(()=>parentReviewSuggestions().map(x=>x.s)),['ma','mi','mo']);
