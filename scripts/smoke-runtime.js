@@ -2,7 +2,7 @@ const fs=require("fs");
 const vm=require("vm");
 
 const content=fs.readFileSync("content.js","utf8");
-const modules=["progression.js","rewards.js","app.js"].map(file=>({file,source:fs.readFileSync(file,"utf8")}));
+const modules=["progression.js","rewards.js","exercises.js","missions.js","app.js"].map(file=>({file,source:fs.readFileSync(file,"utf8")}));
 const main=modules.map(x=>x.source).join("\n");
 if(!content.trim()||!main.trim()){
   console.error("content.js or app.js is empty");

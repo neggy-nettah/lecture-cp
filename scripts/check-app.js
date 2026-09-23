@@ -2,7 +2,7 @@ const fs=require("fs");
 
 const html=fs.readFileSync("index.html","utf8");
 const content=fs.readFileSync("content.js","utf8");
-const scriptFiles=["progression.js","rewards.js","app.js"];
+const scriptFiles=["progression.js","rewards.js","exercises.js","missions.js","app.js"];
 const app=scriptFiles.map(file=>fs.readFileSync(file,"utf8")).join("\n");
 const css=fs.readFileSync("styles.css","utf8");
 const manifestText=fs.readFileSync("manifest.webmanifest","utf8");
@@ -194,7 +194,7 @@ if(!app.includes("window.supabase?.createClient")){
 
 console.log("App validation OK");
 console.log("- Version:",version);
-console.log("- Split architecture: index.html + styles.css + content.js + progression.js + rewards.js + app.js");
+console.log("- Split architecture: index.html + styles.css + content.js + progression.js + rewards.js + exercises.js + missions.js + app.js");
 console.log("- JavaScript syntax: OK");
 console.log("- Core functions: OK");
 console.log("- Navigation/actions: OK");
