@@ -267,7 +267,7 @@ function weakestSyllable(exclude=""){
 }
 function decodableMissionWords(){
  const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
- return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p)))
+ return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
 function buildDailyMission(){
  const primary=pickLearningSyllable(),review=weakestSyllable(primary),decodable=decodableMissionWords();
