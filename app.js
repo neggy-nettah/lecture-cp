@@ -1,62 +1,4 @@
 "use strict";
-const DATA={
- sounds:[
-  {g:"a",say:"a",hint:"comme dans ami",emoji:"🍍"},
-  {g:"i",say:"i",hint:"comme dans image",emoji:"🖼️"},
-  {g:"o",say:"o",hint:"comme dans olive",emoji:"🫒"},
-  {g:"u",say:"u",hint:"comme dans lune",emoji:"🌙"},
-  {g:"é",say:"é",hint:"comme dans école",emoji:"🏫"},
-  {g:"m",say:"mmmm",hint:"le son mmmm",emoji:"🐑"},
-  {g:"l",say:"llll",hint:"le son llll",emoji:"🌙"},
-  {g:"s",say:"ssss",hint:"le son ssss",emoji:"🐍"},
-  {g:"r",say:"rrrr",hint:"le son rrrr",emoji:"🏎️"},
-  {g:"f",say:"ffff",hint:"le son ffff",emoji:"🍃"},
-  {g:"v",say:"vvvv",hint:"le son vvvv",emoji:"🐝"},
-  {g:"p",say:"pe",hint:"le son p",emoji:"🐧"},
-  {g:"t",say:"te",hint:"le son t",emoji:"🐯"},
-  {g:"n",say:"nnnn",hint:"le son nnnn",emoji:"👃"},
-  {g:"b",say:"be",hint:"le son b",emoji:"🎈"}
- ],
- sets:[
-  ["ma","mi","mo","mu","mé"],["la","li","lo","lu","lé"],["sa","si","so","su","sé"],
-  ["ra","ri","ro","ru","ré"],["fa","fi","fo","fu","fé"],["va","vi","vo","vu","vé"],
-  ["pa","pi","po","pu","pé"],["ta","ti","to","tu","té"],["na","ni","no","nu","né"],["ba","bi","bo","bu","bé"]
- ],
- words:[
-  {w:"maman",parts:["ma","man"],emoji:"👩"},{w:"papa",parts:["pa","pa"],emoji:"👨"},
-  {w:"moto",parts:["mo","to"],emoji:"🏍️"},{w:"lune",parts:["lu","ne"],emoji:"🌙"},
-  {w:"tomate",parts:["to","ma","te"],emoji:"🍅"},{w:"banane",parts:["ba","na","ne"],emoji:"🍌"},
-  {w:"pirate",parts:["pi","ra","te"],emoji:"🏴‍☠️"},{w:"valise",parts:["va","li","se"],emoji:"🧳"},
-  {w:"domino",parts:["do","mi","no"],emoji:"🁢"},{w:"salami",parts:["sa","la","mi"],emoji:"🥓"},
-  {w:"cabane",parts:["ca","ba","ne"],emoji:"🛖"},{w:"minute",parts:["mi","nu","te"],emoji:"⏱️"},
-  {w:"bébé",parts:["bé","bé"],emoji:"👶"},{w:"loto",parts:["lo","to"],emoji:"🎟️"},
-  {w:"robot",parts:["ro","bo"],emoji:"🤖"},{w:"navire",parts:["na","vi","re"],emoji:"🚢"},
-  {w:"piano",parts:["pi","a","no"],emoji:"🎹"},{w:"vélo",parts:["vé","lo"],emoji:"🚲"},
-  {w:"tapis",parts:["ta","pi"],emoji:"🧶"},{w:"papi",parts:["pa","pi"],emoji:"👴"},
-  {w:"puma",parts:["pu","ma"],emoji:"🐆"},{w:"tuba",parts:["tu","ba"],emoji:"🎺"},
-  {w:"lama",parts:["la","ma"],emoji:"🦙"},{w:"bobo",parts:["bo","bo"],emoji:"🩹"},
-  {w:"polo",parts:["po","lo"],emoji:"👕"},{w:"sari",parts:["sa","ri"],emoji:"🥻"},
-  {w:"tutu",parts:["tu","tu"],emoji:"🩰"},{w:"mémé",parts:["mé","mé"],emoji:"👵"},
-  {w:"tata",parts:["ta","ta"],emoji:"👩"},{w:"ravi",parts:["ra","vi"],emoji:"😄"},
-  {w:"fini",parts:["fi","ni"],emoji:"✅"},{w:"télé",parts:["té","lé"],emoji:"📺"},
-  {w:"météo",parts:["mé","té","o"],emoji:"🌦️"},{w:"numéro",parts:["nu","mé","ro"],emoji:"🔢"},
-  {w:"mari",parts:["ma","ri"],emoji:"🤵"},{w:"panorama",parts:["pa","no","ra","ma"],emoji:"🏞️"},
-  {w:"silo",parts:["si","lo"],emoji:"🌾"},{w:"solo",parts:["so","lo"],emoji:"🎤"},
-  {w:"miso",parts:["mi","so"],emoji:"🍜"},{w:"sumo",parts:["su","mo"],emoji:"🤼"},
-  {w:"salé",parts:["sa","lé"],emoji:"🧂"},{w:"lili",parts:["li","li"],emoji:"👧"},
-  {w:"mimi",parts:["mi","mi"],emoji:"🐱"},{w:"lola",parts:["lo","la"],emoji:"👧"},
-  {w:"mila",parts:["mi","la"],emoji:"👧"},{w:"sami",parts:["sa","mi"],emoji:"👦"},
-  {w:"safari",parts:["sa","fa","ri"],emoji:"🦁"}
- ],
- sentences:[
-   ["Papa","a","une","moto."],["Maman","a","une","valise."],["Lili","a","une","banane."],["Nina","a","une","jolie","robe."],
-   ["Papa","a","un","vélo."],["Lili","a","un","robot."],["Nina","a","un","piano."],["Papi","a","un","tuba."],
-   ["Le","lama","a","un","bobo."],["Maman","a","un","tapis."],["Mémé","a","un","vélo."],["Lili","a","un","tutu."],
-   ["Nina","a","un","polo."],["Maman","a","un","sari."],["Lili","a","un","polo."],["Lili","a","un","vélo."],["Papa","a","un","polo."],
-   ["Mila","a","un","vélo."],["Sami","a","un","polo."],["Lola","a","un","vélo."]
- ]
-};
-
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
@@ -385,11 +327,6 @@ function missionComplete(){
  stage.innerHTML=title("Mission terminée !","Tu as fini ta séance du jour.","Bravo !")+
  '<div class="card center"><div class="mission-celebrate">🏆✨</div><h3 style="font-size:26px;margin:5px">Super travail !</h3><p style="color:var(--muted)">Aujourd’hui tu as travaillé <b>'+m.primary.toUpperCase()+'</b>, révisé <b>'+m.review.toUpperCase()+'</b> et construit <b>'+m.word.toUpperCase()+'</b>.</p>'+score+'<p style="color:var(--muted);font-size:13px">Mission enregistrée dans le suivi parent.</p></div>'+unlock+reward+'<div class="actions" style="margin-top:14px"><button class="btn primary" data-action="go" data-to="home">🏠 Retour à l’accueil</button><button class="btn yellow" data-action="go" data-to="world">🗺️ Mon monde</button></div>'
 }
-const COLLECTIBLES=[
- {id:"dragon",emoji:"🐉",name:"Bébé dragon"},{id:"fairy",emoji:"🧚",name:"Fée des étoiles"},
- {id:"knight",emoji:"🛡️",name:"Petit chevalier"},{id:"unicorn",emoji:"🦄",name:"Licorne nuage"},
- {id:"dino",emoji:"🦕",name:"Petit dinosaure"},{id:"fox",emoji:"🦊",name:"Renard explorateur"}
-];
 function advanceRewards(){
  state.rewards=state.rewards||{towardPiece:0,pieces:0,puzzles:0,collection:[]};
  state.rewards.towardPiece=0;state.rewards.pieces++;
@@ -818,13 +755,6 @@ function badgeData(){
   {emoji:"👑",name:"Super lectrice",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30}
  ]
 }
-const WORLD_ZONES=[
- {id:"meadow",name:"Prairie des sons",emoji:"🌼",need:0,desc:"On découvre les premiers sons et syllabes."},
- {id:"forest",name:"Forêt des syllabes",emoji:"🌲",need:2,desc:"Les syllabes deviennent de plus en plus familières."},
- {id:"castle",name:"Château des mots",emoji:"🏰",need:5,desc:"On assemble les syllabes pour lire des mots."},
- {id:"ocean",name:"Océan des phrases",emoji:"🌊",need:9,desc:"On commence à lire et remettre des phrases en ordre."},
- {id:"space",name:"Galaxie des lecteurs",emoji:"🚀",need:14,desc:"Une zone pour les lecteurs devenus très autonomes."}
-];
 function companionLevel(){
  const n=(state.missionHistory||[]).length;
  if(n>=14)return {emoji:"🦊👑",name:"Léo, gardien des étoiles",level:5};
