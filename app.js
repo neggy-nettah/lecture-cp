@@ -5,7 +5,7 @@ const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const APP_VERSION="0.9.1";
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 const DEFAULT_STATE={updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],attemptLedger:{},rewardLedger:{},soundPractice:{},wordPractice:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
-let session=null,currentChild=null,children=[],saveTimer=null;
+let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight=false,remoteSavePending=false;
 function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})},mastery:(raw&&raw.mastery)||{},reviewQueue:Array.isArray(raw?.reviewQueue)?raw.reviewQueue:[],attemptLedger:(raw&&raw.attemptLedger)||{},rewardLedger:(raw&&raw.rewardLedger)||{},soundPractice:(raw&&raw.soundPractice)||{},wordPractice:(raw&&raw.wordPractice)||{},missionHistory:Array.isArray(raw?.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...((raw&&raw.rewards)||{}),collection:[...((((raw&&raw.rewards)||{}).collection)||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
@@ -29,9 +29,21 @@ function saveLocal(){
 }
 async function saveRemoteNow(){
  saveLocal();topUI();if(!sb||!session||!currentChild)return;
- $("#syncStatus").textContent="☁️ Synchronisation…";$("#syncStatus").className="sync";
- const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:learningCourseCompleted(),attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
- if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
+ if(remoteSaveInFlight){remoteSavePending=true;return}
+ remoteSaveInFlight=true;
+ try{
+  do{
+   remoteSavePending=false;
+   const profileId=currentChild?.id;if(!profileId)break;
+   const snapshot=normalizeState(JSON.parse(JSON.stringify(state)));
+   $("#syncStatus").textContent="☁️ Synchronisation…";$("#syncStatus").className="sync";
+   const {error}=await sb.from("progress").upsert({child_id:profileId,lesson_id:"app_state",stars:snapshot.stars||0,completed:learningCourseCompleted(),attempts:snapshot.stats?.attempts||0,correct_answers:snapshot.stats?.correct||0,lesson_state:snapshot},{onConflict:"child_id,lesson_id"});
+   if(currentChild?.id===profileId){
+    if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}
+    else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
+   }
+  }while(remoteSavePending&&sb&&session&&currentChild)
+ }finally{remoteSaveInFlight=false}
 }
 function save(touch=true){
  if(touch)state.updatedAt=Date.now();
