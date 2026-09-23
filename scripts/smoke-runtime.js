@@ -129,9 +129,13 @@ const probes=[
   '(state=normalizeState({mastery:{ba:{attempts:1,correct:1,lastSeen:localDayKey()}}}),unlockedFamilyCount()===10)',
   '(state=normalizeState({soundPractice:{b:true}}),unlockedFamilyCount()===3)',
   '(state=normalizeState({wordPractice:{bobo:true}}),unlockedFamilyCount()===10)',
-  '(state=normalizeState({}),activeLearningSyllables().length===15)',
+  '(state=normalizeState({}),activeLearningSyllables().length===18)',
   'fullyDecodableWords().length>=4',
   'fullyDecodableWords().every(w=>w.parts.join("")===w.w)',
+  'fullyDecodableWords().length>=44',
+  '["lune","tomate","banane","pirate","valise","minute","navire"].every(w=>fullyDecodableWords().some(x=>x.w===w))',
+  '["maman","domino","cabane"].every(w=>!fullyDecodableWords().some(x=>x.w===w))',
+  'DATA.sets.every(set=>set.length===6&&["a","e","i","o","u","é"].every(v=>set.includes(set[0][0]+v)))',
   '(state=normalizeState({}),decodableMissionWords().length>=6)',
   '(state=normalizeState({}),decodableMissionWords().every(w=>w.parts.join("")===w.w))',
   '(state=normalizeState({}),decodableMissionWords().every(w=>w.parts.every(p=>activeLearningSyllables().includes(p)||"aioué".includes(p))))',
@@ -163,7 +167,7 @@ const probes=[
   '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}],mastery:Object.fromEntries(["ma","mi","mo","mu"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),unlockedFamilyCount()===5)',
   '(state=normalizeState({lastView:"unknown-view"}),currentView="unknown-view",render(),currentView==="home")',
   '(state=normalizeState({}),state.sound=DATA.sounds.length-1,currentView="sounds",state.done.sounds!==true)',
-  '(state=normalizeState({}),activeSoundData().length===8)',
+  '(state=normalizeState({}),activeSoundData().length===9&&activeSoundData().some(x=>x.g==="e"))',
   '(state=normalizeState({missionHistory:[{accuracy:50,attempts:2,correct:1},{accuracy:100,attempts:2,correct:2}]}),recentPerformance().accuracy===75)',
   '(state=normalizeState({}),sentenceUnlocked()===false)',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),sentenceUnlocked()===true&&unlockedFamilyCount()===7&&decodableSentencePool().length>=3)',
@@ -249,6 +253,7 @@ console.log("- Initial curriculum unlock: 3 families");
 console.log("- Curriculum expands only when missions and mastery are both ready");
 console.log("- Previously practiced later families remain accessible");
 console.log("- Free reading words are fully decodable");
+console.log("- Schwa e families and expanded decodable word coverage: OK");
 console.log("- Mission words use currently unlocked syllables");
 console.log("- Unknown saved views recover to home");
 console.log("- Navigation alone does not validate sound practice");
