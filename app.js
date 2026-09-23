@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.19.0";
+const APP_VERSION="0.20.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -15,7 +15,7 @@ function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...r
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,missingWord=null,missingIndex=0;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -136,7 +136,7 @@ function tone(kind="ok"){
   const osc=ctx.createOscillator(),gain=ctx.createGain();osc.connect(gain);gain.connect(ctx.destination);
   osc.type="sine";osc.frequency.value=kind==="ok"?660:220;gain.gain.setValueAtTime(.001,ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(.12,ctx.currentTime+.02);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.22);
-  osc.start();osc.stop(ctx.currentTime+.24)
+  osc.onended=()=>{void ctx.close()};osc.start();osc.stop(ctx.currentTime+.24)
  }catch(e){}
 }
 function starFx(){
@@ -158,11 +158,12 @@ function masteryLevel(key){
 }
 function masteryStars(key){const n=masteryLevel(key);return "★".repeat(n)+"☆".repeat(3-n)}
 function resetQuestionTracking(){
+ questionAssisted=false;
  questionErrorRecorded=!!(missionMode&&state.dailyMission?.failedSteps?.[state.dailyMission.index])
 }
 function recordQuestionSuccess(key=null,challengeKey=""){
  // Correcting a previously failed question earns encouragement, not mastery.
- return recordAttempt(true,questionErrorRecorded?null:key,challengeKey)
+ return recordAttempt(true,questionErrorRecorded||questionAssisted?null:key,challengeKey)
 }
 function recordQuestionError(key=null){
  if(questionErrorRecorded)return false;
@@ -283,14 +284,14 @@ function decodableSentencePool(){
  return DATA.sentences.filter(arr=>arr.every(token=>{
   const parts=phraseTokenParts(token);if(parts===null)return false;if(parts.length===0)return true;
   const clean=String(token).toLowerCase().replace(/[.!?,;:]/g,"");
-  return parts.join("")===clean&&parts.every(p=>allowed.has(p))
+  return !DEFERRED_WORDS.includes(clean)&&parts.join("")===clean&&parts.every(p=>allowed.has(p))
  }))
 }
 function comprehensionSentencePool(){
  return decodableSentencePool().map(sentence=>{
   const targetToken=[...sentence].reverse().find(token=>DATA.words.some(w=>w.w===String(token).toLowerCase().replace(/[.!?,;:]/g,"")));
   const clean=targetToken?String(targetToken).toLowerCase().replace(/[.!?,;:]/g,""):"",word=DATA.words.find(w=>w.w===clean);
-  return word?{sentence,word}:null
+  return word&&PICTURE_WORDS.includes(word.w)?{sentence,word}:null
  }).filter(Boolean)
 }
 function pickLearningSyllable(){
@@ -323,11 +324,11 @@ function weakestSyllable(exclude=""){
 }
 function fullyDecodableWords(){
  const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioueé".includes(x.g)).map(x=>x.g)]);
- return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
+ return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w&&!DEFERRED_WORDS.includes(w.w))
 }
 function decodableMissionWords(){
  const allowed=new Set([...activeLearningSyllables(),...DATA.sounds.filter(x=>"aioueé".includes(x.g)).map(x=>x.g)]);
- return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
+ return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w&&!DEFERRED_WORDS.includes(w.w))
 }
 function missingSyllableWords(){const active=new Set(activeLearningSyllables());return decodableMissionWords().filter(w=>w.parts.some(p=>active.has(p)))}
 function pickReviewSyllable(exclude=""){
@@ -392,6 +393,10 @@ function startMissionStep(){
  const m=getDailyMission();if(m.completed||m.index>=m.steps.length){missionComplete();return}
  if(m.startAttempts==null){m.startAttempts=state.stats?.attempts||0;m.startCorrect=state.stats?.correct||0;state.dailyMission=m;save()}
  const s=currentMissionStep();missionMode=true;
+ if(["missing","build"].includes(s.type)&&!decodableMissionWords().some(w=>w.w===s.target)){
+  const replacement=pick(s.type==="missing"?missingSyllableWords():decodableMissionWords());
+  s.target=replacement.w;if(s.type==="build")m.word=replacement.w;save()
+ }
  if(s.type==="discover")missionDiscover(s.target);
  else if(s.type==="listen")gameListen(s.target,true);
  else if(s.type==="bubbles")gameBubbles(s.target,true);
@@ -547,7 +552,7 @@ function words(){
    <div class="word">${wordHTML(x.parts)}</div>
    <div class="word-parts">${x.parts.map(p=>`<button class="part" data-action="speak" data-text="${p}" data-rate=".62">🔊 ${p}</button>`).join("")}</div>
    <div class="actions" style="margin-top:13px"><button class="btn primary" data-action="speak" data-text="${x.w}" data-rate=".70">🔊 Le mot entier</button><button class="btn good" data-action="word-read">🙋 J'ai essayé de le lire</button></div>
-   <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.<br><b>${pool.filter(w=>state.wordPractice?.[w.w]).length} / ${Math.min(5,pool.length)}</b> mots pratiqués pour valider cet atelier.</div>
+   <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.<br><b>${Math.min(pool.filter(w=>state.wordPractice?.[w.w]).length,Math.min(5,pool.length))} / ${Math.min(5,pool.length)}</b> mots pratiqués pour valider cet atelier.</div>
  </div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  <div class="nextbar"><button class="btn gray" data-action="word-prev">← Mot</button><button class="btn primary" data-action="word-next">Mot suivant →</button></div>`;
@@ -710,28 +715,27 @@ function createVoiceGate(stream){
  }
 }
 function normalizeHeard(s){
- return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z]/g,"")
+ return String(s||"").toLowerCase().normalize("NFC").replace(/[^a-zàâçéèêëîïôùûüÿ]/g,"")
 }
 function pronunciationMatches(expected,heard){
  const e=normalizeHeard(expected),h=normalizeHeard(heard);
  if(!e||!h)return false;
  if(h===e)return true;
  const aliases={
-  ma:["ma","mha"],mi:["mi","mie","mis","my"],mo:["mo","mot","mots"],mu:["mu","mue","mues"],me:["me","mais","mes","met","mets"],
-  la:["la","là"],li:["li","lit","lis"],lo:["lo","lot","lots","l eau"],lu:["lu","lue","lus"],le:["le","les","lait"],
-  sa:["sa","ça"],si:["si","six"],so:["so","sot","saut"],su:["su","sue","sues"],se:["se","ces","ses","c est"],
-  ra:["ra"],ri:["ri","riz","rit"],ro:["ro"],ru:["ru","rue"],re:["re"],
-  fa:["fa"],fi:["fi","fie"],fo:["fo","faux","faut"],fu:["fu","fut"],fe:["fe","fait","fais"],
-  va:["va"],vi:["vi","vie","vis"],vo:["vo","vos","vaux"],vu:["vu","vue","vues"],ve:["ve","vais","vait"],
-  pa:["pa","pas"],pi:["pi","pie"],po:["po","pot","peau"],pu:["pu","pue"],pe:["pe","paix"],
-  ta:["ta","tas"],ti:["ti"],to:["to","tôt","taux"],tu:["tu","tue"],te:["te","tes"],
-  na:["na"],ni:["ni","nid"],no:["no","nos"],nu:["nu","nue"],ne:["ne","nez"],
-  ba:["ba","bas"],bi:["bi","bis"],bo:["bo","beau","beaux"],bu:["bu","bue"],be:["be","baie"]
+  mi:["mie","mis"],mo:["mot","mots"],mu:["mue","mues"],
+  la:["là"],li:["lit","lis"],lo:["lot","lots","l’eau"],lu:["lue","lus"],
+  sa:["ça"],si:["six"],so:["sot","saut"],su:["sue","sues"],se:["ce"],
+  ri:["riz","rit"],ru:["rue"],fi:["fie"],fo:["faux","faut"],fu:["fut"],
+  vi:["vie","vis"],vo:["vos","vaux"],vu:["vue","vues"],
+  pa:["pas"],pi:["pie"],po:["pot","peau"],pu:["pue"],
+  ta:["tas"],to:["tôt","taux"],tu:["tue"],ni:["nid"],no:["nos"],nu:["nue"],
+  ba:["bas"],bi:["bis"],bo:["beau","beaux"],bu:["bue"],
+  mé:["mes"],lé:["les"],sé:["ses","ces"],fé:["fée","fées"],té:["thé"],né:["nez"]
  };
- return (aliases[e]||[]).some(x=>normalizeHeard(x)===h) || (h.startsWith(e)&&h.length<=e.length+2);
+ return (aliases[e]||[]).some(x=>normalizeHeard(x)===h);
 }
 function gamePronunciation(){
- currentView="pronunciation";state.lastView="pronunciation";save(false);currentAnswer=pickLearningSyllable();locked=false;
+ missionMode=false;currentView="pronunciation";state.lastView="pronunciation";save(false);currentAnswer=pickLearningSyllable();locked=false;
  const micAvailable=!!navigator.mediaDevices?.getUserMedia;
  stage.innerHTML=title("Écoute & répète","Écoute la syllabe, puis dis-la dans le micro.","Jeu micro")+
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
@@ -807,18 +811,19 @@ function gameMissing(forcedWord=null,fromMission=false){
  missingWord=word;const hideable=word.parts.map((p,i)=>activeSet.has(p)?i:-1).filter(i=>i>=0);missingIndex=pick(hideable);currentAnswer=word.parts[missingIndex];
  const opts=nextRandom(active,currentAnswer,4);
  const puzzle=word.parts.map((p,i)=>i===missingIndex?'<span class="missing-slot">?</span>':'<span>'+esc(p)+'</span>').join("·");
- stage.innerHTML=title("La syllabe manquante","Lis le mot et retrouve le morceau qui manque.","Jeu visuel")+
- '<div class="card center"><div class="emojis" style="font-size:78px">'+word.emoji+'</div><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ stage.innerHTML=title("La syllabe manquante","Écoute le mot à compléter, puis retrouve le morceau qui manque.","Mot à compléter")+
+ '<div class="card center"><button class="btn primary" data-action="missing-listen">🔊 Écouter le mot à compléter</button><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-missing">Nouveau mot →</button>')+'</div>'
 }
 
+function pictureWordPool(){return decodableMissionWords().filter(w=>PICTURE_WORDS.includes(w.w))}
 function gamePicture(){
- currentView="pictures";state.lastView="pictures";save(false);const pool=decodableMissionWords(),answer=pick(pool);currentAnswer=answer.w;locked=false;resetQuestionTracking();
+ missionMode=false;currentView="pictures";state.lastView="pictures";save(false);const pool=pictureWordPool(),answer=pick(pool);currentAnswer=answer.w;locked=false;resetQuestionTracking();
  const opts=nextRandom(pool.map(x=>x.w),answer.w,4);
  stage.innerHTML=title("Quel est ce mot ?","Lis les mots et touche celui qui correspond à l'image.","Jeu 2")+
  `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
  <div class="choices">${opts.map(w=>`<button class="choice" data-action="picture-answer" data-value="${w}">${w}</button>`).join("")}</div>
- <div class="actions" style="margin-top:11px"><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Indice audio</button></div>
+ <div class="actions" style="margin-top:11px"><button class="btn yellow" data-action="picture-hint">🔊 Indice audio</button></div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
 }
@@ -827,7 +832,7 @@ function gameBuild(forcedAnswer=null,fromMission=false){
  const extraCount=Math.max(1,4-answer.parts.length),extraBase=activeLearningSyllables(),extraPool=extraBase.filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
- `<div class="card center"><div class="emojis">${answer.emoji}</div><div style="font-size:16px;color:var(--muted)">Fabrique : <b>${answer.w}</b></div>
+ `<div class="card center"><div class="emojis">${answer.emoji}</div><div style="font-size:16px;color:var(--muted)">Modèle : <b>${answer.w}</b> — assemble les morceaux.</div>
  <div class="order-zone" id="orderZone"><span class="empty">Les syllabes arrivent ici…</span></div>
  <div class="choices" id="buildChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:27px" data-action="build-token" data-value="${x}" data-id="${i}">${colorSyl(x)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="build-reset">↩ Recommencer</button><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Écouter le mot</button></div>
@@ -838,8 +843,8 @@ function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
-   if(ok){locked=true;recordQuestionSuccess("word:"+currentAnswer.w,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
-   else{locked=true;recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
+   if(ok){locked=true;recordQuestionSuccess(null,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
+   else{locked=true;recordQuestionError();miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
 function gameComprehension(forcedTarget=null,fromMission=false){
@@ -847,8 +852,8 @@ function gameComprehension(forcedTarget=null,fromMission=false){
  const pool=comprehensionSentencePool();if(!pool.length){if(fromMission)missionHub();else activate("games");return}
  missionMode=fromMission;currentView="comprehension";state.lastView=fromMission?"mission":"comprehension";save(false);locked=false;resetQuestionTracking();
  const forcedPool=forcedTarget?pool.filter(x=>x.word.w===forcedTarget):[],item=pick(forcedPool.length?forcedPool:pool),sentence=item.sentence;currentAnswer=item.word.w;
- const available=decodableMissionWords().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
- stage.innerHTML=title("Je comprends la phrase","Lis la phrase puis choisis la bonne image.","Compréhension")+
+ const available=pictureWordPool().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
+ stage.innerHTML=title("Je comprends la phrase","Lis la phrase : que possède le personnage ? Les petits mots peuvent être lus avec un adulte.","Compréhension")+
  '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>'
 }
@@ -856,7 +861,7 @@ function gameComprehension(forcedTarget=null,fromMission=false){
 function gameOrder(){
  if(!sentenceUnlocked()){activate("games");return}
  const pool=decodableSentencePool();if(!pool.length){activate("games");return}
- currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;resetQuestionTracking();const opts=shuffle(arr);
+ missionMode=false;currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;resetQuestionTracking();const opts=shuffle(arr);
  stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Les petits mots comme « un » ou « une » sont lus avec un adulte au besoin.","Jeu 4")+
  `<div class="card center"><div class="hero-emoji">💬</div>
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
@@ -1273,7 +1278,7 @@ document.addEventListener("click",e=>{
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
  if(a==="word-next"){const n=decodableMissionWords().length;state.word=(state.word+1)%n;save(false);words();return}
  if(a==="word-prev"){const n=decodableMissionWords().length;state.word=(state.word-1+n)%n;save(false);words();return}
- if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");words();return}
+ if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();words();practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-bubbles"){gameBubbles();return}
  if(a==="parent-review"){
@@ -1321,6 +1326,8 @@ document.addEventListener("click",e=>{
  }
  if(a==="repeat-answer"){speak(typeof currentAnswer==="string"?currentAnswer:currentAnswer.w,.60);return}
  if(a==="listen-answer"){checkChoice(b,b.dataset.value,"listen");return}
+ if(a==="picture-hint"){questionAssisted=true;speak(currentAnswer,.70);return}
+ if(a==="missing-listen"){speak(missingWord.w,.70);return}
  if(a==="picture-answer"){checkChoice(b,b.dataset.value,"pictures");return}
  if(a==="build-token"){
    if(locked||b.disabled)return;b.disabled=true;orderMade.push(b.dataset.value);updateBuild();return

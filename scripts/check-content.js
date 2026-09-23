@@ -7,6 +7,10 @@ try{vm.runInContext(src,context,{timeout:1000})}
 catch(error){console.error("CONTENT VALIDATION FAILED: syntax/runtime",error);process.exit(1)}
 
 const data=vm.runInContext("DATA",context);
+const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
+const pictureWords=vm.runInContext("PICTURE_WORDS",context);
+const pictures=data.words.filter(w=>pictureWords.includes(w.w));
+if(pictures.length!==pictureWords.length||new Set(pictures.map(w=>w.emoji)).size!==pictures.length)throw Error("Ambiguous or missing picture vocabulary");
 const collectibles=vm.runInContext("COLLECTIBLES",context);
 const zones=vm.runInContext("WORLD_ZONES",context);
 
@@ -50,12 +54,12 @@ const exactWords=data.words.filter(w=>w.parts.join("")===w.w);
 if(exactWords.length<30)fail("Too few exactly assembled words:",String(exactWords.length));
 
 const taughtParts=new Set([...syllables,"a","e","i","o","u","é"]);
-const fullyDecodable=data.words.filter(w=>w.parts.join("")===w.w&&w.parts.every(p=>taughtParts.has(p)));
-if(fullyDecodable.length<42)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
-for(const expected of ["lune","tomate","banane","pirate","valise","minute","navire"]){
+const fullyDecodable=data.words.filter(w=>w.parts.join("")===w.w&&w.parts.every(p=>taughtParts.has(p))&&!deferredWords.includes(w.w));
+if(fullyDecodable.length<40)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
+for(const expected of ["lune","tomate","banane","pirate","minute","navire"]){
   if(!fullyDecodable.some(w=>w.w===expected))fail("Expected e-syllable word is not fully decodable:",expected);
 }
-for(const deferred of ["maman","domino","cabane","robot","tapis"]){
+for(const deferred of ["maman","domino","cabane","robot","tapis",...deferredWords]){
   if(fullyDecodable.some(w=>w.w===deferred))fail("Word with untaught grapheme became decodable too early:",deferred);
 }
 

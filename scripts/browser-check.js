@@ -21,6 +21,7 @@ window.supabase={createClient:()=>({
   const context=await browser.newContext();const page=await context.newPage();const errors=[];page.on('dialog',dialog=>dialog.accept());page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({body:mockClient,contentType:'application/javascript'}));
   await page.goto(url);await page.locator('[data-action="mission-start"]').first().waitFor();
+  await require('./audit-games-browser')(page);
   // Every principal screen must fit on phones, tablets and desktop.
   for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});
@@ -137,7 +138,7 @@ window.supabase={createClient:()=>({
   await page.evaluate(()=>{state=normalizeState({});gameBuild({w:'salami',parts:['sa','la','mi'],emoji:'🥓'});orderMade=['mi','la','sa'];updateBuild()});
   await page.waitForTimeout(900);
   for(const part of ['sa','la','mi'])await page.locator(`[data-action="build-token"][data-value="${part}"]`).click();
-  assert.equal(await page.evaluate(()=>state.mastery['word:salami'].correct),0);
+  assert.equal(await page.evaluate(()=>state.mastery['word:salami']?.correct||0),0);
   assert.equal(await page.evaluate(()=>locked),true);
   // A pending reset from a wrong word must never mutate the next exercise.
   await page.evaluate(()=>{gameBuild({w:'salami',parts:['sa','la','mi'],emoji:'🥓'});orderMade=['mi','la','sa'];updateBuild();gameBuild({w:'salami',parts:['sa','la','mi'],emoji:'🥓'});orderMade=['sa'];updateBuild()});

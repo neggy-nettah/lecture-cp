@@ -73,3 +73,8 @@ const WORLD_ZONES=[
  {id:"ocean",name:"Océan des phrases",emoji:"🌊",need:9,desc:"On commence à lire et remettre des phrases en ordre."},
  {id:"space",name:"Galaxie des lecteurs",emoji:"🚀",need:14,desc:"Une zone pour les lecteurs devenus très autonomes."}
 ];
+
+// Reserved until the corresponding pronunciation rules are explicitly taught.
+const DEFERRED_WORDS=["valise","miso"];
+// Only these illustrations are used as an answer clue (no names or approximate emojis).
+const PICTURE_WORDS=["papa","moto","lune","tomate","banane","pirate","bébé","navire","piano","vélo","papi","lama","polo","sari","tutu","mémé","télé"];

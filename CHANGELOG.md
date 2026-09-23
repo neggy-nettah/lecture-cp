@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.20.0 — 2026-09-23
+
+- audit automatisé de tous les types d’exercices sur les huit paliers accessibles, intégré aux contrôles GitHub
+- banque d’images restreinte aux correspondances explicites ; exclusion des prénoms et illustrations approximatives des questions visuelles
+- indice audio du jeu Mot & image traité comme aide, sans preuve de lecture autonome
+- construction avec modèle conservée comme assemblage récompensé, sans maîtrise de lecture du mot
+- mot cible de la syllabe manquante précisé par une consigne audio
+- valise et miso différés jusqu’à l’enseignement du s prononcé z ; adaptation des anciennes missions concernées
+- comparateur du micro bêta : distinction e/é et rejet des mots qui commencent seulement par la syllabe
+- compteurs de pratique corrigés, retour de lecture conservé et fermeture des contextes audio des effets sonores
+
 ## 0.19.0 — 2026-09-23
 
 - Memory de mission : reprise de la même disposition, des paires trouvées et des erreurs après navigation ou rechargement

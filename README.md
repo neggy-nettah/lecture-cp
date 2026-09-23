@@ -237,3 +237,9 @@ Le bilan propose jusqu’à trois syllabes déjà travaillées parmi les famille
 ### Reprise du Memory de mission
 
 La disposition des six cartes, les paires trouvées et les erreurs sont conservées avec la mission. Les cartes seulement retournées sont masquées à la reprise. Une paire précédemment manquée ne devient pas une preuve de maîtrise après rechargement. Les anciennes parties avec erreur mais sans détail des paires restent jouables, sans nouvelle maîtrise sur cette partie. Le Memory libre démarre une nouvelle partie à chaque lancement.
+
+### Audit des exercices (0.20)
+
+`node scripts/browser-check.js` lance aussi `scripts/audit-games-browser.js` : tous les paliers, choix corrects et incorrects, assemblage de tous les mots accessibles, phrases, images, indices, répétition des clics et affichage à 320 px. Les autres scénarios couvrent Memory, reprise, profils, comptes et sauvegardes. Voir `AUDIT.md` pour les corrections et les limites.
+
+Les questions visuelles utilisent uniquement `PICTURE_WORDS`. La syllabe manquante donne le mot cible à écouter. La construction avec modèle entraîne l’assemblage et conserve sa récompense, mais ne prouve pas une lecture autonome. L’indice audio du jeu Mot & image supprime la preuve de maîtrise pour cette question. `DEFERRED_WORDS` exclut valise et miso tant que la règle du s prononcé z n’est pas enseignée.
