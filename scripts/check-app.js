@@ -44,6 +44,7 @@ const requiredFunctions=[
   "function fullyDecodableWords(",
   "function decodableSentencePool(",
   "function gameMemory(",
+  "function gameMissing(",
   "function gameFamily(",
   "function worldView(",
   "function collectionView(",
