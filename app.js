@@ -266,12 +266,18 @@ function buildDailyMission(){
  const recentWords=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word));
  const related=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
- const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualType=Number(localDayKey().slice(-2))%2?"family":"memory";
+ const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualModes=["memory","family","missing"],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
+ const missingPool=decodable.filter(w=>w.parts.length>=2&&w.w!==word.w),missingWord=pick(missingPool.length?missingPool:decodable.filter(w=>w.parts.length>=2))||word;
+ const visualStep=visualType==="memory"
+  ?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}
+  :visualType==="family"
+   ?{type:"family",target:family[0][0],title:"J’observe",detail:"Trouve l’intrus de la famille "+family[0][0].toUpperCase()}
+   :{type:"missing",target:missingWord.w,title:"Je complète",detail:"Retrouve la syllabe manquante de "+missingWord.w.toUpperCase()};
  state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,sessionStats:{attempts:0,correct:0},steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
   {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
   {type:"bubbles",target:review,title:"Je révise",detail:"Éclate la bonne bulle"},
-  visualType==="memory"?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}:{type:"family",target:family[0][0],title:"J’observe",detail:"Trouve l’intrus de la famille "+family[0][0].toUpperCase()},
+  visualStep,
   {type:"build",target:word.w,title:"Défi final",detail:"Construis le mot "+word.w.toUpperCase()}
  ]};
  save();return state.dailyMission
@@ -312,6 +318,7 @@ function startMissionStep(){
  else if(s.type==="bubbles")gameBubbles(s.target,true);
  else if(s.type==="memory")gameMemory([m.primary,m.review],true);
  else if(s.type==="family"){const fam=DATA.sets.find(set=>set[0][0]===s.target)||DATA.sets[0];gameFamily(fam,true)}
+ else if(s.type==="missing")gameMissing(DATA.words.find(w=>w.w===s.target)||null,true);
  else if(s.type==="build")gameBuild(DATA.words.find(w=>w.w===s.target)||null,true)
 }
 function completeMissionStep(){
