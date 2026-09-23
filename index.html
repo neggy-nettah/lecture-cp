@@ -701,6 +701,16 @@ function masterySummary(){
  });
  return {total:syllables.length,mastered,learning,unseen,weakest:attempted.slice(0,6)}
 }
+function missionDayStreak(){
+ const dates=[...new Set((state.missionHistory||[]).map(x=>x.date))].sort().reverse();
+ if(!dates.length)return 0;
+ const fmt=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+ let cursor=new Date(),today=fmt(cursor);
+ if(dates[0]!==today){cursor.setDate(cursor.getDate()-1);if(dates[0]!==fmt(cursor))return 0}
+ let streak=0;
+ for(const d of dates){if(d!==fmt(cursor))break;streak++;cursor.setDate(cursor.getDate()-1)}
+ return streak
+}
 function recentMissionHTML(){
  const hist=(state.missionHistory||[]).slice(-7).reverse();
  if(!hist.length)return '<p style="color:var(--muted);font-size:13px">Aucune mission terminée pour le moment.</p>';
@@ -721,7 +731,7 @@ function parents(){
   <div class="parent-box"><h3>🎯 Précision</h3><p><b style="font-size:26px">${accuracy} %</b><br>${correct} bonnes réponses sur ${attempts} essais vérifiés.</p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
   <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes actuellement à ★ ou ★★.</p></div>
-  <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>Historique des missions validées.</p></div>
+  <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série actuelle : ${missionDayStreak()} jour(s).</p></div>
  </div>
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions.</p><div class="collection-row">${weak}</div></div>
  <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les 50 syllabes en détail</summary><div class="mastery-grid">${DATA.sets.flat().map(s=>`<div class="mastery-chip">${s.toUpperCase()}<small>${masteryStars(s)}</small></div>`).join("")}</div></details>
