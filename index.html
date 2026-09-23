@@ -24,7 +24,7 @@ button:disabled{cursor:default}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 0 12px}
 .brand{display:flex;gap:11px;align-items:center}.logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(140deg,var(--purple),#a49eff);display:grid;place-items:center;color:#fff;font-size:29px;box-shadow:var(--shadow)}
 h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;color:var(--muted);margin-top:4px}
-.score{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px 12px;font-weight:900;box-shadow:var(--shadow);white-space:nowrap}
+.score{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px 12px;font-weight:900;box-shadow:var(--shadow);white-space:nowrap;pointer-events:none;user-select:none}
 .progress-card{background:#ffffffd9;border:1px solid var(--line);border-radius:18px;padding:10px 12px;box-shadow:var(--shadow);margin-bottom:12px}
 .progress-head{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:800;margin-bottom:7px}
 .progress{height:10px;background:#eeeaf5;border-radius:999px;overflow:hidden}.progress>div{height:100%;background:linear-gradient(90deg,var(--purple),#b1abff);transition:.35s;width:0}
@@ -139,9 +139,9 @@ const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},sound:0,set:0,word:0,gameWins:0,lastView:"home"};
+const DEFAULT_STATE={stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},sound:0,set:0,word:0,gameWins:0,lastView:"home"};
 let session=null,currentChild=null,children=[],saveTimer=null;
-function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{}}}
+function normalizeState(raw){return {...DEFAULT_STATE,...(raw||{}),done:(raw&&raw.done)||{},stats:{...DEFAULT_STATE.stats,...((raw&&raw.stats)||{})}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
@@ -152,7 +152,7 @@ function saveLocal(){localStorage.setItem(currentChild?childKey(currentChild.id)
 async function saveRemoteNow(){
  saveLocal();topUI();if(!session||!currentChild)return;
  $("#syncStatus").textContent="☁️ Synchronisation…";$("#syncStatus").className="sync";
- const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=6,attempts:0,correct_answers:0,lesson_state:state},{onConflict:"child_id,lesson_id"});
+ const {error}=await sb.from("progress").upsert({child_id:currentChild.id,lesson_id:"app_state",stars:state.stars||0,completed:Object.keys(state.done||{}).length>=6,attempts:state.stats?.attempts||0,correct_answers:state.stats?.correct||0,lesson_state:state},{onConflict:"child_id,lesson_id"});
  if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
 }
 function save(){saveLocal();topUI();clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)}
@@ -207,8 +207,14 @@ function confetti(){
  for(let i=0;i<20;i++){const x=document.createElement("i");x.textContent=pick(bits);x.style.left=Math.random()*100+"%";x.style.animationDelay=Math.random()*.35+"s";x.style.fontSize=(14+Math.random()*17)+"px";box.appendChild(x)}
  fx.appendChild(box);setTimeout(()=>box.remove(),1900)
 }
-function reward(msg="Bravo !"){
+function recordAttempt(correct){
+ state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;save()
+}
+function rewardVerified(msg="Bravo !"){
  state.stars++;state.streak++;save();tone("ok");starFx();toast("🌟 "+msg,"ok")
+}
+function practiceDone(msg="Bravo pour ton effort !"){
+ tone("ok");toast("👏 "+msg,"ok")
 }
 function miss(msg="Écoute encore une fois."){
  state.streak=0;save();tone("no");toast("💪 "+msg,"no")
@@ -246,7 +252,7 @@ function sounds(){
    <div class="streak">Carte ${state.sound+1} / ${DATA.sounds.length}</div>
    <div class="hero-emoji">${x.emoji}</div>
    <div class="big ${"aeioué".includes(x.g)?"blue":"red"}">${x.g}</div>
-   <div class="actions"><button class="btn primary speaker" data-action="speak" data-text="${esc(x.say)}" data-rate=".58">🔊 Écouter le son</button><button class="btn good" data-action="sound-repeat">🎙️ Je l'ai répété</button></div>
+   <div class="actions"><button class="btn primary speaker" data-action="speak" data-text="${esc(x.say)}" data-rate=".58">🔊 Écouter le son</button><button class="btn good" data-action="sound-repeat">🎙️ J'ai répété</button></div>
    <div class="tip">${x.hint}. Pour les consonnes, on cherche le <b>son</b>, pas le nom de la lettre.</div>
  </div>
  <div class="card">
@@ -281,7 +287,7 @@ function words(){
    <div class="emojis">${x.emoji}</div>
    <div class="word">${wordHTML(x.parts)}</div>
    <div class="word-parts">${x.parts.map(p=>`<button class="part" data-action="speak" data-text="${p}" data-rate=".62">🔊 ${p}</button>`).join("")}</div>
-   <div class="actions" style="margin-top:13px"><button class="btn primary" data-action="speak" data-text="${x.w}" data-rate=".70">🔊 Le mot entier</button><button class="btn good" data-action="word-read">✅ Je l'ai lu</button></div>
+   <div class="actions" style="margin-top:13px"><button class="btn primary" data-action="speak" data-text="${x.w}" data-rate=".70">🔊 Le mot entier</button><button class="btn good" data-action="word-read">🙋 J'ai essayé de le lire</button></div>
    <div class="tip">Essaie d'abord sans l'audio. Utilise 🔊 seulement pour vérifier.</div>
  </div>
  <div id="feedback" class="feedback"></div>
@@ -295,7 +301,7 @@ function gamesMenu(){
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
   <button class="level" data-action="game-order"><div class="ico">💬</div><b>La phrase</b><small>Remets les mots dans l'ordre</small></button>
  </div>
- ${mission("⭐","Une bonne réponse = une étoile","Après plusieurs réussites, une pluie d'étoiles apparaît !")}`;
+ ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
 function gameListen(){
  currentView="listen";state.lastView="listen";save();currentAnswer=pick(DATA.sets.flat());locked=false;
@@ -333,8 +339,8 @@ function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
-   if(ok){reward("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`}
-   else{miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
+   if(ok){locked=true;recordAttempt(true);rewardVerified("Mot construit !");setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`}
+   else{recordAttempt(false);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
 function gameOrder(){
@@ -351,8 +357,8 @@ function updateOrder(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${esc(x)}</span>`).join(""):`<span class="empty">La phrase se construit ici…</span>`;
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join(" ")===orderTarget.join(" ");
-   if(ok){reward("Phrase réussie !");setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
-   else{miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
+   if(ok){locked=true;recordAttempt(true);rewardVerified("Phrase réussie !");setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
+   else{recordAttempt(false);miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
 }
 function parents(){
@@ -383,11 +389,11 @@ function render(){
 function checkChoice(btn,value,kind){
  if(locked)return;
  if(value===currentAnswer){
-   locked=true;btn.classList.add("correct");reward("Bonne réponse !");
+   locked=true;btn.classList.add("correct");recordAttempt(true);rewardVerified("Bonne réponse !");
    if(kind==="listen")setDone("listen");if(kind==="pictures")setDone("pictures");if(kind==="syllables")setDone("syllables");
    speak(value,.64);if(state.streak>0&&state.streak%5===0)confetti()
  }else{
-   btn.classList.add("wrong","wiggle");miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
+   btn.classList.add("wrong","wiggle");recordAttempt(false);miss();speak(currentAnswer,.60);setTimeout(()=>btn.classList.remove("wrong","wiggle"),650)
  }
 }
 
@@ -411,14 +417,14 @@ document.addEventListener("click",e=>{
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
  if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save();sounds();return}
  if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save();sounds();return}
- if(a==="sound-repeat"){reward("Super prononciation !");setDone("sounds");return}
+ if(a==="sound-repeat"){practiceDone("Bien répété ! L’étoile sera gagnée quand le micro pourra valider la prononciation.");return}
  if(a==="set-next"){state.set=(state.set+1)%DATA.sets.length;save();syllables();return}
  if(a==="set-prev"){state.set=(state.set-1+DATA.sets.length)%DATA.sets.length;save();syllables();return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
  if(a==="word-next"){state.word=(state.word+1)%DATA.words.length;if(state.word===0)setDone("words");save();words();return}
  if(a==="word-prev"){state.word=(state.word-1+DATA.words.length)%DATA.words.length;save();words();return}
- if(a==="word-read"){reward("Mot lu !");setDone("words");return}
+ if(a==="word-read"){practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-picture"){gamePicture();return}
  if(a==="game-build"){gameBuild();return}
