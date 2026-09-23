@@ -311,6 +311,11 @@ function activeLearningSyllables(){
  const unlocked=DATA.sets.slice(0,unlockedFamilyCount()).flat(),known=Object.keys(state.mastery||{}).filter(k=>DATA.sets.flat().includes(k));
  return [...new Set([...unlocked,...known])]
 }
+function activeSoundGraphemes(){
+ const consonants=DATA.sets.slice(0,unlockedFamilyCount()).map(set=>set[0][0]);
+ return new Set(["a","i","o","u","é",...consonants])
+}
+function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
  all.forEach(s=>{
