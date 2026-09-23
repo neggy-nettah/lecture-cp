@@ -12,7 +12,7 @@ function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...r
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,missionMode=false,questionErrorRecorded=false;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,missionMode=false,questionErrorRecorded=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -75,7 +75,7 @@ function topUI(){
  $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : devenir une super lectrice 🌟";
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
- const keys=["sounds","syllables","words","listen","bubbles","memory","families","pictures",...(sentenceUnlocked()?["order"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
+ const keys=["sounds","syllables","words","listen","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
  if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
@@ -471,6 +471,7 @@ function gamesMenu(){
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
   <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
+  <button class="level" data-action="game-missing"><div class="ico">🕵️</div><b>Syllabe manquante</b><small>Complète le mot avec la bonne syllabe</small></button>
   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
@@ -683,6 +684,17 @@ async function startPronunciationRecognition(){
  try{recognition.start()}catch(e){clearTimeout(watchdog);closeMic();console.error("SpeechRecognition start error",e);if(status){status.className="mic-status error";status.textContent="La reconnaissance vocale n’a pas démarré. Vérifie Siri et l’autorisation micro de Safari."}}
 }
 
+function gameMissing(forcedWord=null,fromMission=false){
+ missionMode=fromMission;currentView="missing";state.lastView=fromMission?"mission":"missing";save(false);locked=false;resetQuestionTracking();
+ const pool=decodableMissionWords().filter(w=>w.parts.length>=2),word=forcedWord||pick(pool);
+ missingWord=word;missingIndex=Math.floor(Math.random()*word.parts.length);currentAnswer=word.parts[missingIndex];
+ const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
+ const puzzle=word.parts.map((p,i)=>i===missingIndex?'<span class="missing-slot">?</span>':'<span>'+esc(p)+'</span>').join("·");
+ stage.innerHTML=title("La syllabe manquante","Lis le mot et retrouve le morceau qui manque.","Jeu visuel")+
+ '<div class="card center"><div class="emojis" style="font-size:78px">'+word.emoji+'</div><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-missing">Nouveau mot →</button>')+'</div>'
+}
+
 function gamePicture(){
  currentView="pictures";state.lastView="pictures";save(false);const pool=decodableMissionWords(),answer=pick(pool);currentAnswer=answer.w;locked=false;resetQuestionTracking();
  const opts=nextRandom(pool.map(x=>x.w),answer.w,4);
@@ -890,7 +902,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","family","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","family","missing","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -904,6 +916,7 @@ function render(){
  else if(currentView==="bubbles")gameBubbles();
  else if(currentView==="memory")gameMemory();
  else if(currentView==="family")gameFamily();
+ else if(currentView==="missing")gameMissing();
  else if(currentView==="pronunciation")gamePronunciation();
  else if(currentView==="pictures")gamePicture();
  else if(currentView==="build")gameBuild();
@@ -975,6 +988,14 @@ document.addEventListener("click",e=>{
  if(a==="game-memory"){gameMemory();return}
  if(a==="memory-card"){memoryFlip(b,Number(b.dataset.index));return}
  if(a==="game-family"){gameFamily();return}
+ if(a==="game-missing"){gameMissing();return}
+ if(a==="missing-answer"){
+   if(locked)return;
+   const value=b.dataset.value,key="missing:"+(missingWord?.w||"mot")+":"+missingIndex;
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,currentAnswer,key);rewardVerified("Mot complété !",key);setDone("missing");$("#feedback").innerHTML='<div class="ok">🎉 Bravo ! Le mot est <b>'+esc(missingWord.w)+'</b>.</div>';completeMissionStep()}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError(currentAnswer);miss("Cherche le morceau qui complète le mot.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   return
+ }
  if(a==="family-answer"){
    if(locked)return;
    if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,"family:"+currentAnswer);rewardVerified("Intrus trouvé !","family:"+currentAnswer);setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
