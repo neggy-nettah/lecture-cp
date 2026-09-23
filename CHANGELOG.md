@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.11.2 — 2026-09-23
+
+### Mises à jour de l'app installée
+- vérification d'une nouvelle version du Service Worker à chaque chargement
+- notification non intrusive lorsqu'une nouvelle version prend le contrôle
+- aucune recharge automatique pendant une mission ou un jeu
+- nouveau cache versionné pour forcer le renouvellement des assets installés
+- garde-fou CI sur la gestion des mises à jour installées
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.11.1 — 2026-09-23
 
 ### Hors ligne
