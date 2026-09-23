@@ -356,6 +356,32 @@ function gameListen(){
  setTimeout(()=>speak(currentAnswer,.60),180)
 }
 function speechRecognitionCtor(){return window.SpeechRecognition||window.webkitSpeechRecognition||null}
+function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)}
+function isSafariBrowser(){return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent)}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function requestMicrophonePermission(status){
+ if(!window.isSecureContext){
+  if(status){status.className="mic-status error";status.textContent="Le micro nécessite une connexion sécurisée HTTPS."}
+  return false
+ }
+ if(!navigator.mediaDevices?.getUserMedia){
+  if(status){status.className="mic-status error";status.textContent="Ce navigateur ne donne pas accès au microphone."}
+  return false
+ }
+ try{
+  if(status){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> Autorisation du micro…'}
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});
+  stream.getTracks().forEach(t=>t.stop());
+  return true
+ }catch(e){
+  console.error("Micro permission error",e);
+  let msg="Impossible d’accéder au microphone.";
+  if(e?.name==="NotAllowedError"||e?.name==="SecurityError")msg="Micro refusé. Autorise le microphone dans les réglages du navigateur puis réessaie.";
+  else if(e?.name==="NotFoundError")msg="Aucun microphone détecté sur cet appareil.";
+  if(status){status.className="mic-status error";status.textContent=msg}
+  return false
+ }
+}
 function normalizeHeard(s){
  return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z]/g,"")
 }
@@ -379,25 +405,45 @@ function pronunciationMatches(expected,heard){
 }
 function gamePronunciation(){
  currentView="pronunciation";state.lastView="pronunciation";save();currentAnswer=pickLearningSyllable();locked=false;
- const supported=!!speechRecognitionCtor();
+ const micAvailable=!!navigator.mediaDevices?.getUserMedia;
  stage.innerHTML=title("Écoute & répète","Écoute la syllabe, puis dis-la dans le micro.","Jeu micro")+
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
- <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${supported?"":"disabled"}>🎙️ À toi !</button></div>
- <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${supported?"Appuie sur « À toi ! », puis prononce seulement la syllabe.":"Le micro vocal n’est pas disponible sur ce navigateur. Tu peux quand même écouter et t’entraîner."}</div>
+ <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${micAvailable?"":"disabled"}>🎙️ À toi !</button></div>
+ <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${micAvailable?"Au premier essai, ton téléphone va demander l’autorisation du micro.":"Le microphone n’est pas disponible sur ce navigateur."}</div>
  <div id="feedback" class="feedback"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-pronunciation">Nouvelle syllabe →</button></div>`;
  setTimeout(()=>speak(currentAnswer,.60),120)
 }
-function startPronunciationRecognition(){
+async function startPronunciationRecognition(){
  if(locked)return;
- const Ctor=speechRecognitionCtor(),status=$("#micStatus");
- if(!Ctor){if(status){status.className="mic-status error";status.textContent="Micro vocal non disponible sur ce navigateur."}return}
+ const status=$("#micStatus");
+ const permitted=await requestMicrophonePermission(status);
+ if(!permitted)return;
+ await sleep(300);
+ const Ctor=speechRecognitionCtor();
+ if(!Ctor){
+  if(status){
+   status.className="mic-status error";
+   status.textContent=isIOS()&&!isSafariBrowser()?"Le micro fonctionne, mais la reconnaissance vocale est bloquée dans ce navigateur sur iPhone. Ouvre l’app directement dans Safari.":"Le micro fonctionne, mais ce navigateur ne propose pas la reconnaissance vocale."
+  }
+  return
+ }
  window.speechSynthesis?.cancel?.();
+ await sleep(250);
  const recognition=new Ctor();recognition.lang="fr-FR";recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=5;
- let finished=false;
- if(status){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> J’écoute…'}
+ let finished=false,started=false;
+ let watchdog=setTimeout(()=>{
+  if(started&&!finished){
+   try{recognition.abort()}catch(e){}
+   if(status){status.className="mic-status error";status.textContent="La reconnaissance vocale ne répond pas. Sur iPhone, ouvre l’app directement dans Safari puis réessaie."}
+  }
+ },8000);
+ recognition.onstart=()=>{
+  started=true;
+  if(status){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> J’écoute… dis seulement la syllabe'}
+ };
  recognition.onresult=e=>{
-  finished=true;
+  finished=true;clearTimeout(watchdog);
   const alternatives=[];for(let i=0;i<e.results[0].length;i++)alternatives.push(e.results[0][i].transcript);
   const heard=alternatives[0]||"",ok=alternatives.some(x=>pronunciationMatches(currentAnswer,x));
   if(ok){
@@ -411,12 +457,12 @@ function startPronunciationRecognition(){
   }
  };
  recognition.onerror=e=>{
-  finished=true;
-  const messages={not_allowed:"Autorise le microphone pour jouer.", "not-allowed":"Autorise le microphone pour jouer.", "no-speech":"Je n’ai rien entendu. Réessaie en parlant un peu plus fort.", audio_capture:"Je ne trouve pas de microphone.", "audio-capture":"Je ne trouve pas de microphone."};
-  if(status){status.className="mic-status error";status.textContent=messages[e.error]||"Le micro n’a pas compris. Réessaie."}
+  finished=true;clearTimeout(watchdog);
+  const messages={not_allowed:"Autorise le microphone pour jouer.", "not-allowed":"Autorise le microphone pour jouer.", service_not_allowed:"La reconnaissance vocale est bloquée par le navigateur.", "service-not-allowed":"La reconnaissance vocale est bloquée par le navigateur.", "no-speech":"Je n’ai rien entendu. Réessaie en parlant un peu plus fort.", audio_capture:"Je ne trouve pas de microphone.", "audio-capture":"Je ne trouve pas de microphone.", network:"La reconnaissance vocale a besoin d’Internet sur ce navigateur."};
+  if(status){status.className="mic-status error";status.textContent=messages[e.error]||("Le micro n’a pas compris ("+(e.error||"erreur")+"). Réessaie.")}
  };
- recognition.onend=()=>{if(!finished&&status){status.className="mic-status";status.textContent="Je n’ai pas bien entendu. Tu peux réessayer."}};
- try{recognition.start()}catch(e){if(status){status.className="mic-status error";status.textContent="Le micro est déjà actif. Réessaie dans un instant."}}
+ recognition.onend=()=>{clearTimeout(watchdog);if(!finished&&status){status.className="mic-status";status.textContent="Je n’ai pas bien entendu. Tu peux réessayer."}};
+ try{recognition.start()}catch(e){clearTimeout(watchdog);console.error("SpeechRecognition start error",e);if(status){status.className="mic-status error";status.textContent="La reconnaissance vocale n’a pas démarré. Réessaie ou ouvre l’app dans Safari."}}
 }
 
 function gamePicture(){
