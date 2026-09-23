@@ -187,3 +187,23 @@ Avant de pousser `develop-caly` vers `main` :
 5. vérifier qu'une mission ne récompense qu'une fois par jour
 6. vérifier mobile et desktop
 7. ne pas réintroduire le micro dans la progression pédagogique
+
+
+## Vérifications navigateur
+
+Le workflow GitHub exécute désormais aussi `scripts/browser-check.js` avec Chromium.
+Les appels Supabase sont simulés : aucun compte ni aucune progression réelle n’est utilisé.
+Ce scénario vérifie la reprise et la fin des missions, les récompenses uniques,
+les changements de profil rapides, les sauvegardes en attente et 32 écrans/tailles.
+
+Pour le lancer localement avec Playwright 1.58.2 et Chromium installés :
+
+```sh
+python3 -m http.server 8765 --bind 127.0.0.1
+# Dans un autre terminal :
+node scripts/browser-check.js
+```
+
+Le test des voix Safari et de la synchronisation entre deux appareils reste manuel.
+Les écritures simultanées depuis plusieurs appareils restent basées sur l’horodatage
+le plus récent ; une fusion serveur des progrès reste une évolution à prévoir.

@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.15.0 — 2026-09-24
+
+### Progression et profils
+- les réponses réseau périmées sont ignorées après un changement de profil ou de compte
+- chaque sauvegarde en attente garde son profil et son instantané de progression
+- les progrès faits pendant une lecture distante ne sont plus remplacés par une ancienne réponse
+- un renouvellement de connexion ne redémarre plus l’exercice en cours
+- les erreurs réseau préservent le mode local ; un échec de stockage local est signalé
+
+### Jeux et petits écrans
+- les rappels différés du Memory et des jeux de construction sont limités à leur écran d’origine
+- les clics supplémentaires après une construction terminée ne modifient plus la réponse
+- le mélange des choix utilise Fisher–Yates
+- meilleur ajustement des cartes et du bandeau sur petits écrans, cibles tactiles agrandies
+- formulaire parent utilisable au clavier, fermeture par Échap et retour du focus
+
+### Vérification
+- scénario navigateur ajouté : missions, reprise après rechargement, récompense unique, réponses réseau tardives et isolation des profils
+- contrôle de débordement des écrans principaux à 320, 390, 768 et 1280 pixels
+- ces scénarios utilisent un service de synchronisation simulé et ne remplacent pas l’essai réel avec deux appareils
+
+### À vérifier sur les appareils réels
+- synthèse vocale Safari macOS et micro BÊTA
+- connexion réelle, profils et synchronisation Supabase sur iPhone et Mac
+
 ## 0.14.1 — 2026-09-24
 
 - Les syllabes récemment ratées ont davantage de chances de revenir comme sujet principal d’une mission.

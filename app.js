@@ -2,11 +2,13 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.14.1";
+const APP_VERSION="0.15.0";
 const STATE_SCHEMA_VERSION=1;
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
 const DEFAULT_STATE={schemaVersion:STATE_SCHEMA_VERSION,updatedAt:0,stars:0,streak:0,name:"",done:{},stats:{attempts:0,correct:0},mastery:{},reviewQueue:[],attemptLedger:{},rewardLedger:{},soundPractice:{},wordPractice:{},rewards:{towardPiece:0,pieces:0,puzzles:0,collection:[]},dailyMission:null,missionHistory:[],sound:0,set:0,word:0,gameWins:0,lastView:"home"};
-let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight=false,remoteSavePending=false;
+let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight=false;
+const pendingProfileSaves=new Map();
+let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 function migrateState(raw){const src=raw&&typeof raw==="object"?{...raw}:{};src.schemaVersion=STATE_SCHEMA_VERSION;return src}
 function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION,done:raw.done||{},stats:{...DEFAULT_STATE.stats,...(raw.stats||{})},mastery:raw.mastery||{},reviewQueue:Array.isArray(raw.reviewQueue)?raw.reviewQueue:[],attemptLedger:raw.attemptLedger||{},rewardLedger:raw.rewardLedger||{},soundPractice:raw.soundPractice||{},wordPractice:raw.wordPractice||{},missionHistory:Array.isArray(raw.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...(raw.rewards||{}),collection:[...((raw.rewards||{}).collection||[])]}}}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
@@ -25,6 +27,7 @@ window.addEventListener("error",e=>showRuntimeError(e.error||e.message));
 window.addEventListener("unhandledrejection",e=>showRuntimeError(e.reason||"Promise error"));
 function updateConnectivityUI(){
  const s=$("#syncStatus");if(!s)return;
+ if(localSaveFailed){s.textContent="⚠️ Sauvegarde locale indisponible • exporte ta progression dans Parents";s.className="sync err";return}
  if(!navigator.onLine){s.textContent="📴 Hors ligne • l’app reste utilisable et la progression est gardée sur cet appareil";s.className="sync err";return}
  if(!session){s.textContent="Mode invité • sauvegarde locale";s.className="sync";return}
  if(!currentChild){s.textContent="Compte connecté • choisissez un profil enfant";s.className="sync";return}
@@ -32,25 +35,31 @@ function updateConnectivityUI(){
 window.addEventListener("offline",updateConnectivityUI);
 window.addEventListener("online",()=>{if(sb&&session&&currentChild)loadRemoteState();else updateConnectivityUI()});
 function saveLocal(){
- try{localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state));return true}
- catch(e){console.error("Local save error",e);return false}
+ try{localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state));localSaveFailed=false;return true}
+ catch(e){console.error("Local save error",e);localSaveFailed=true;return false}
 }
 async function saveRemoteNow(){
  saveLocal();topUI();if(!sb||!session||!currentChild)return;
- if(remoteSaveInFlight){remoteSavePending=true;return}
+ const profileId=currentChild.id,ownerId=session.user.id;
+ const snapshot=normalizeState(JSON.parse(JSON.stringify(state)));
+ pendingProfileSaves.set(profileId,{profileId,ownerId,snapshot,completed:learningCourseCompleted()});
+ if(remoteSaveInFlight)return;
  remoteSaveInFlight=true;
  try{
-  do{
-   remoteSavePending=false;
-   const profileId=currentChild?.id;if(!profileId)break;
-   const snapshot=normalizeState(JSON.parse(JSON.stringify(state)));
-   $("#syncStatus").textContent="☁️ Synchronisation…";$("#syncStatus").className="sync";
-   const {error}=await sb.from("progress").upsert({child_id:profileId,lesson_id:"app_state",stars:snapshot.stars||0,completed:learningCourseCompleted(),attempts:snapshot.stats?.attempts||0,correct_answers:snapshot.stats?.correct||0,lesson_state:snapshot},{onConflict:"child_id,lesson_id"});
-   if(currentChild?.id===profileId){
-    if(error){console.error(error);$("#syncStatus").textContent="⚠️ Sauvegardé localement • synchro impossible";$("#syncStatus").className="sync err"}
+  while(pendingProfileSaves.size){
+   const [key,job]=pendingProfileSaves.entries().next().value;
+   pendingProfileSaves.delete(key);
+   if(session?.user?.id!==job.ownerId)continue;
+   if(currentChild?.id===job.profileId){$("#syncStatus").textContent="☁️ Synchronisation…";$("#syncStatus").className="sync"}
+   let error=null;
+   try{
+    ({error}=await sb.from("progress").upsert({child_id:job.profileId,lesson_id:"app_state",stars:job.snapshot.stars||0,completed:job.completed,attempts:job.snapshot.stats?.attempts||0,correct_answers:job.snapshot.stats?.correct||0,lesson_state:job.snapshot},{onConflict:"child_id,lesson_id"}));
+   }catch(e){error=e}
+   if(currentChild?.id===job.profileId&&session?.user?.id===job.ownerId){
+    if(error){console.error("Remote save error",error);$("#syncStatus").textContent=localSaveFailed?"⚠️ Sauvegarde indisponible • exporte la progression depuis Parents":"⚠️ Sauvegardé sur cet appareil • synchronisation à réessayer";$("#syncStatus").className="sync err"}
     else{$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"}
    }
-  }while(remoteSavePending&&sb&&session&&currentChild)
+  }
  }finally{remoteSaveInFlight=false}
 }
 function save(touch=true){
@@ -59,21 +68,39 @@ function save(touch=true){
  if(!touch)return;
  clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)
 }
-async function loadRemoteState(){
- if(!sb||!session||!currentChild)return;$("#syncStatus").textContent="☁️ Chargement…";
- let cached=null;try{cached=JSON.parse(localStorage.getItem(childKey(currentChild.id))||"null")}catch(e){console.error("Local cache read error",e)}
- const {data,error}=await sb.from("progress").select("lesson_state").eq("child_id",currentChild.id).eq("lesson_id","app_state").maybeSingle();
- if(error)console.error(error);
- const remote=data?.lesson_state||null,local=cached||null;
- if(remote&&local){
-  const remoteTs=Number(remote.updatedAt||0),localTs=Number(local.updatedAt||0);
-  if(localTs>remoteTs){state=normalizeState(local);await saveRemoteNow()}
-  else{saveSnapshotBackup(normalizeState(local));state=normalizeState(remote)}
- }else if(remote)state=normalizeState(remote);
- else if(local){state=normalizeState(local);await saveRemoteNow()}
- else{state=normalizeState({name:currentChild.nickname});save();await saveRemoteNow()}
- state.name=currentChild.nickname;currentView=state.lastView||"home";saveLocal();render();topUI();
+function cachedProfileState(child){
+ try{return normalizeState(JSON.parse(localStorage.getItem(childKey(child.id))||"null")||{name:child.nickname})}
+ catch(e){return normalizeState({name:child.nickname})}
 }
+function enterChildProfile(child){
+ clearTimeout(saveTimer);
+ // Queue the outgoing child's snapshot before changing the active profile.
+ if(currentChild&&currentChild!==child&&session&&!profileLoading)void saveRemoteNow();
+ profileLoadSequence++;currentChild=child;state=cachedProfileState(child);state.name=child.nickname;
+ missionMode=false;currentView=state.lastView||"home";
+ try{localStorage.setItem("lastChildId",child.id)}catch(e){console.error("Profile preference save error",e)}
+ profileLoading=true;stage.innerHTML='<div class="card center" role="status"><h2>On retrouve ta progression…</h2><p>Encore un petit instant.</p></div>';topUI()
+}
+async function loadRemoteState(){
+ if(!sb||!session||!currentChild)return;
+ const child=currentChild,ownerId=session.user.id,requestId=++profileLoadSequence;
+ $("#syncStatus").textContent="☁️ Chargement…";
+ let data=null,error=null;
+ try{({data,error}=await sb.from("progress").select("lesson_state").eq("child_id",child.id).eq("lesson_id","app_state").maybeSingle())}catch(e){error=e}
+ if(requestId!==profileLoadSequence||currentChild?.id!==child.id||session?.user?.id!==ownerId)return;
+ const wasLoading=profileLoading;profileLoading=false;
+ if(error){if(wasLoading)render();console.error("Remote load error",error);$("#syncStatus").textContent=localSaveFailed?"⚠️ Sauvegarde indisponible • exporte la progression depuis Parents":"📴 Progression locale conservée • synchronisation à réessayer";$("#syncStatus").className="sync err";return}
+ // Re-read the cache after the request: the child may have answered while it was in flight.
+ const cached=cachedProfileState(child);
+ const local=Number(state.updatedAt||0)>=Number(cached.updatedAt||0)?state:cached,remote=data?.lesson_state||null;
+ const remoteTs=Number(remote?.updatedAt||0),localTs=Number(local.updatedAt||0);
+ if(!remote||localTs>remoteTs){state=normalizeState(local);state.name=child.nickname;if(wasLoading)render();await saveRemoteNow();return}
+ if(remoteTs===localTs&&localTs>0){if(wasLoading)render();topUI();$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok";return}
+ saveSnapshotBackup(normalizeState(local));state=normalizeState(remote);state.name=child.nickname;
+ missionMode=false;currentView=state.lastView||"home";saveLocal();render();topUI();
+ $("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"
+}
+
 function topUI(){
  const version=$("#appVersion");if(version)version.textContent="v"+APP_VERSION;
  $("#stars").textContent=state.stars||0;$("#streak").textContent=(state.streak||0)>=2?`🔥${state.streak}`:"";
@@ -82,10 +109,10 @@ function topUI(){
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
  const keys=["sounds","syllables","words","listen","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order","comprehension"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";
- if(!navigator.onLine){updateConnectivityUI()}else if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
+ if(localSaveFailed||!navigator.onLine){updateConnectivityUI()}else if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
-function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function shuffle(a){const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function colorSyl(s){return `<span class="red">${esc(s[0]||"")}</span><span class="blue">${esc(s.slice(1))}</span>`}
@@ -538,7 +565,7 @@ function gameListen(forcedTarget=null,fromMission=false){
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
- if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
+ if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
 }
 
 function gameBubbles(forcedTarget=null,fromMission=false){
@@ -549,7 +576,7 @@ function gameBubbles(forcedTarget=null,fromMission=false){
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
- if(!fromMission)setTimeout(()=>speak(currentAnswer,.60),180)
+ if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
 }
 function gameFamily(forcedFamily=null,fromMission=false){
  missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;resetQuestionTracking();
@@ -590,13 +617,17 @@ function memoryFlip(btn,index){
   }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
  }else{
   memoryMissedPairs.add(a.card.pair);memoryMissedPairs.add(b.card.pair);recordQuestionError();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
-  setTimeout(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";memoryOpen=[]},750)
+  screenTask(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";memoryOpen=[]},750)
  }
 }
 
 function speechRecognitionCtor(){return window.SpeechRecognition||window.webkitSpeechRecognition||null}
 function isIOS(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1)}
 function isSafariBrowser(){return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(navigator.userAgent)}
+function screenTask(fn,ms){
+ const screen=stage.firstElementChild;
+ return setTimeout(()=>{if(stage.firstElementChild===screen)fn()},ms)
+}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function openMicrophone(status){
  if(!window.isSecureContext){
@@ -673,7 +704,7 @@ function gamePronunciation(){
  <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${micAvailable?"Appuie sur « À toi ! ». Le micro restera actif pendant l’écoute et aucune réponse ne sera validée sans voix détectée.":"Le microphone n’est pas disponible sur ce navigateur."}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-pronunciation">Nouvelle syllabe →</button></div>`;
- setTimeout(()=>speak(currentAnswer,.60),120)
+ screenTask(()=>speak(currentAnswer,.60),120)
 }
 async function startPronunciationRecognition(){
  if(locked)return;
@@ -723,7 +754,7 @@ async function startPronunciationRecognition(){
   }else{
    miss("Presque ! Écoute encore et réessaie.");
    if(status){status.className="mic-status error";status.textContent='J’ai entendu « '+(heard||"…")+' ». Réessaie.'}
-   setTimeout(()=>speak(currentAnswer,.60),250);
+   screenTask(()=>speak(currentAnswer,.60),250);
   }
  };
  recognition.onerror=e=>{
@@ -773,7 +804,7 @@ function updateBuild(){
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join("")===orderTarget.join("");
    if(ok){locked=true;recordAttempt(true,"word:"+currentAnswer.w,"build:"+currentAnswer.w);rewardVerified("Mot construit !","build:"+currentAnswer.w);setDone("words");confetti();speak(currentAnswer.w,.70);$("#feedback").innerHTML=`<div class="ok">🎉 Bravo : ${currentAnswer.w}</div>`;completeMissionStep()}
-   else{recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
+   else{locked=true;recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
 function gameComprehension(forcedTarget=null,fromMission=false){
@@ -804,7 +835,7 @@ function updateOrder(){
  if(orderMade.length===orderTarget.length){
    const ok=orderMade.join(" ")===orderTarget.join(" ");
    if(ok){locked=true;recordAttempt(true,"sentence:"+orderTarget.join(" "),"order:"+orderTarget.join(" "));rewardVerified("Phrase réussie !","order:"+orderTarget.join(" "));setDone("order");confetti();speak(orderTarget.join(" "),.73);$("#feedback").innerHTML=`<div class="ok">🎉 Très bien !</div>`}
-   else{recordQuestionError("sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
+   else{locked=true;recordQuestionError("sentence:"+orderTarget.join(" "));miss("L'ordre n'est pas encore le bon.");$("#feedback").innerHTML=`<div class="no">Regarde le premier mot et recommence.</div>`;screenTask(()=>{locked=false;orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(b=>b.disabled=false);updateOrder()},900)}
  }
 }
 function masterySummary(){
@@ -1042,21 +1073,36 @@ function checkChoice(btn,value,kind){
 }
 
 
+let authOpener=null;
+function closeAuth(){
+ $("#authModal").classList.add("hidden");
+ if(authOpener?.isConnected)authOpener.focus();authOpener=null
+}
+document.addEventListener("keydown",e=>{
+ const modal=$("#authModal");if(modal.classList.contains("hidden"))return;
+ if(e.key==="Escape"){e.preventDefault();closeAuth();return}
+ if(e.key!=="Tab")return;
+ const fields=[...modal.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]')].filter(el=>!el.hidden);
+ const first=fields[0],last=fields[fields.length-1];if(!first)return;
+ if(e.shiftKey&&(document.activeElement===first||!modal.contains(document.activeElement))){e.preventDefault();last.focus()}
+ else if(!e.shiftKey&&(document.activeElement===last||!modal.contains(document.activeElement))){e.preventDefault();first.focus()}
+});
 function authMsg(text,type=""){const el=$("#authMsg");if(el){el.textContent=text;el.className="auth-msg "+type}}
-function renderAuthForm(mode){const f=$("#authForm");if(!f)return;if(mode==="signup")f.innerHTML=`<div class="form"><div class="field"><label>Votre prénom</label><input id="signupName"></div><div class="field"><label>Email</label><input id="signupEmail" type="email"></div><div class="field"><label>Mot de passe (8 caractères minimum)</label><input id="signupPassword" type="password"></div><button class="btn primary" data-action="signup">Créer mon compte</button></div>`;else f.innerHTML=`<div class="form"><div class="field"><label>Email</label><input id="loginEmail" type="email"></div><div class="field"><label>Mot de passe</label><input id="loginPassword" type="password"></div><button class="btn primary" data-action="login">Se connecter</button><button class="btn gray" data-action="forgot">Mot de passe oublié</button></div>`}
-function openAuth(mode="login"){const modal=$("#authModal"),content=$("#authContent");modal.classList.remove("hidden");if(session){renderAccountPanel();return}content.innerHTML=`<h2>Compte parent</h2><p>Connectez-vous pour synchroniser la progression entre plusieurs appareils.</p><div class="tabs"><button class="tab ${mode==="login"?"active":""}" data-auth-tab="login">Connexion</button><button class="tab ${mode==="signup"?"active":""}" data-auth-tab="signup">Créer un compte</button></div><div id="authForm"></div><div class="auth-msg" id="authMsg"></div><div class="actions" style="margin-top:10px"><button class="btn gray" data-action="close-modal">Continuer en invité</button></div>`;renderAuthForm(mode)}
+function renderAuthForm(mode){const f=$("#authForm");if(!f)return;if(mode==="signup")f.innerHTML=`<div class="form"><div class="field"><label for="signupName">Votre prénom</label><input id="signupName"></div><div class="field"><label for="signupEmail">Email</label><input id="signupEmail" type="email"></div><div class="field"><label for="signupPassword">Mot de passe (8 caractères minimum)</label><input id="signupPassword" type="password"></div><button class="btn primary" data-action="signup">Créer mon compte</button></div>`;else f.innerHTML=`<div class="form"><div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email"></div><div class="field"><label for="loginPassword">Mot de passe</label><input id="loginPassword" type="password"></div><button class="btn primary" data-action="login">Se connecter</button><button class="btn gray" data-action="forgot">Mot de passe oublié</button></div>`}
+function openAuth(mode="login"){const modal=$("#authModal"),content=$("#authContent");authOpener=document.activeElement;modal.classList.remove("hidden");if(session){renderAccountPanel();content.querySelector("button")?.focus();return}content.innerHTML=`<h2>Compte parent</h2><p>Connectez-vous pour synchroniser la progression entre plusieurs appareils.</p><div class="tabs"><button class="tab ${mode==="login"?"active":""}" data-auth-tab="login">Connexion</button><button class="tab ${mode==="signup"?"active":""}" data-auth-tab="signup">Créer un compte</button></div><div id="authForm"></div><div class="auth-msg" id="authMsg"></div><div class="actions" style="margin-top:10px"><button class="btn gray" data-action="close-modal">Continuer en invité</button></div>`;renderAuthForm(mode);content.querySelector("input")?.focus()}
 async function signUp(){if(!sb){authMsg("Connexion au service indisponible. Le mode invité reste utilisable.","error");return}const email=$("#signupEmail").value.trim(),password=$("#signupPassword").value,name=$("#signupName").value.trim();if(!email||password.length<8){authMsg("Email valide et mot de passe de 8 caractères minimum.","error");return}authMsg("Création du compte…");const {error}=await sb.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:APP_URL}});authMsg(error?error.message:"Compte créé ✅ Vérifiez votre boîte mail et cliquez sur le lien de confirmation.",error?"error":"good")}
-async function login(){if(!sb){authMsg("Connexion au service indisponible. Le mode invité reste utilisable.","error");return}const email=$("#loginEmail").value.trim(),password=$("#loginPassword").value;authMsg("Connexion…");const {error}=await sb.auth.signInWithPassword({email,password});if(error){authMsg(error.message,"error");return}$("#authModal").classList.add("hidden")}
+async function login(){if(!sb){authMsg("Connexion au service indisponible. Le mode invité reste utilisable.","error");return}const email=$("#loginEmail").value.trim(),password=$("#loginPassword").value;authMsg("Connexion…");const {error}=await sb.auth.signInWithPassword({email,password});if(error){authMsg(error.message,"error");return}closeAuth()}
 async function forgot(){if(!sb){authMsg("Service de connexion indisponible.","error");return}const email=$("#loginEmail").value.trim();if(!email){authMsg("Entrez d'abord votre email.","error");return}const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:APP_URL});authMsg(error?error.message:"Email de réinitialisation envoyé ✅",error?"error":"good")}
-async function logout(){if(sb)await sb.auth.signOut();session=null;currentChild=null;children=[];try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}currentView=state.lastView||"home";$("#authModal").classList.add("hidden");render();topUI()}
-async function loadChildren(){if(!sb||!session)return;const {data,error}=await sb.from("children").select("id,parent_id,nickname,school_level,avatar,created_at").eq("parent_id",session.user.id).order("created_at",{ascending:true});if(error){console.error(error);return}children=(data||[]).filter(ch=>ch.parent_id===session.user.id)}
-function renderAccountPanel(){const c=$("#authContent");c.innerHTML=`<h2>Mon compte</h2><p>${esc(session.user.email||"")}</p><div class="children-grid">${children.map(ch=>`<button class="child-card" data-action="select-child" data-id="${esc(ch.id)}"><div class="avatar">${esc(ch.avatar||"🦊")}</div><b>${esc(ch.nickname)}</b><small>${esc(ch.school_level||"CP")}</small></button>`).join("")}</div><div class="card"><h3 style="margin-top:0">Ajouter un enfant</h3><div class="form"><div class="field"><label>Prénom ou pseudo</label><input id="newChildName" maxlength="30"></div><div class="field"><label>Niveau</label><select id="newChildLevel"><option>CP</option><option>Grande section</option><option>CE1</option></select></div><div class="field"><label>Avatar</label><select id="newChildAvatar"><option>🦊</option><option>🐼</option><option>🦄</option><option>🐯</option><option>🐨</option><option>🐰</option></select></div><button class="btn primary" data-action="create-child">Créer le profil</button></div><div class="auth-msg" id="authMsg"></div></div><div class="actions" style="margin-top:12px"><button class="btn gray" data-action="close-modal">Fermer</button><button class="btn redbtn" data-action="logout">Se déconnecter</button></div>`}
-async function createChild(){if(!sb){authMsg("Service de connexion indisponible.","error");return}const nickname=$("#newChildName").value.trim(),school_level=$("#newChildLevel").value,avatar=$("#newChildAvatar").value;if(!nickname){authMsg("Indiquez un prénom ou un pseudo.","error");return}const {data,error}=await sb.from("children").insert({parent_id:session.user.id,nickname,school_level,avatar}).select().single();if(error){authMsg(error.message,"error");return}await loadChildren();currentChild=data;localStorage.setItem("lastChildId",data.id);await loadRemoteState();renderAccountPanel();topUI()}
-async function selectChild(id){const ch=children.find(x=>x.id===id&&x.parent_id===session?.user?.id);if(!ch)return;currentChild=ch;localStorage.setItem("lastChildId",id);await loadRemoteState();$("#authModal").classList.add("hidden");topUI()}
+async function logout(){clearTimeout(saveTimer);if(currentChild&&!profileLoading)await saveRemoteNow();profileLoadSequence++;profileLoading=false;if(sb)await sb.auth.signOut();session=null;currentChild=null;children=[];try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}currentView=state.lastView||"home";closeAuth();render();topUI()}
+async function loadChildren(){if(!sb||!session)return;const ownerId=session.user.id;const {data,error}=await sb.from("children").select("id,parent_id,nickname,school_level,avatar,created_at").eq("parent_id",session.user.id).order("created_at",{ascending:true});if(ownerId!==session?.user?.id)return;if(error){console.error(error);return}children=(data||[]).filter(ch=>ch.parent_id===ownerId)}
+function renderAccountPanel(){const c=$("#authContent");c.innerHTML=`<h2>Mon compte</h2><p>${esc(session.user.email||"")}</p><div class="children-grid">${children.map(ch=>`<button class="child-card" data-action="select-child" data-id="${esc(ch.id)}"><div class="avatar">${esc(ch.avatar||"🦊")}</div><b>${esc(ch.nickname)}</b><small>${esc(ch.school_level||"CP")}</small></button>`).join("")}</div><div class="card"><h3 style="margin-top:0">Ajouter un enfant</h3><div class="form"><div class="field"><label for="newChildName">Prénom ou pseudo</label><input id="newChildName" maxlength="30"></div><div class="field"><label for="newChildLevel">Niveau</label><select id="newChildLevel"><option>CP</option><option>Grande section</option><option>CE1</option></select></div><div class="field"><label for="newChildAvatar">Avatar</label><select id="newChildAvatar"><option>🦊</option><option>🐼</option><option>🦄</option><option>🐯</option><option>🐨</option><option>🐰</option></select></div><button class="btn primary" data-action="create-child">Créer le profil</button></div><div class="auth-msg" id="authMsg"></div></div><div class="actions" style="margin-top:12px"><button class="btn gray" data-action="close-modal">Fermer</button><button class="btn redbtn" data-action="logout">Se déconnecter</button></div>`}
+async function createChild(){if(!sb){authMsg("Service de connexion indisponible.","error");return}const nickname=$("#newChildName").value.trim(),school_level=$("#newChildLevel").value,avatar=$("#newChildAvatar").value;if(!nickname){authMsg("Indiquez un prénom ou un pseudo.","error");return}const {data,error}=await sb.from("children").insert({parent_id:session.user.id,nickname,school_level,avatar}).select().single();if(error){authMsg(error.message,"error");return}await loadChildren();if(data.parent_id!==session?.user?.id)return;enterChildProfile(data);await loadRemoteState();if(session)renderAccountPanel();topUI()}
+async function selectChild(id){const ch=children.find(x=>x.id===id&&x.parent_id===session?.user?.id);if(!ch)return;enterChildProfile(ch);closeAuth();await loadRemoteState();topUI()}
 
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-action]");if(!b)return;
  const a=b.dataset.action;
+ if(profileLoading&&!["select-child","close-modal","logout"].includes(a))return;
  if(a==="recover-home"){runtimeErrorShown=false;missionMode=false;activate("home");return}
  if(a==="go"){missionMode=false;activate(b.dataset.to);return}
  if(a==="mission-start"){missionHub();return}
@@ -1085,7 +1131,7 @@ document.addEventListener("click",e=>{
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
  if(a==="bubble-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");setTimeout(()=>speak(currentAnswer,.60),120);completeMissionStep()}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordAttempt(true,currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");screenTask(()=>speak(currentAnswer,.60),120);completeMissionStep()}
    else{recordQuestionError(currentAnswer);b.disabled=true;b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
    return
  }
@@ -1124,18 +1170,18 @@ document.addEventListener("click",e=>{
  if(a==="listen-answer"){checkChoice(b,b.dataset.value,"listen");return}
  if(a==="picture-answer"){checkChoice(b,b.dataset.value,"pictures");return}
  if(a==="build-token"){
-   if(b.disabled)return;b.disabled=true;orderMade.push(b.dataset.value);updateBuild();return
+   if(locked||b.disabled)return;b.disabled=true;orderMade.push(b.dataset.value);updateBuild();return
  }
- if(a==="build-reset"){orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(x=>x.disabled=false);updateBuild();$("#feedback").innerHTML="";return}
- if(a==="order-token"){if(b.disabled)return;b.disabled=true;orderMade.push(b.dataset.value);updateOrder();return}
- if(a==="order-reset"){orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(x=>x.disabled=false);updateOrder();$("#feedback").innerHTML="";return}
+ if(a==="build-reset"){if(locked)return;orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(x=>x.disabled=false);updateBuild();$("#feedback").innerHTML="";return}
+ if(a==="order-token"){if(locked||b.disabled)return;b.disabled=true;orderMade.push(b.dataset.value);updateOrder();return}
+ if(a==="order-reset"){if(locked)return;orderMade=[];document.querySelectorAll("#orderChoices .choice").forEach(x=>x.disabled=false);updateOrder();$("#feedback").innerHTML="";return}
  if(a==="signup"){signUp();return}
  if(a==="login"){login();return}
  if(a==="forgot"){forgot();return}
  if(a==="logout"){logout();return}
  if(a==="create-child"){createChild();return}
  if(a==="select-child"){selectChild(b.dataset.id);return}
- if(a==="close-modal"){$("#authModal").classList.add("hidden");return}
+ if(a==="close-modal"){closeAuth();return}
  if(a==="reset-mission"){resetDailyMission();return}
  if(a==="copy-diagnostic"){copyDiagnostic();return}
  if(a==="export-progress"){exportProgress();return}
@@ -1145,23 +1191,38 @@ document.addEventListener("click",e=>{
    if(confirm("Remettre les étoiles et la progression à zéro ? Une sauvegarde locale sera conservée.")){saveBackup();state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
  }
 });
-nav.addEventListener("click",e=>{const b=e.target.closest(".nav-btn");if(!b)return;missionMode=false;activate(b.dataset.view)});
+nav.addEventListener("click",e=>{const b=e.target.closest(".nav-btn");if(!b||profileLoading)return;missionMode=false;activate(b.dataset.view)});
 $("#accountBtn").addEventListener("click",()=>openAuth());
 $("#switchChildBtn").addEventListener("click",async()=>{if(!session)openAuth("login");else{await loadChildren();openAuth()}});
-$("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("#authModal").classList.add("hidden")});
+$("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")closeAuth()});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
 document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
 async function bootstrap(){
  if(sb){
   try{
    const {data:{session:s}}=await sb.auth.getSession();session=s;
-   if(session){await loadChildren();const remembered=localStorage.getItem("lastChildId");if(remembered)currentChild=children.find(c=>c.id===remembered)||null;if(!currentChild&&children.length===1)currentChild=children[0];if(currentChild){localStorage.setItem("lastChildId",currentChild.id);await loadRemoteState()}}
-   sb.auth.onAuthStateChange((event,newSession)=>{session=newSession;setTimeout(async()=>{if(session){await loadChildren();if(!currentChild&&children.length===1){currentChild=children[0];localStorage.setItem("lastChildId",currentChild.id);await loadRemoteState()}else{render();topUI()}}else{currentChild=null;children=[];try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}currentView=state.lastView||"home";render();topUI()}},0)})
+   if(session){await loadChildren();const remembered=localStorage.getItem("lastChildId");if(remembered)currentChild=children.find(c=>c.id===remembered)||null;if(!currentChild&&children.length===1)currentChild=children[0];if(currentChild){enterChildProfile(currentChild);await loadRemoteState()}}
+   sb.auth.onAuthStateChange((event,newSession)=>{
+    const previousOwner=session?.user?.id;session=newSession;
+    if(previousOwner===newSession?.user?.id){topUI();return}
+    clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;
+    try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
+    currentView=state.lastView||"home";render();topUI();
+    if(!newSession)return;
+    const ownerId=newSession.user.id;
+    setTimeout(async()=>{
+     try{
+      await loadChildren();if(session?.user?.id!==ownerId)return;
+      const remembered=localStorage.getItem("lastChildId"),child=children.find(c=>c.id===remembered)||(children.length===1?children[0]:null);
+      if(child){enterChildProfile(child);await loadRemoteState()}else topUI()
+     }catch(e){console.error("Account refresh error",e);authMsg("Le compte est connecté. Réessaie de choisir un profil.","error")}
+    },0)
+   })
   }catch(e){console.error("Supabase bootstrap error",e);session=null;currentChild=null}
  }
  if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener?.("voiceschanged",()=>speechSynthesis.getVoices())}
  render();topUI();
- if(!sb){$("#syncStatus").textContent="Mode local • service de synchronisation indisponible";$("#syncStatus").className="sync err"}
+ if(!sb&&!localSaveFailed){$("#syncStatus").textContent="Mode local • service de synchronisation indisponible";$("#syncStatus").className="sync err"}
 }
 function registerServiceWorker(){
  if(!("serviceWorker" in navigator))return;

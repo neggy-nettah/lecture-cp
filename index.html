@@ -10,7 +10,7 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>La Fabrique des Syllabes</title>
-<link rel="stylesheet" href="./styles.css?v=0.14.1">
+<link rel="stylesheet" href="./styles.css?v=0.15.0">
 </head>
 <body>
 <div class="app">
@@ -26,7 +26,7 @@
     <div class="progress"><div id="progressBar"></div></div><div class="sync" id="syncStatus">Mode invité • sauvegarde locale</div>
   </div>
   <div class="layout">
-    <nav class="nav" id="nav">
+    <nav class="nav" id="nav" aria-label="Activités et espace parent">
       <div class="profilebox"><div class="tiny">Profil enfant</div><div class="profileline"><strong id="childLabel">Invité</strong><button class="btn gray" style="min-height:34px;padding:6px 9px;font-size:12px" id="switchChildBtn">Changer</button></div></div>
       <button class="nav-btn active" data-view="home">🏠 Accueil</button>
       <button class="nav-btn" data-view="sounds">🔤 Sons</button>
@@ -37,14 +37,14 @@
       <button class="nav-btn" data-view="collection">🎁 Collection</button>
       <button class="nav-btn" data-view="parents">👨‍👩‍👧 Parents</button>
     </nav>
-    <main class="stage" id="stage"></main>
+    <main class="stage" id="stage" tabindex="-1"></main>
   </div>
   <div class="footer-note">Les audios utilisent la voix française disponible sur l'appareil. • <span id="appVersion"></span></div>
 </div>
 <div id="fx"></div>
-<div class="modal hidden" id="authModal"><div class="modal-card"><div id="authContent"></div></div></div>
+<div class="modal hidden" id="authModal" role="dialog" aria-modal="true" aria-label="Compte parent"><div class="modal-card"><div id="authContent"></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./content.js?v=0.14.1"></script>
-<script src="./app.js?v=0.14.1"></script>
+<script src="./content.js?v=0.15.0"></script>
+<script src="./app.js?v=0.15.0"></script>
 </body>
 </html>
