@@ -903,6 +903,29 @@ function exportProgress(){
   a.href=url;a.download="lecture-cp-"+label+"-"+localDayKey()+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),500);
  }catch(e){console.error("Export progress error",e);prompt("Copie cette sauvegarde :",json)}
 }
+function parseProgressImport(text){
+ let payload;
+ try{payload=JSON.parse(String(text||""))}catch(e){throw new Error("JSON invalide")}
+ if(!payload||typeof payload!=="object"||payload.app!=="La Fabrique des Syllabes"||!payload.state||typeof payload.state!=="object")throw new Error("Fichier non reconnu");
+ const imported=normalizeState(payload.state);
+ const numbers=[imported.stars,imported.streak,imported.stats?.attempts,imported.stats?.correct];
+ if(numbers.some(x=>!Number.isFinite(Number(x))||Number(x)<0))throw new Error("Progression invalide");
+ imported.stars=Math.floor(Number(imported.stars||0));imported.streak=Math.floor(Number(imported.streak||0));
+ imported.stats={attempts:Math.floor(Number(imported.stats?.attempts||0)),correct:Math.floor(Number(imported.stats?.correct||0))};
+ if(imported.stats.correct>imported.stats.attempts)throw new Error("Statistiques incohérentes");
+ imported.missionHistory=(imported.missionHistory||[]).filter(x=>x&&typeof x==="object"&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))).slice(-365);
+ imported.reviewQueue=(imported.reviewQueue||[]).filter(s=>DATA.sets.flat().includes(s)).slice(-50);
+ return imported
+}
+async function importProgressFile(file){
+ if(!file)return;
+ if(file.size>2*1024*1024){alert("Ce fichier est trop volumineux pour une sauvegarde de progression.");return}
+ let imported;
+ try{imported=parseProgressImport(await file.text())}catch(e){console.error("Import progress error",e);alert("Impossible d’importer ce fichier : "+e.message+".");return}
+ if(!confirm("Remplacer la progression actuelle par celle de ce fichier ? Une sauvegarde locale de l’état actuel sera conservée."))return;
+ saveBackup();imported.updatedAt=Date.now();if(currentChild)imported.name=currentChild.nickname;
+ state=imported;missionMode=false;currentView="home";state.lastView="home";save();render();alert("Progression importée ✅")
+}
 function resetDailyMission(){
  if(!confirm("Recréer seulement la mission du jour ? La progression générale sera conservée."))return;
  state.dailyMission=null;missionMode=false;currentView="home";save();render();alert("Nouvelle mission créée.")
@@ -926,7 +949,7 @@ function parents(){
   <div class="parent-box"><h3>🎯 Priorité</h3><p>La précision avant la vitesse. L’image sert de vérification, pas à deviner le mot.</p></div>
   <div class="parent-box"><h3>🌟 Motivation</h3><p>Valoriser l’effort et les progrès. Une courte réussite quotidienne vaut mieux qu’une longue séance tendue.</p></div>
  </div>
- <div class="card"><b>🛠️ Outils parent</b><p style="color:var(--muted);font-size:13px">En cas de souci, tu peux recréer uniquement la mission du jour, exporter la progression ou copier un diagnostic technique sans email.</p><div class="actions"><button class="btn gray" data-action="reset-mission">↻ Recréer la mission</button><button class="btn good" data-action="export-progress">⬇️ Exporter la progression</button><button class="btn gray" data-action="copy-diagnostic">📋 Copier diagnostic</button></div></div>
+ <div class="card"><b>🛠️ Outils parent</b><p style="color:var(--muted);font-size:13px">En cas de souci, tu peux recréer uniquement la mission du jour, exporter ou restaurer une progression, ou copier un diagnostic technique sans email.</p><input id="progressImportInput" type="file" accept=".json,application/json" hidden><div class="actions"><button class="btn gray" data-action="reset-mission">↻ Recréer la mission</button><button class="btn good" data-action="export-progress">⬇️ Exporter la progression</button><button class="btn good" data-action="import-progress">⬆️ Importer une progression</button><button class="btn gray" data-action="copy-diagnostic">📋 Copier diagnostic</button></div></div>
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
@@ -1064,6 +1087,7 @@ document.addEventListener("click",e=>{
  if(a==="reset-mission"){resetDailyMission();return}
  if(a==="copy-diagnostic"){copyDiagnostic();return}
  if(a==="export-progress"){exportProgress();return}
+ if(a==="import-progress"){const input=$("#progressImportInput");if(input)input.click();return}
  if(a==="restore-backup"){restoreBackup();return}
  if(a==="reset"){
    if(confirm("Remettre les étoiles et la progression à zéro ? Une sauvegarde locale sera conservée.")){saveBackup();state=normalizeState({name:currentChild?currentChild.nickname:(state.name||"")});currentView="home";save();render()}
@@ -1074,6 +1098,7 @@ $("#accountBtn").addEventListener("click",()=>openAuth());
 $("#switchChildBtn").addEventListener("click",async()=>{if(!session)openAuth("login");else{await loadChildren();openAuth()}});
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")$("#authModal").classList.add("hidden")});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
+document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
 async function bootstrap(){
  if(sb){
   try{
