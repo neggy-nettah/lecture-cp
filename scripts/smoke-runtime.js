@@ -106,6 +106,10 @@ const probes=[
   'typeof decodableSentencePool==="function"',
   'typeof recentPerformance==="function"',
   'typeof recordQuestionError==="function"',
+  'typeof dueReviewSyllables==="function"',
+  '(state=normalizeState({mastery:{ma:{attempts:1,correct:1,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===1&&dueReviewSyllables().includes("ma"))',
+  '(state=normalizeState({mastery:{ma:{attempts:2,correct:2,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===3)',
+  '(state=normalizeState({mastery:{ma:{attempts:4,correct:4,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===7)',
   'typeof worldView==="function"',
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
@@ -202,6 +206,7 @@ console.log("- Mission stats start only when the mission starts");
 console.log("- Legacy state migration: OK");
 console.log("- Saved-state schema version: OK");
 console.log("- Word practice tracking: OK");
+console.log("- Spaced review intervals: OK");
 console.log("- Duplicate mastery guard: OK");
 console.log("- One-error-per-question analytics: OK");
 console.log("- Mission/free-play attempt scoping: OK");
