@@ -280,13 +280,16 @@ function buildDailyMission(){
  const recentWords=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word));
  const related=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
- const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualModes=["memory","family","missing"],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
+ const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],comprehensionPool=sentenceUnlocked()?comprehensionSentencePool():[],visualModes=["memory","family","missing",...(comprehensionPool.length?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
  const missingCandidates=missingSyllableWords(),missingPool=missingCandidates.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingCandidates)||word;
+ const comprehensionChoices=comprehensionPool.filter(x=>x.word.w!==word.w),comprehensionItem=pick(comprehensionChoices.length?comprehensionChoices:comprehensionPool);
  const visualStep=visualType==="memory"
   ?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}
   :visualType==="family"
    ?{type:"family",target:family[0][0],title:"J’observe",detail:"Trouve l’intrus de la famille "+family[0][0].toUpperCase()}
-   :{type:"missing",target:missingWord.w,title:"Je complète",detail:"Retrouve la syllabe manquante de "+missingWord.w.toUpperCase()};
+   :visualType==="comprehension"&&comprehensionItem
+    ?{type:"comprehension",target:comprehensionItem.word.w,title:"Je comprends",detail:"Lis la phrase et choisis la bonne image"}
+    :{type:"missing",target:missingWord.w,title:"Je complète",detail:"Retrouve la syllabe manquante de "+missingWord.w.toUpperCase()};
  state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,sessionStats:{attempts:0,correct:0},steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
   {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
@@ -333,6 +336,7 @@ function startMissionStep(){
  else if(s.type==="memory")gameMemory([m.primary,m.review],true);
  else if(s.type==="family"){const fam=DATA.sets.find(set=>set[0][0]===s.target)||DATA.sets[0];gameFamily(fam,true)}
  else if(s.type==="missing")gameMissing(DATA.words.find(w=>w.w===s.target)||null,true);
+ else if(s.type==="comprehension")gameComprehension(s.target,true);
  else if(s.type==="build")gameBuild(DATA.words.find(w=>w.w===s.target)||null,true)
 }
 function completeMissionStep(){
@@ -748,15 +752,15 @@ function updateBuild(){
    else{recordQuestionError("word:"+currentAnswer.w);miss("Presque ! Recommence dans un autre ordre.");$("#feedback").innerHTML=`<div class="no">Essaie encore.</div>`;setTimeout(()=>{orderMade=[];document.querySelectorAll("#buildChoices .choice").forEach(b=>b.disabled=false);updateBuild()},800)}
  }
 }
-function gameComprehension(){
- if(!sentenceUnlocked()){activate("games");return}
- const pool=comprehensionSentencePool();if(!pool.length){activate("games");return}
- currentView="comprehension";state.lastView="comprehension";save(false);locked=false;resetQuestionTracking();
- const item=pick(pool),sentence=item.sentence;currentAnswer=item.word.w;
+function gameComprehension(forcedTarget=null,fromMission=false){
+ if(!sentenceUnlocked()){if(fromMission)missionHub();else activate("games");return}
+ const pool=comprehensionSentencePool();if(!pool.length){if(fromMission)missionHub();else activate("games");return}
+ missionMode=fromMission;currentView="comprehension";state.lastView=fromMission?"mission":"comprehension";save(false);locked=false;resetQuestionTracking();
+ const forcedPool=forcedTarget?pool.filter(x=>x.word.w===forcedTarget):[],item=pick(forcedPool.length?forcedPool:pool),sentence=item.sentence;currentAnswer=item.word.w;
  const available=decodableMissionWords().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
  stage.innerHTML=title("Je comprends la phrase","Lis la phrase puis choisis la bonne image.","Compréhension")+
  '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
- '<div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button></div>'
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>'
 }
 
 function gameOrder(){
@@ -1088,7 +1092,7 @@ document.addEventListener("click",e=>{
  if(a==="comprehension-answer"){
    if(locked)return;
    const value=b.dataset.value,key="comprehension:"+currentAnswer;
-   if(value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,key);rewardVerified("Phrase comprise !",key);setDone("comprehension");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as bien compris la phrase !</div>'}
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordAttempt(true,null,key);rewardVerified("Phrase comprise !",key);setDone("comprehension");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as bien compris la phrase !</div>';completeMissionStep()}
    else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Relis la phrase tranquillement.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
