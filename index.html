@@ -45,7 +45,7 @@ h1{font-size:clamp(23px,5vw,36px);line-height:1;margin:0}.sub{font-size:13px;col
 .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.choice{min-height:72px;border:2px solid #e8e3f1;background:#fff;border-radius:17px;font-size:30px;font-weight:1000;color:var(--ink);transition:.15s transform,.15s border-color,.15s background}.choice:active{transform:scale(.97)}.choice.correct{background:#e7f8ee;border-color:var(--green);color:#176d40}.choice.wrong{background:#fff0f4;border-color:var(--red);color:#a21d44}
 .choice.picture{font-size:42px;min-height:100px}.choice.picture small{display:block;font-size:14px;color:var(--muted);margin-top:5px}
 .feedback{min-height:49px;margin-top:11px;display:flex;justify-content:center;align-items:center}.feedback .ok,.feedback .no{width:100%;padding:11px;border-radius:14px;font-weight:900}.ok{background:#e9f9f0;color:#176d40}.no{background:#fff1f4;color:#9f2145}
-.sound-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.sound-tile{border:2px solid #e6e0f7;background:#faf9ff;border-radius:16px;padding:12px 6px;font-size:31px;font-weight:1000;min-height:63px}.sound-tile:active{transform:scale(.96)}
+.sound-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}.sound-tile{border:2px solid #e6e0f7;background:#faf9ff;border-radius:16px;padding:12px 6px;font-size:31px;font-weight:1000;min-height:63px;position:relative}.sound-tile:active{transform:scale(.96)}.sound-tile.practiced{border-color:#6dcf9a;background:#effaf4}.sound-tile.practiced::after{content:"✓";position:absolute;right:6px;top:4px;font-size:13px;color:#1d8c54}.family-roadmap{display:flex;gap:7px;overflow-x:auto;padding:8px 1px 3px;margin-top:10px;scrollbar-width:none}.family-roadmap::-webkit-scrollbar{display:none}.family-chip{min-width:58px;padding:9px 8px;border-radius:13px;border:1px solid #e8e3f1;background:#faf9ff;text-align:center;font-weight:1000;flex:0 0 auto}.family-chip small{display:block;font-size:9px;color:var(--muted);margin-top:3px}.family-chip.open{border-color:#c8c1ff;background:#f3f1ff;color:#4d44d7}.family-chip.locked{opacity:.42;filter:grayscale(1)}
 .syllable{display:inline-flex;flex-direction:column;gap:4px;min-width:108px;min-height:78px;padding:10px 15px;align-items:center;justify-content:center;border:2px solid #ded9ff;border-radius:19px;background:#faf9ff;font-size:42px;font-weight:1000;margin:6px}.syllable small{font-size:12px;color:#8a83c7;letter-spacing:1px}
 .word{font-size:clamp(42px,9vw,72px);font-weight:1000;line-height:1.15;margin:13px 0}.word span:nth-child(odd){color:#dc3d53}.word span:nth-child(even){color:#3b70d7}
 .word-parts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.part{padding:12px 18px;border-radius:15px;background:#f7f5ff;color:#4b43d0;font-size:27px;font-weight:1000}
@@ -317,6 +317,10 @@ function activeSoundGraphemes(){
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
+function familyRoadmapHTML(){
+ const count=unlockedFamilyCount();
+ return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count;return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:"à venir")+'</small></div>'}).join("")+'</div>'
+}
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function learningCourseCompleted(){return (state.missionHistory||[]).length>=14&&masterySummary().mastered>=40}
 const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
@@ -532,11 +536,11 @@ function sounds(){
    <div class="hero-emoji">${x.emoji}</div>
    <div class="big ${"aeioué".includes(x.g)?"blue":"red"}">${x.g}</div>
    <div class="actions"><button class="btn primary speaker" data-action="speak" data-text="${esc(x.say)}" data-rate=".58">🔊 Écouter le son</button><button class="btn good" data-action="sound-repeat">🎙️ J'ai répété</button></div>
-   <div class="tip">${x.hint}. Pour les consonnes, on cherche le <b>son</b>, pas le nom de la lettre.</div>
+   <div class="tip">${x.hint}. Pour les consonnes, on cherche le <b>son</b>, pas le nom de la lettre.<br><b>${pool.filter(s=>state.soundPractice?.[s.g]).length} / ${pool.length}</b> sons pratiqués dans le palier actuel.</div>
  </div>
  <div class="card">
    <b>Touche une lettre pour l'entendre :</b>
-   <div class="sound-grid">${pool.map(s=>`<button class="sound-tile" data-action="speak" data-text="${esc(s.say)}" data-rate=".58">${s.g}</button>`).join("")}</div>
+   <div class="sound-grid">${pool.map(s=>`<button class="sound-tile ${state.soundPractice?.[s.g]?"practiced":""}" data-action="speak" data-text="${esc(s.say)}" data-rate=".58">${s.g}</button>`).join("")}</div>
  </div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  <div class="nextbar"><button class="btn gray" data-action="sound-prev">← Avant</button><button class="btn primary" data-action="sound-next">Suivant →</button></div>`;
@@ -550,6 +554,7 @@ function syllables(){
    <button class="btn primary" data-action="speak" data-text="${first+first+first+'a'}" data-rate=".55">🔊 Écouter : ${first}…a → ${first}a</button>
    <div style="margin-top:12px">${set.map(s=>`<button class="syllable" data-action="speak" data-text="${s}" data-rate=".62"><span>${colorSyl(s)}</span><small>${masteryStars(s)}</small></button>`).join("")}</div>
  </div>
+ <div class="card"><b>🗺️ Mes familles de syllabes</b><p style="color:var(--muted);font-size:13px;margin:5px 0">Les nouvelles familles arrivent petit à petit avec les missions.</p>${familyRoadmapHTML()}</div>
  ${mission("🧩","Mini-jeu","Écoute une syllabe et retrouve-la parmi les cartes.")}
  <div class="card center"><button class="btn primary" data-action="syllable-quiz">🎧 Lancer l'exercice</button><div id="quizArea"></div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="tip">🔓 Familles disponibles : <b>${unlockedFamilyCount()} / ${DATA.sets.length}</b>. Les suivantes se débloquent avec les missions.</div>
