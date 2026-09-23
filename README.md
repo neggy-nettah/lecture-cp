@@ -12,14 +12,17 @@ L'application privilégie la précision, la répétition espacée et la progress
 
 ## Architecture actuelle
 
-- Application statique dans `index.html`
-- HTML, CSS et JavaScript sans framework
+- Application statique sans framework
+- `index.html` : structure HTML et chargement des assets
+- `styles.css` : styles et responsive
+- `app.js` : données, logique pédagogique, navigation, Supabase et jeux
 - Supabase :
   - authentification parent
   - profils enfants
   - sauvegarde de l'état dans `progress.lesson_state`
 - localStorage comme sauvegarde locale / mode invité
 - GitHub Pages pour l'hébergement
+- version courante des assets ajoutée en query string pour limiter les problèmes de cache
 - branche de travail : `develop-caly`
 - branche publiée : `main`
 
