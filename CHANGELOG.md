@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.11.0 — 2026-09-23
+
+### Installation et hors ligne
+- ajout d'un manifeste Web App pour une ouverture en mode autonome
+- ajout d'une icône SVG dédiée à La Fabrique des Syllabes
+- métadonnées iPhone/iPad pour une meilleure utilisation depuis l'écran d'accueil
+- ajout d'un Service Worker limité aux fichiers statiques de l'application
+- après une première ouverture en ligne, le cœur de l'application peut se rouvrir hors ligne
+- les appels Supabase et les ressources externes ne sont volontairement pas mis en cache par le Service Worker
+
+### Cache et mises à jour
+- cache versionné avec la version de l'application
+- suppression automatique des anciens caches lors de l'activation d'une nouvelle version
+- navigation en stratégie réseau d'abord, avec repli sur l'application locale hors ligne
+- assets versionnés conservés en cache local
+
+### Tests
+- validation automatique du manifeste et de l'icône
+- validation syntaxique du Service Worker
+- contrôle automatique de la cohérence entre APP_VERSION, les URLs d'assets et la version du cache
+- test du démarrage sur un navigateur sans support Service Worker
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.10.2 — 2026-09-23
 
 ### Sauvegarde portable
