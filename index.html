@@ -278,7 +278,7 @@ function recordAttempt(correct,key=null,challengeKey=""){
  state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;
  if(key){
   state.mastery=state.mastery||{};const m=state.mastery[key]||{attempts:0,correct:0};
-  m.attempts++;if(correct)m.correct++;state.mastery[key]=m;
+  m.attempts++;if(correct)m.correct++;m.lastSeen=localDayKey();if(correct)m.lastCorrect=localDayKey();state.mastery[key]=m;
   if(DATA.sets.flat().includes(key)){
    state.reviewQueue=Array.isArray(state.reviewQueue)?state.reviewQueue:[];
    if(correct){const i=state.reviewQueue.indexOf(key);if(i>=0)state.reviewQueue.splice(i,1)}
@@ -287,9 +287,17 @@ function recordAttempt(correct,key=null,challengeKey=""){
  }
  save();return true
 }
+function daysSinceDayKey(key){
+ if(!key)return 0;
+ const d=new Date(key+"T00:00:00"),today=new Date();today.setHours(0,0,0,0);
+ return Math.max(0,Math.round((today-d)/86400000))
+}
 function pickLearningSyllable(){
  const all=DATA.sets.flat(),weighted=[];
- all.forEach(s=>{const level=masteryLevel(s),weight=[5,4,2,1][level];for(let i=0;i<weight;i++)weighted.push(s)});
+ all.forEach(s=>{
+  const level=masteryLevel(s),m=state.mastery?.[s]||{},overdue=m.lastSeen&&daysSinceDayKey(m.lastSeen)>=7?2:0,weight=[5,4,2,1][level]+overdue;
+  for(let i=0;i<weight;i++)weighted.push(s)
+ });
  (state.reviewQueue||[]).forEach(s=>{if(all.includes(s))for(let i=0;i<3;i++)weighted.push(s)});
  return pick(weighted.length?weighted:all)
 }
@@ -312,8 +320,11 @@ function decodableMissionWords(){
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
 function pickReviewSyllable(exclude=""){
- const recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&DATA.sets.flat().includes(s));
+ const all=DATA.sets.flat(),recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&all.includes(s));
  if(recent.length)return recent[0];
+ const overdue=all.filter(s=>s!==exclude&&masteryLevel(s)>=2&&state.mastery?.[s]?.lastSeen&&daysSinceDayKey(state.mastery[s].lastSeen)>=7)
+   .sort((a,b)=>daysSinceDayKey(state.mastery[b].lastSeen)-daysSinceDayKey(state.mastery[a].lastSeen));
+ if(overdue.length)return overdue[0];
  return weakestSyllable(exclude)
 }
 function buildDailyMission(){
