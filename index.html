@@ -566,7 +566,7 @@ function gamesMenu(){
 }
 function gameListen(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
- const opts=nextRandom(DATA.sets.flat(),currentAnswer,4);
+ const opts=nextRandom(fromMission?activeLearningSyllables():DATA.sets.flat(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
@@ -577,7 +577,7 @@ function gameListen(forcedTarget=null,fromMission=false){
 
 function gameBubbles(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;
- const opts=nextRandom(DATA.sets.flat(),currentAnswer,6);
+ const opts=nextRandom(fromMission?activeLearningSyllables():DATA.sets.flat(),currentAnswer,6);
  stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
  `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
@@ -587,22 +587,22 @@ function gameBubbles(forcedTarget=null,fromMission=false){
 }
 function gameFamily(forcedFamily=null,fromMission=false){
  missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;
- const family=forcedFamily||pick(DATA.sets),others=DATA.sets.flat().filter(x=>!family.includes(x));
+ const family=forcedFamily||pick(DATA.sets),base=fromMission?activeLearningSyllables():DATA.sets.flat(),others=base.filter(x=>!family.includes(x));
  const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
  const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
  stage.innerHTML=title("Trouve l’intrus","Trois syllabes commencent par "+initial+". Une seule n’est pas de la même famille.","Jeu visuel")+
  '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-family">Nouvel intrus →</button>')+'</div>'
 }
-function makeMemoryDeck(preferred=[]){
- const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(DATA.sets.flat().filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
+function makeMemoryDeck(preferred=[],allowedPool=DATA.sets.flat()){
+ const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(allowedPool.filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
  memoryDeck=shuffle(pool.flatMap((s,i)=>[
   {id:i+"-sound",pair:s,type:"sound",label:"🔊"},
   {id:i+"-text",pair:s,type:"text",label:s}
  ]));memoryOpen=[];memoryMatches=0
 }
 function gameMemory(preferred=[],fromMission=false){
- missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;makeMemoryDeck(preferred);
+ missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;makeMemoryDeck(preferred,fromMission?activeLearningSyllables():DATA.sets.flat());
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
  <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
@@ -781,7 +781,7 @@ function gamePicture(){
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
  missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=(fromMission?decodableMissionWords():fullyDecodableWords()).filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool);currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
- const extraCount=Math.max(1,4-answer.parts.length),extraPool=DATA.sets.flat().filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
+ const extraCount=Math.max(1,4-answer.parts.length),extraBase=fromMission?activeLearningSyllables():DATA.sets.flat(),extraPool=extraBase.filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
  `<div class="card center"><div class="emojis">${answer.emoji}</div><div style="font-size:16px;color:var(--muted)">Fabrique : <b>${answer.w}</b></div>
