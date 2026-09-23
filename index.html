@@ -739,7 +739,7 @@ function gamePicture(){
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
- missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const answer=forcedAnswer||pick(DATA.words.filter(x=>x.parts.length>=2));currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
+ missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=decodableMissionWords().filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool.length?buildPool:DATA.words.filter(x=>x.parts.length>=2));currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
  const extras=shuffle(DATA.sets.flat()).slice(0,Math.max(1,4-answer.parts.length));
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
