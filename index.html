@@ -347,16 +347,16 @@ function home(){
    <div class="hero-emoji">🦊📚✨</div>
    <h3 style="font-size:25px;margin:5px 0">Le renard Léo a perdu ses étoiles !</h3>
    <p style="color:var(--muted);max-width:560px;margin:7px auto 14px">Lis les sons, fabrique des syllabes et réussis les mini-jeux pour les retrouver.</p>
-   <div class="actions"><button class="btn primary" data-action="go" data-to="sounds">🚀 Commencer</button><button class="btn yellow" data-action="speak" data-text="Prête pour la mission lecture ?">🔊 Écouter</button></div>
+   <div class="actions"><button class="btn primary" data-action="mission-start">🚀 Ma mission du jour</button><button class="btn yellow" data-action="speak" data-text="Prête pour la mission lecture ?">🔊 Écouter</button></div>
  </div>
- ${mission("🎯","Objectif du jour","5 à 10 minutes. On s'arrête pendant que c'est encore amusant.")}
+ ${missionCardHTML()}
  ${(()=>{const r=state.rewards||DEFAULT_STATE.rewards;const next=COLLECTIBLES[r.puzzles%COLLECTIBLES.length];return `<div class="card"><div class="puzzle-wrap"><div class="puzzle-grid">${[0,1,2,3].map(i=>`<div class="puzzle-piece ${i<r.pieces?"on":""}">${i<r.pieces?"✨":"?"}</div>`).join("")}</div><div><b style="font-size:18px">🧩 Puzzle magique</b><p style="color:var(--muted);font-size:13px;line-height:1.45">3 bonnes réponses vérifiées donnent un morceau. Encore ${Math.max(0,3-(r.towardPiece||0))} réussite(s) avant le prochain morceau.</p><div style="font-weight:900">Prochaine découverte : ${next.emoji} ???</div>${r.collection.length?`<div class="collection-row">${r.collection.map(x=>`<span class="collectible">${x.emoji} ${x.name}</span>`).join("")}</div>`:""}</div></div></div>`})()}
  <div class="levels">
    <button class="level" data-action="go" data-to="sounds"><div class="ico">🔤</div><b>1. Les sons</b><small>J'écoute et je reconnais</small></button>
    <button class="level" data-action="go" data-to="syllables"><div class="ico">🧩</div><b>2. Les syllabes</b><small>Je combine les sons</small></button>
    <button class="level" data-action="go" data-to="words"><div class="ico">🐾</div><b>3. Les mots</b><small>Je lis par morceaux</small></button>
    <button class="level" data-action="game-listen"><div class="ico">👂</div><b>4. J'écoute</b><small>Je trouve ce que j'entends</small></button>
-   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>5. Je répète</b><small>Le micro vérifie ma syllabe</small></button>
+   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>5. Je répète <span class="beta-pill">BÊTA</span></b><small>Entraînement vocal seulement</small></button>
    <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>6. Image-mot</b><small>Je relie mot et image</small></button>
    <button class="level" data-action="game-order"><div class="ico">🧠</div><b>7. La phrase</b><small>Je remets les mots en ordre</small></button>
  </div>`;
@@ -683,6 +683,8 @@ function render(){
  else if(currentView==="syllables")syllables();
  else if(currentView==="words")words();
  else if(currentView==="games")gamesMenu();
+ else if(currentView==="mission")missionHub();
+ else if(currentView==="mission-complete")missionComplete();
  else if(currentView==="listen")gameListen();
  else if(currentView==="bubbles")gameBubbles();
  else if(currentView==="memory")gameMemory();
@@ -721,7 +723,12 @@ async function selectChild(id){const ch=children.find(x=>x.id===id);if(!ch)retur
 document.addEventListener("click",e=>{
  const b=e.target.closest("[data-action]");if(!b)return;
  const a=b.dataset.action;
- if(a==="go"){activate(b.dataset.to);return}
+ if(a==="go"){missionMode=false;activate(b.dataset.to);return}
+ if(a==="mission-start"){missionHub();return}
+ if(a==="mission-next"){startMissionStep();return}
+ if(a==="mission-review"){missionMode=false;activate("games");return}
+ if(a==="mission-discover-listen"){speak(currentAnswer,.58);return}
+ if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
  if(a==="sound-next"){state.sound=(state.sound+1)%DATA.sounds.length;if(state.sound===0)setDone("sounds");save();sounds();return}
  if(a==="sound-prev"){state.sound=(state.sound-1+DATA.sounds.length)%DATA.sounds.length;save();sounds();return}
