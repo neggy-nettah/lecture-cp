@@ -331,6 +331,10 @@ function weakestSyllable(exclude=""){
  }
  return pick(all)
 }
+function fullyDecodableWords(){
+ const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
+ return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
+}
 function decodableMissionWords(){
  const allowed=new Set([...activeLearningSyllables(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
@@ -531,7 +535,7 @@ function startSyllableQuiz(){
  $("#feedback").innerHTML="";speak(currentAnswer,.60)
 }
 function words(){
- const x=DATA.words[state.word%DATA.words.length];
+ const pool=fullyDecodableWords(),x=pool[state.word%pool.length];
  stage.innerHTML=title("Lis le mot","Lis chaque morceau puis colle-les.","Niveau 3")+
  `<div class="card center">
    <div class="emojis">${x.emoji}</div>
@@ -763,8 +767,8 @@ async function startPronunciationRecognition(){
 }
 
 function gamePicture(){
- currentView="pictures";state.lastView="pictures";save(false);const answer=pick(DATA.words);currentAnswer=answer.w;locked=false;
- const opts=nextRandom(DATA.words.map(x=>x.w),answer.w,4);
+ currentView="pictures";state.lastView="pictures";save(false);const pool=fullyDecodableWords(),answer=pick(pool);currentAnswer=answer.w;locked=false;
+ const opts=nextRandom(pool.map(x=>x.w),answer.w,4);
  stage.innerHTML=title("Quel est ce mot ?","Lis les mots et touche celui qui correspond à l'image.","Jeu 2")+
  `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
  <div class="choices">${opts.map(w=>`<button class="choice" data-action="picture-answer" data-value="${w}">${w}</button>`).join("")}</div>
@@ -773,7 +777,7 @@ function gamePicture(){
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-picture">Nouvelle image →</button></div>`;
 }
 function gameBuild(forcedAnswer=null,fromMission=false){
- missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=decodableMissionWords().filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool.length?buildPool:DATA.words.filter(x=>x.parts.length>=2));currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
+ missionMode=fromMission;currentView="build";state.lastView=fromMission?"mission":"build";save(false);const buildPool=(fromMission?decodableMissionWords():fullyDecodableWords()).filter(x=>x.parts.length>=2),answer=forcedAnswer||pick(buildPool);currentAnswer=answer;orderTarget=answer.parts;orderMade=[];locked=false;
  const extras=shuffle(DATA.sets.flat()).slice(0,Math.max(1,4-answer.parts.length));
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
@@ -1027,8 +1031,8 @@ document.addEventListener("click",e=>{
  if(a==="set-prev"){state.set=(state.set-1+DATA.sets.length)%DATA.sets.length;save(false);syllables();return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
- if(a==="word-next"){state.word=(state.word+1)%DATA.words.length;if(state.word===0)setDone("words");save(false);words();return}
- if(a==="word-prev"){state.word=(state.word-1+DATA.words.length)%DATA.words.length;save(false);words();return}
+ if(a==="word-next"){const n=fullyDecodableWords().length;state.word=(state.word+1)%n;if(state.word===0)setDone("words");save(false);words();return}
+ if(a==="word-prev"){const n=fullyDecodableWords().length;state.word=(state.word-1+n)%n;save(false);words();return}
  if(a==="word-read"){practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-bubbles"){gameBubbles();return}
