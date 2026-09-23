@@ -51,11 +51,11 @@ if(exactWords.length<30)fail("Too few exactly assembled words:",String(exactWord
 
 const taughtParts=new Set([...syllables,"a","e","i","o","u","é"]);
 const fullyDecodable=data.words.filter(w=>w.parts.join("")===w.w&&w.parts.every(p=>taughtParts.has(p)));
-if(fullyDecodable.length<44)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
+if(fullyDecodable.length<42)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
 for(const expected of ["lune","tomate","banane","pirate","valise","minute","navire"]){
   if(!fullyDecodable.some(w=>w.w===expected))fail("Expected e-syllable word is not fully decodable:",expected);
 }
-for(const deferred of ["maman","domino","cabane"]){
+for(const deferred of ["maman","domino","cabane","robot","tapis"]){
   if(fullyDecodable.some(w=>w.w===deferred))fail("Word with untaught grapheme became decodable too early:",deferred);
 }
 
