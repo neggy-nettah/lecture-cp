@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.10.1 — 2026-09-23
+
+### Corrections
+- correction du jeu de compréhension : la réponse cible est maintenant bien stockée dans l'état partagé utilisé par le clic
+- Memory n'augmente plus la maîtrise d'une syllabe si cette paire a déjà été mal associée pendant la manche
+- consigne de l'écran Syllabes alignée avec l'interaction réelle (plus de faux glisser-déposer)
+
+### Qualité des données
+- garde-fou automatique empêchant le retour du bug de réponse dans le jeu de compréhension
+- garde-fou automatique empêchant Memory de gonfler artificiellement la maîtrise
+- smoke test confirmant qu'une paire ratée puis retrouvée reste une réussite de jeu sans devenir une preuve forte de maîtrise
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.10.0 — 2026-09-23
 
 ### Nouveau jeu
