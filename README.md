@@ -83,7 +83,7 @@ Une mission contient 5 étapes :
 1. découverte
 2. écoute et choix
 3. révision avec Bulles
-4. Memory ou Trouve l'intrus selon le jour
+4. Memory, Trouve l'intrus ou Syllabe manquante selon le jour
 5. construction d'un mot
 
 La progression est sauvegardée. Une étape réussie affiche explicitement un bouton pour continuer.
@@ -111,6 +111,7 @@ Une mission terminée :
 - Bulles express
 - Memory des sons
 - Trouve l'intrus
+- Syllabe manquante
 - Mot & image
 - Construis le mot
 - Phrase en ordre
