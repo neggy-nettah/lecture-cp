@@ -27,6 +27,7 @@ try{
 }
 
 const requiredFunctions=[
+  "function migrateState(",
   "function normalizeState(",
   "function buildDailyMission(",
   "function getDailyMission(",
@@ -124,6 +125,9 @@ if(!app.includes("startAttempts:null")||!app.includes("if(m.startAttempts==null)
 }
 if(!app.includes("sessionStats")||!app.includes("state.dailyMission.sessionStats")){
   fail("Mission-only performance tracking is missing.");
+}
+if(!app.includes("STATE_SCHEMA_VERSION")||!app.includes("schemaVersion")){
+  fail("Saved-state schema versioning is missing.");
 }
 if(!app.includes("updatedAt")||!app.includes("localTs>remoteTs")){
   fail("Newest-state sync protection is missing.");
