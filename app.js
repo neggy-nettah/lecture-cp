@@ -189,6 +189,9 @@ function recordAttempt(correct,key=null,challengeKey=""){
   const keys=Object.keys(state.attemptLedger);if(keys.length>700)keys.slice(0,keys.length-400).forEach(k=>delete state.attemptLedger[k])
  }
  state.stats=state.stats||{attempts:0,correct:0};state.stats.attempts++;if(correct)state.stats.correct++;
+ if(missionMode&&state.dailyMission){
+  const ss=state.dailyMission.sessionStats||{attempts:0,correct:0};ss.attempts++;if(correct)ss.correct++;state.dailyMission.sessionStats=ss
+ }
  if(key){
   state.mastery=state.mastery||{};const m=state.mastery[key]||{attempts:0,correct:0};
   m.attempts++;if(correct)m.correct++;m.lastSeen=localDayKey();if(correct)m.lastCorrect=localDayKey();state.mastery[key]=m;
@@ -290,7 +293,7 @@ function buildDailyMission(){
  const related=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualType=Number(localDayKey().slice(-2))%2?"family":"memory";
- state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,steps:[
+ state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,sessionStats:{attempts:0,correct:0},steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
   {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
   {type:"bubbles",target:review,title:"Je révise",detail:"Éclate la bonne bulle"},
@@ -302,6 +305,7 @@ function buildDailyMission(){
 function getDailyMission(){
  const m=state.dailyMission;
  if(!m||m.date!==localDayKey()||!Array.isArray(m.steps)||m.steps.length!==5)return buildDailyMission();
+ if(!m.sessionStats)m.sessionStats={attempts:0,correct:0};
  return m
 }
 function missionProgressHTML(m){
@@ -358,8 +362,10 @@ function missionComplete(){
  state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
  let gain=null,familyUnlock=null,record=state.missionHistory.find(x=>x.date===m.date)||null;
  if(!record){
-  const beforeFamilies=unlockedFamilyCount(),measured=typeof m.startAttempts==="number"&&typeof m.startCorrect==="number";
-  const attempts=measured?Math.max(0,(state.stats?.attempts||0)-m.startAttempts):0,correct=measured?Math.max(0,(state.stats?.correct||0)-m.startCorrect):0;
+  const beforeFamilies=unlockedFamilyCount(),sessionStats=m.sessionStats||null,legacyMeasured=!sessionStats&&typeof m.startAttempts==="number"&&typeof m.startCorrect==="number";
+  const attempts=sessionStats?Number(sessionStats.attempts||0):(legacyMeasured?Math.max(0,(state.stats?.attempts||0)-m.startAttempts):0);
+  const correct=sessionStats?Number(sessionStats.correct||0):(legacyMeasured?Math.max(0,(state.stats?.correct||0)-m.startCorrect):0);
+  const measured=!!sessionStats||legacyMeasured;
   record={date:m.date,primary:m.primary,review:m.review,word:m.word,attempts,correct,accuracy:measured?(attempts?Math.round(correct/attempts*100):100):null};
   state.missionHistory.push(record);state.missionHistory=state.missionHistory.slice(-60);gain=rewardMissionPiece();
   const afterFamilies=unlockedFamilyCount();
