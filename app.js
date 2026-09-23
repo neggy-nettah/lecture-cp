@@ -492,7 +492,7 @@ function makeMemoryDeck(preferred=[],allowedPool=DATA.sets.flat()){
  ]));memoryOpen=[];memoryMatches=0
 }
 function gameMemory(preferred=[],fromMission=false){
- missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;makeMemoryDeck(preferred,activeLearningSyllables());
+ missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;resetQuestionTracking();makeMemoryDeck(preferred,activeLearningSyllables());
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
  <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
@@ -513,7 +513,7 @@ function memoryFlip(btn,index){
    locked=true;rewardVerified("Memory terminé !","memory");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
   }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
  }else{
-  tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
+  recordQuestionError();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
   setTimeout(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";memoryOpen=[]},750)
  }
 }
