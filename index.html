@@ -706,14 +706,24 @@ function recentMissionHTML(){
  return '<div class="mission-steps">'+hist.map(x=>'<div class="mission-step"><span class="num">✓</span><div><b>'+esc(x.date)+'</b><small>'+esc((x.primary||"").toUpperCase())+' • révision '+esc((x.review||"").toUpperCase())+' • '+esc((x.word||"").toUpperCase())+'</small></div></div>').join("")+'</div>'
 }
 function parents(){
- stage.innerHTML=title("Coin parent","Une lecture courte, régulière et positive.","5–10 min / jour")+
+ const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0;
+ const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses pour repérer les difficultés.</span>`;
+ stage.innerHTML=title("Coin parent","Suivi simple de la progression réelle.","Tableau de bord")+
  `<div class="parent-grid">
-  <div class="parent-box"><h3>📅 Routine simple</h3><p>2 sons → 1 série de syllabes → 2 mots → 1 mini-jeu. On s'arrête avant la fatigue.</p></div>
-  <div class="parent-box"><h3>👂 Comment aider</h3><p>Laisser quelques secondes pour décoder. Si ça bloque, redonner le son puis fusionner : <b>mmm…a → ma</b>.</p></div>
-  <div class="parent-box"><h3>🎯 Priorité</h3><p>La précision avant la vitesse. On ne demande pas de deviner le mot grâce à l'image : l'image sert surtout de récompense et de vérification.</p></div>
-  <div class="parent-box"><h3>🌟 Motivation</h3><p>Valoriser l'effort : « tu as bien essayé de coller les sons ». Une courte réussite quotidienne vaut mieux qu'une longue séance tendue.</p></div>
+  <div class="parent-box"><h3>🎯 Précision</h3><p><b style="font-size:26px">${accuracy} %</b><br>${correct} bonnes réponses sur ${attempts} essais vérifiés.</p></div>
+  <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée.</p></div>
+  <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes actuellement à ★ ou ★★.</p></div>
+  <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>Historique des missions validées.</p></div>
  </div>
- <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne et peut être retrouvée sur un autre appareil.</p></div><div class="card"><b>Test audio</b><p style="color:var(--muted);font-size:13px">Si la voix ne démarre pas automatiquement sur iPhone/iPad, toucher une première fois un bouton 🔊 l'autorise généralement.</p><div class="actions"><button class="btn primary" data-action="speak" data-text="Bonjour ! On va apprendre à lire ensemble.">🔊 Tester la voix</button><button class="btn gray" data-action="reset">Réinitialiser la progression</button></div></div>`;
+ <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions.</p><div class="collection-row">${weak}</div></div>
+ <div class="card"><b>📚 7 dernières missions</b>${recentMissionHTML()}</div>
+ <div class="parent-grid">
+  <div class="parent-box"><h3>📅 Routine simple</h3><p>Une mission courte par jour suffit. On s’arrête avant la fatigue et on privilégie la régularité.</p></div>
+  <div class="parent-box"><h3>👂 Comment aider</h3><p>Laisser quelques secondes pour décoder. Si ça bloque, redonner le son puis fusionner : <b>mmm…a → ma</b>.</p></div>
+  <div class="parent-box"><h3>🎯 Priorité</h3><p>La précision avant la vitesse. L’image sert de vérification, pas à deviner le mot.</p></div>
+  <div class="parent-box"><h3>🌟 Motivation</h3><p>Valoriser l’effort et les progrès. Une courte réussite quotidienne vaut mieux qu’une longue séance tendue.</p></div>
+ </div>
+ <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne.</p><div class="actions"><button class="btn gray" data-action="reset">Réinitialiser la progression</button></div></div>`;
 }
 function render(){
  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","bubbles","memory","pronunciation","pictures","build","order"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
