@@ -269,8 +269,13 @@ function decodableMissionWords(){
  const allowed=new Set([...DATA.sets.flat(),...DATA.sounds.filter(x=>"aioué".includes(x.g)).map(x=>x.g)]);
  return DATA.words.filter(w=>w.parts.every(p=>allowed.has(p))&&w.parts.join("")===w.w)
 }
+function pickReviewSyllable(exclude=""){
+ const recent=[...(state.reviewQueue||[])].reverse().filter(s=>s!==exclude&&DATA.sets.flat().includes(s));
+ if(recent.length)return recent[0];
+ return weakestSyllable(exclude)
+}
 function buildDailyMission(){
- const primary=pickLearningSyllable(),review=weakestSyllable(primary),decodable=decodableMissionWords();
+ const primary=pickLearningSyllable(),review=pickReviewSyllable(primary),decodable=decodableMissionWords();
  const candidates=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),word=pick(candidates.length?candidates:decodable.length?decodable:DATA.words);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],visualType=Number(localDayKey().slice(-2))%2?"family":"memory";
  state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:state.stats?.attempts||0,startCorrect:state.stats?.correct||0,steps:[
