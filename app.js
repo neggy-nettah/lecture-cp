@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.18.0";
+const APP_VERSION="0.19.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -15,7 +15,7 @@ function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...r
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),missionMode=false,questionErrorRecorded=false,missingWord=null,missingIndex=0;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -603,32 +603,56 @@ function makeMemoryDeck(preferred=[],allowedPool=DATA.sets.flat()){
  memoryDeck=shuffle(pool.flatMap((s,i)=>[
   {id:i+"-sound",pair:s,type:"sound",label:"🔊"},
   {id:i+"-text",pair:s,type:"text",label:s}
- ]));memoryOpen=[];memoryMatches=0;memoryMissedPairs=new Set()
+ ]));memoryOpen=[];memoryMatches=0;memoryMissedPairs=new Set();memoryMatchedPairs=new Set()
+}
+function restoreMemoryRound(){
+ const m=state.dailyMission,r=missionMode?m?.memoryRound:null,allowed=activeLearningSyllables();
+ if(!r||r.step!==m.index||!Array.isArray(r.cards)||r.cards.length!==6)return false;
+ if(!r.cards.every(c=>c&&allowed.includes(c.pair)&&["sound","text"].includes(c.type)))return false;
+ const pairs=[...new Set(r.cards.map(c=>c.pair))];
+ if(pairs.length!==3||pairs.some(p=>["sound","text"].some(t=>r.cards.filter(c=>c.pair===p&&c.type===t).length!==1)))return false;
+ memoryDeck=r.cards.map((c,i)=>({id:String(i),pair:c.pair,type:c.type,label:c.type==="sound"?"🔊":c.pair}));
+ memoryMatchedPairs=new Set((Array.isArray(r.matched)?r.matched:[]).filter(p=>pairs.includes(p)));
+ memoryMissedPairs=new Set((Array.isArray(r.missed)?r.missed:[]).filter(p=>pairs.includes(p)));
+ memoryMatches=memoryMatchedPairs.size;memoryOpen=[];return true
+}
+function saveMemoryRound(){
+ if(!missionMode||!state.dailyMission)return;
+ state.dailyMission.memoryRound={step:state.dailyMission.index,cards:memoryDeck.map(c=>({pair:c.pair,type:c.type})),matched:[...memoryMatchedPairs],missed:[...memoryMissedPairs]}
+}
+function finishMemory(){
+ locked=true;rewardVerified("Memory terminé !","memory");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
 }
 function gameMemory(preferred=[],fromMission=false){
- missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;resetQuestionTracking();makeMemoryDeck(preferred,activeLearningSyllables());
+ missionMode=fromMission;currentView="memory";state.lastView=fromMission?"mission":"memory";save(false);locked=false;resetQuestionTracking();
+ if(!restoreMemoryRound()){
+  makeMemoryDeck(preferred,activeLearningSyllables());
+  // Old/interrupted rounds without pair details must not erase a recorded error.
+  if(fromMission&&questionErrorRecorded)memoryMissedPairs=new Set(memoryDeck.map(c=>c.pair))
+ }
+ saveMemoryRound();save(false);
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
- <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card" data-action="memory-card" data-index="${i}">?</button>`).join("")}</div>
+ <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card ${memoryMatchedPairs.has(x.pair)?"matched":""}" data-action="memory-card" data-index="${i}" aria-label="${memoryMatchedPairs.has(x.pair)?"Paire trouvée : "+esc(x.pair):"Carte "+(i+1)+" masquée"}">${memoryMatchedPairs.has(x.pair)?(x.type==="sound"?"🔊":colorSyl(x.label)):"?"}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
- <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`;
+ if(memoryMatches===3)finishMemory()
 }
 function memoryFlip(btn,index){
  if(locked||btn.classList.contains("matched")||btn.classList.contains("open")||memoryOpen.length>=2)return;
- const card=memoryDeck[index];btn.classList.add("open");btn.innerHTML=card.type==="sound"?"🔊":colorSyl(card.label);
+ const card=memoryDeck[index];if(!card)return;btn.setAttribute("aria-label",card.type==="sound"?"Carte son":card.label);btn.classList.add("open");btn.innerHTML=card.type==="sound"?"🔊":colorSyl(card.label);
  if(card.type==="sound")speak(card.pair,.60);
  memoryOpen.push({btn,index,card});
  if(memoryOpen.length<2)return;
  const [a,b]=memoryOpen,match=a.card.pair===b.card.pair&&a.card.type!==b.card.type;
  if(match){
-  a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryOpen=[];
-  const masteryKey=memoryMissedPairs.has(a.card.pair)?null:a.card.pair;recordAttempt(true,masteryKey,"memory:"+a.card.pair);tone("ok");
-  if(memoryMatches===3){
-   locked=true;rewardVerified("Memory terminé !","memory");setDone("memory");confetti();$("#feedback").innerHTML='<div class="ok">🎉 Bravo, toutes les paires sont trouvées !</div>';completeMissionStep()
-  }else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
+  a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryMatchedPairs.add(a.card.pair);memoryOpen=[];saveMemoryRound();
+  a.btn.setAttribute("aria-label","Paire trouvée : "+a.card.pair);b.btn.setAttribute("aria-label","Paire trouvée : "+b.card.pair);
+  const masteryKey=memoryMissedPairs.has(a.card.pair)?null:a.card.pair;if(!recordAttempt(true,masteryKey,"memory:"+a.card.pair))save();tone("ok");
+  if(memoryMatches===3){finishMemory()}else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
  }else{
-  memoryMissedPairs.add(a.card.pair);memoryMissedPairs.add(b.card.pair);recordQuestionError();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
-  screenTask(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";memoryOpen=[]},750)
+  memoryMissedPairs.add(a.card.pair);memoryMissedPairs.add(b.card.pair);saveMemoryRound();if(!recordQuestionError())save();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
+  screenTask(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";a.btn.setAttribute("aria-label","Carte "+(a.index+1)+" masquée");b.btn.setAttribute("aria-label","Carte "+(b.index+1)+" masquée");memoryOpen=[]},750)
  }
 }
 

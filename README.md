@@ -233,3 +233,7 @@ le changement de mot de passe. Les tests automatiques simulent ce service.
 ### Révisions depuis le coin parent
 
 Le bilan propose jusqu’à trois syllabes déjà travaillées parmi les familles accessibles : erreurs à revoir, échéances de révision, puis apprentissages en cours. Chaque bouton lance un exercice libre ciblé sans avancer la mission. Les syllabes non évaluées et les familles à découvrir sont nommées séparément ; une absence de données ne vaut pas un échec. Le pourcentage de tentatives inclut les corrections, contrairement aux nouvelles preuves de maîtrise.
+
+### Reprise du Memory de mission
+
+La disposition des six cartes, les paires trouvées et les erreurs sont conservées avec la mission. Les cartes seulement retournées sont masquées à la reprise. Une paire précédemment manquée ne devient pas une preuve de maîtrise après rechargement. Les anciennes parties avec erreur mais sans détail des paires restent jouables, sans nouvelle maîtrise sur cette partie. Le Memory libre démarre une nouvelle partie à chaque lancement.
