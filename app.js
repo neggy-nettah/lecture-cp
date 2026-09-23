@@ -914,7 +914,11 @@ function parseProgressImport(text){
  imported.stats={attempts:Math.floor(Number(imported.stats?.attempts||0)),correct:Math.floor(Number(imported.stats?.correct||0))};
  if(imported.stats.correct>imported.stats.attempts)throw new Error("Statistiques incohérentes");
  imported.missionHistory=(imported.missionHistory||[]).filter(x=>x&&typeof x==="object"&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))).slice(-365);
- imported.reviewQueue=(imported.reviewQueue||[]).filter(s=>DATA.sets.flat().includes(s)).slice(-50);
+ const validSyllables=new Set(DATA.sets.flat()),cleanMastery={};
+ Object.entries(imported.mastery||{}).forEach(([k,v])=>{if(validSyllables.has(k)&&v&&typeof v==="object")cleanMastery[k]={attempts:Math.max(0,Math.floor(Number(v.attempts||0))),correct:Math.max(0,Math.floor(Number(v.correct||0))),lastSeen:v.lastSeen||null,lastCorrect:v.lastCorrect||null}});
+ imported.mastery=cleanMastery;
+ imported.reviewQueue=(imported.reviewQueue||[]).filter(s=>validSyllables.has(s)).slice(-50);
+ if(imported.dailyMission?.date!==localDayKey())imported.dailyMission=null;
  return imported
 }
 async function importProgressFile(file){
