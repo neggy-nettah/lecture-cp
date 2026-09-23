@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.14.0 — 2026-09-24
+
+### Contenu de lecture
+- ajout du son `e` non accentué au curriculum
+- chaque famille passe de 5 à 6 syllabes : `a / e / i / o / u / é`
+- le parcours contient maintenant 60 syllabes au total
+- des mots comme **lune, tomate, banane, pirate, valise, minute, navire** deviennent enfin décodables lorsque leurs familles sont débloquées
+
+### Qualité pédagogique
+- le moteur reconnaît désormais `e` comme voyelle/graphème enseigné
+- 42 mots du corpus sont complètement assemblables avec les sons réellement enseignés
+- **maman, domino, cabane, robot, tapis** restent volontairement hors du pool 100 % décodable tant que leurs particularités ne sont pas enseignées
+- le tableau parent affiche automatiquement le nombre réel de syllabes
+
+### Tests
+- validation des 10 familles à 6 syllabes
+- contrôle du motif `a/e/i/o/u/é` pour chaque consonne
+- garde-fou sur les 7 mots rendus décodables par le nouveau `e`
+- garde-fou empêchant les mots à graphèmes ou lettres silencieuses non enseignés d’entrer trop tôt
+
+### Connu
+- la synthèse vocale Safari macOS reste volontairement inchangée.
+
 ## 0.13.0 — 2026-09-24
 
 ### Progression pédagogique
