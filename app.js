@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.22.0";
+const APP_VERSION="0.23.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -74,6 +74,7 @@ function cachedProfileState(child){
  catch(e){return normalizeState({name:child.nickname})}
 }
 function enterChildProfile(child){
+ stopPronunciationSession();
  clearTimeout(saveTimer);
  // Queue the outgoing child's snapshot before changing the active profile.
  if(currentChild&&currentChild!==child&&session&&!profileLoading)void saveRemoteNow();
@@ -153,7 +154,7 @@ function toast(msg,type="ok"){
 }
 function title(t,p,pill){return `<div class="titlebar"><div><h2>${t}</h2><p>${p}</p></div>${pill?`<span class="pill">${pill}</span>`:""}</div>`}
 function mission(ico,b,txt){return `<div class="mission"><div class="mission-icon">${ico}</div><div><b>${b}</b><span>${txt}</span></div></div>`}
-function activate(v){currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render()}
+function activate(v){stopPronunciationSession();currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render()}
 function nextRandom(arr,answer,n=4){let a=shuffle(arr.filter(x=>x!==answer)).slice(0,n-1);return shuffle([answer,...a])}
 
 function weeklyRhythmHTML(){
@@ -190,31 +191,33 @@ function screenTask(fn,ms){
  return setTimeout(()=>{if(stage.firstElementChild===screen)fn()},ms)
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-async function openMicrophone(status){
+async function openMicrophone(status,isCurrent=()=>true){
  if(!window.isSecureContext){
-  if(status){status.className="mic-status error";status.textContent="Le micro nécessite une connexion sécurisée HTTPS."}
+  if(status&&isCurrent()){status.className="mic-status error";status.textContent="Le micro nécessite une connexion sécurisée HTTPS."}
   return null
  }
  if(!navigator.mediaDevices?.getUserMedia){
-  if(status){status.className="mic-status error";status.textContent="Ce navigateur ne donne pas accès au microphone."}
+  if(status&&isCurrent()){status.className="mic-status error";status.textContent="Ce navigateur ne donne pas accès au microphone."}
   return null
  }
  try{
-  if(status){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> Activation du micro…'}
+  if(status&&isCurrent()){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> Activation du micro…'}
   return await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})
  }catch(e){
   console.error("Micro permission error",e);
   let msg="Impossible d’accéder au microphone.";
   if(e?.name==="NotAllowedError"||e?.name==="SecurityError")msg="Micro refusé. Autorise le microphone dans les réglages Safari puis recharge la page.";
   else if(e?.name==="NotFoundError")msg="Aucun microphone détecté sur cet appareil.";
-  if(status){status.className="mic-status error";status.textContent=msg}
+  if(status&&isCurrent()){status.className="mic-status error";status.textContent=msg}
   return null
  }
 }
 function createVoiceGate(stream){
  const AC=window.AudioContext||window.webkitAudioContext;
- if(!AC)return {heardVoice:()=>true,stop:()=>{}};
- const ctx=new AC(),src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();
+ if(!AC)return {heardVoice:()=>false,stop:()=>{}};
+ const ctx=new AC();
+ try{
+ const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();
  an.fftSize=1024;an.smoothingTimeConstant=.15;src.connect(an);
  const buf=new Uint8Array(an.fftSize);
  let baseline=.008,peak=0,voicedFrames=0,frames=0,running=true;
@@ -232,8 +235,9 @@ function createVoiceGate(stream){
  sample();
  return {
   heardVoice:()=>voicedFrames>=3&&peak>=Math.max(.022,baseline*2.1),
-  stop:()=>{running=false;try{src.disconnect()}catch(e){}try{ctx.close()}catch(e){}}
+  stop:()=>{running=false;try{src.disconnect()}catch(e){}try{void ctx.close().catch(()=>{})}catch(e){}}
  }
+ }catch(e){try{void ctx.close().catch(()=>{})}catch(closeError){}throw e}
 }
 function normalizeHeard(s){
  return String(s||"").toLowerCase().normalize("NFC").replace(/[^a-zàâçéèêëîïôùûüÿ]/g,"")
@@ -256,74 +260,82 @@ function pronunciationMatches(expected,heard){
  return (aliases[e]||[]).some(x=>normalizeHeard(x)===h);
 }
 function gamePronunciation(){
+ stopPronunciationSession();
  missionMode=false;currentView="pronunciation";state.lastView="pronunciation";save(false);currentAnswer=pickLearningSyllable();locked=false;
  const micAvailable=!!navigator.mediaDevices?.getUserMedia;
  stage.innerHTML=title("Écoute & répète","Écoute la syllabe, puis dis-la dans le micro.","Jeu micro")+
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
- <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${micAvailable?"":"disabled"}>🎙️ À toi !</button></div>
+ <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${micAvailable?"":"disabled"}>🎙️ À toi !</button><button class="btn gray" data-action="pronunciation-stop" hidden>Arrêter l’écoute</button></div>
  <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${micAvailable?"Appuie sur « À toi ! ». Le micro restera actif pendant l’écoute et aucune réponse ne sera validée sans voix détectée.":"Le microphone n’est pas disponible sur ce navigateur."}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-pronunciation">Nouvelle syllabe →</button></div>`;
- screenTask(()=>speak(currentAnswer,.60),120)
+ screenTask(()=>{if(!pronunciationSession)speak(currentAnswer,.60)},120)
 }
-async function startPronunciationRecognition(){
- if(locked)return;
- const status=$("#micStatus");
- const stream=await openMicrophone(status);
- if(!stream)return;
- const gate=createVoiceGate(stream);
- const closeMic=()=>{try{gate.stop()}catch(e){}stream.getTracks().forEach(t=>t.stop())};
- await sleep(550);
- const Ctor=speechRecognitionCtor();
- if(!Ctor){
-  if(status){
-   status.className="mic-status error";
-   status.textContent=isIOS()&&!isSafariBrowser()?"Le micro fonctionne, mais la reconnaissance vocale est bloquée dans ce navigateur sur iPhone. Ouvre l’app directement dans Safari.":"Le micro fonctionne, mais ce navigateur ne propose pas la reconnaissance vocale."
-  }
-  closeMic();
-  return
+let pronunciationSession=null;
+function closePronunciationRun(run,message=""){
+ if(!run||run.closed)return;
+ const show=run.isCurrent();run.closed=true;
+ if(pronunciationSession===run)pronunciationSession=null;
+ clearTimeout(run.watchdog);run.observer?.disconnect();
+ if(run.recognition){
+  run.recognition.onstart=run.recognition.onresult=run.recognition.onerror=run.recognition.onend=null;
+  try{run.recognition.abort()}catch(e){}
  }
- window.speechSynthesis?.cancel?.();
- await sleep(250);
- const recognition=new Ctor();recognition.lang="fr-FR";recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=5;
- let finished=false,started=false;
- let watchdog=setTimeout(()=>{
-  if(started&&!finished){
-   try{recognition.abort()}catch(e){}closeMic();
-   if(status){status.className="mic-status error";status.textContent="La reconnaissance vocale ne répond pas. Vérifie que Siri est activé puis réessaie."}
-  }
- },8000);
- recognition.onstart=()=>{
-  started=true;
-  if(status){status.className="mic-status listening";status.innerHTML='<span class="mic-pulse">🎙️</span> J’écoute… dis seulement la syllabe'}
- };
- recognition.onresult=e=>{
-  finished=true;clearTimeout(watchdog);
-  const voiceDetected=gate.heardVoice();closeMic();
-  const alternatives=[];for(let i=0;i<e.results[0].length;i++)alternatives.push(e.results[0][i].transcript);
-  const heard=alternatives[0]||"",ok=voiceDetected&&alternatives.some(x=>pronunciationMatches(currentAnswer,x));
-  if(!voiceDetected){
-   miss("Je n’ai pas entendu ta voix.");
-   if(status){status.className="mic-status error";status.textContent="🎙️ Aucun son vocal détecté. Parle après l’apparition de « J’écoute »."}
-   return
-  }
-  if(ok){
-   locked=true;practiceDone("Très bien prononcé !");
-   if(status){status.className="mic-status success";status.textContent='✅ J’ai entendu « '+heard+' »'}
-   confetti();
-  }else{
-   miss("Presque ! Écoute encore et réessaie.");
-   if(status){status.className="mic-status error";status.textContent='J’ai entendu « '+(heard||"…")+' ». Réessaie.'}
-   screenTask(()=>speak(currentAnswer,.60),250);
-  }
- };
- recognition.onerror=e=>{
-  finished=true;clearTimeout(watchdog);closeMic();
-  const messages={not_allowed:"Autorise le microphone pour jouer.", "not-allowed":"Autorise le microphone pour jouer.", service_not_allowed:"La reconnaissance vocale est bloquée par le navigateur.", "service-not-allowed":"La reconnaissance vocale est bloquée par le navigateur.", "no-speech":"Je n’ai rien entendu. Réessaie en parlant un peu plus fort.", audio_capture:"Je ne trouve pas de microphone.", "audio-capture":"Je ne trouve pas de microphone.", network:"La reconnaissance vocale a besoin d’Internet sur ce navigateur."};
-  if(status){status.className="mic-status error";status.textContent=messages[e.error]||("Le micro n’a pas compris ("+(e.error||"erreur")+"). Réessaie.")}
- };
- recognition.onend=()=>{clearTimeout(watchdog);if(!finished){closeMic();if(status){status.className="mic-status";status.textContent="Je n’ai pas bien entendu. Tu peux réessayer."}}};
- try{recognition.start()}catch(e){clearTimeout(watchdog);closeMic();console.error("SpeechRecognition start error",e);if(status){status.className="mic-status error";status.textContent="La reconnaissance vocale n’a pas démarré. Vérifie Siri et l’autorisation micro de Safari."}}
+ try{run.gate?.stop()}catch(e){}
+ run.stream?.getTracks().forEach(track=>track.stop());
+ run.buttons.forEach(({button,disabled})=>{button.disabled=disabled});
+ if(run.stopButton)run.stopButton.hidden=true;
+ if(show&&message){run.status.className="mic-status";run.status.textContent=message}
+}
+function stopPronunciationSession(message=""){closePronunciationRun(pronunciationSession,message)}
+window.addEventListener("pagehide",()=>stopPronunciationSession());
+document.addEventListener("visibilitychange",()=>{if(document.hidden)stopPronunciationSession("Écoute interrompue. Appuie sur « À toi ! » pour recommencer.")});
+async function startPronunciationRecognition(){
+ if(locked||pronunciationSession||currentView!=="pronunciation")return;
+ const status=$("#micStatus");if(!status)return;
+ const expected=currentAnswer,profile=currentChild?.id||null,owner=session?.user?.id||null;
+ const run={status,closed:false,stream:null,gate:null,recognition:null,buttons:[...stage.querySelectorAll('[data-action="pronunciation-record"], [data-action="pronunciation-listen"]')].map(button=>({button,disabled:button.disabled})),stopButton:stage.querySelector('[data-action="pronunciation-stop"]')};
+ run.isCurrent=()=>!run.closed&&pronunciationSession===run&&$("#micStatus")===status&&currentView==="pronunciation"&&currentAnswer===expected&&(currentChild?.id||null)===profile&&(session?.user?.id||null)===owner;
+ pronunciationSession=run;window.speechSynthesis?.cancel?.();run.buttons.forEach(({button})=>button.disabled=true);if(run.stopButton)run.stopButton.hidden=false;
+ if(typeof MutationObserver!=="undefined"){
+  run.observer=new MutationObserver(()=>{if(!run.isCurrent())closePronunciationRun(run)});
+  run.observer.observe(stage,{childList:true})
+ }
+ const timeout=()=>closePronunciationRun(run,"L’écoute n’a pas abouti. Vérifie l’autorisation du micro puis réessaie.");
+ run.watchdog=setTimeout(timeout,12000);
+ try{
+  const stream=await openMicrophone(status,run.isCurrent);
+  if(!run.isCurrent()){stream?.getTracks().forEach(track=>track.stop());closePronunciationRun(run);return}
+  if(!stream){closePronunciationRun(run);return}
+  run.stream=stream;run.gate=createVoiceGate(stream);
+  await sleep(550);if(!run.isCurrent()){closePronunciationRun(run);return}
+  const Ctor=speechRecognitionCtor();
+  if(!Ctor){closePronunciationRun(run,isIOS()&&!isSafariBrowser()?"Le micro fonctionne, mais la reconnaissance vocale est bloquée dans ce navigateur sur iPhone. Ouvre l’app dans Safari.":"Ce navigateur ne propose pas la reconnaissance vocale.");return}
+  window.speechSynthesis?.cancel?.();
+  await sleep(250);if(!run.isCurrent()){closePronunciationRun(run);return}
+  const recognition=run.recognition=new Ctor();recognition.lang="fr-FR";recognition.interimResults=false;recognition.continuous=false;recognition.maxAlternatives=5;
+  clearTimeout(run.watchdog);run.watchdog=setTimeout(timeout,8000);
+  recognition.onstart=()=>{
+   if(!run.isCurrent()){closePronunciationRun(run);return}
+   status.className="mic-status listening";status.textContent="🎙️ J’écoute… dis seulement la syllabe"
+  };
+  recognition.onresult=e=>{
+   if(!run.isCurrent()){closePronunciationRun(run);return}
+   const voiceDetected=run.gate.heardVoice(),alternatives=Array.from(e.results?.[0]||[],x=>x.transcript||"");
+   const heard=alternatives[0]||"",ok=voiceDetected&&alternatives.some(x=>pronunciationMatches(expected,x));
+   closePronunciationRun(run);
+   if(!voiceDetected){status.className="mic-status error";status.textContent="Aucune voix détectée. Tu peux réessayer.";return}
+   if(ok){locked=true;practiceDone("Très bien prononcé !");status.className="mic-status success";status.textContent='✅ J’ai entendu « '+heard+' »';confetti()}
+   else{status.className="mic-status error";status.textContent='J’ai entendu « '+(heard||"…")+' ». Écoute encore et réessaie.';screenTask(()=>speak(expected,.60),250)}
+  };
+  recognition.onerror=e=>{
+   if(!run.isCurrent()){closePronunciationRun(run);return}
+   const messages={"not-allowed":"Micro refusé. Vérifie les autorisations du navigateur.","service-not-allowed":"La reconnaissance vocale est bloquée par le navigateur.","no-speech":"Je n’ai rien entendu. Tu peux réessayer.","audio-capture":"Aucun microphone disponible.",network:"La reconnaissance vocale a besoin d’Internet sur ce navigateur."};
+   closePronunciationRun(run,messages[e.error]||"La reconnaissance vocale n’a pas abouti. Tu peux réessayer.")
+  };
+  recognition.onend=()=>closePronunciationRun(run,"Je n’ai pas bien entendu. Tu peux réessayer.");
+  recognition.start()
+ }catch(e){console.error("Microphone session error",e);closePronunciationRun(run,"L’écoute n’a pas démarré. Vérifie les réglages du micro puis réessaie.")}
 }
 
 function parentReviewSuggestions(){
@@ -728,7 +740,7 @@ document.addEventListener("click",e=>{
  if(a==="bubble-repeat"){speak(currentAnswer,.60);return}
  if(a==="bubble-answer"){
    if(locked)return;
-   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordQuestionSuccess(currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");screenTask(()=>speak(currentAnswer,.60),120);completeMissionStep()}
+   if(b.dataset.value===currentAnswer){locked=true;b.classList.add("pop");recordQuestionSuccess(currentAnswer,"bubble:"+currentAnswer);rewardVerified("Bonne bulle !","bubble:"+currentAnswer);setDone("bubbles");screenTask(()=>{if(!pronunciationSession)speak(currentAnswer,.60)},120);completeMissionStep()}
    else{recordQuestionError(currentAnswer);b.disabled=true;b.classList.add("wiggle");miss("Essaie une autre bulle.");setTimeout(()=>b.classList.remove("wiggle"),450)}
    return
  }
@@ -751,6 +763,7 @@ document.addEventListener("click",e=>{
  }
  if(a==="game-pronunciation"){gamePronunciation();return}
  if(a==="pronunciation-listen"){speak(currentAnswer,.60);return}
+ if(a==="pronunciation-stop"){stopPronunciationSession("Écoute arrêtée. Tu peux réessayer.");return}
  if(a==="pronunciation-record"){startPronunciationRecognition();return}
  if(a==="game-picture"){gamePicture();return}
  if(a==="game-build"){gameBuild();return}
@@ -794,6 +807,7 @@ document.addEventListener("click",e=>{
 });
 nav.addEventListener("click",e=>{const b=e.target.closest(".nav-btn");if(!b||profileLoading)return;missionMode=false;activate(b.dataset.view)});
 async function openParentAccount(){
+ stopPronunciationSession("Écoute interrompue. Tu peux recommencer après avoir fermé le compte parent.");
  try{if(session&&!passwordRecovery)await loadChildren();openAuth()}catch(e){openAuth();authMsg("Impossible de charger les profils. Réessaie dans un instant.","error")}
 }
 $("#accountBtn").addEventListener("click",openParentAccount);
@@ -803,7 +817,9 @@ document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab
 document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
 function handleAuthStateChange(event,newSession){
  authEventSequence++;
- const previousOwner=session?.user?.id;session=newSession;
+ const previousOwner=session?.user?.id;
+ if(previousOwner!==newSession?.user?.id)stopPronunciationSession();
+ session=newSession;
  if(event==="PASSWORD_RECOVERY"){
   passwordRecovery=!!newSession;
   if(previousOwner!==newSession?.user?.id){clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}}

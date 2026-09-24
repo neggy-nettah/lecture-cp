@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.23.0 — 2026-09-24
+
+- une seule session micro à la fois, avec bouton d’arrêt et fermeture lors de la navigation, du changement de profil ou de la mise en arrière-plan
+- autorisations et résultats tardifs ignorés ; les pistes obtenues après annulation sont immédiatement arrêtées
+- délai de fermeture même si la reconnaissance ne démarre jamais
+- fermeture des ressources en cas d’erreur d’initialisation et absence de validation sans détection vocale
+- les échecs du micro bêta ne pénalisent plus la série de bonnes réponses
+- tests navigateur avec flux et reconnaissance simulés, sans enregistrement réel
+
 ## 0.22.0 — 2026-09-23
 
 - extraction à l’identique des ateliers et mini-jeux dans exercises.js
