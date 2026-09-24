@@ -2,6 +2,11 @@
 // Exercise screens and game mechanics. Functions use active state and shared helpers at call time.
 // DOM event dispatch, microphone lifecycle and app boot remain in app.js.
 
+function refreshPracticeScreen(draw,action){
+ draw();
+ document.querySelector('[data-action="'+action+'"]')?.focus({preventScroll:true})
+}
+
 function sounds(){
  const pool=activeSoundData();if(state.sound>=pool.length)state.sound=0;const x=pool[state.sound%pool.length];
  stage.innerHTML=title("Les sons","Écoute le son, puis répète-le à voix haute.","Niveau 1")+
@@ -134,7 +139,7 @@ function gameMemory(preferred=[],fromMission=false){
  saveMemoryRound();save(false);
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
- <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card ${memoryMatchedPairs.has(x.pair)?"matched":""}" data-action="memory-card" data-index="${i}" aria-label="${memoryMatchedPairs.has(x.pair)?"Paire trouvée : "+esc(x.pair):"Carte "+(i+1)+" masquée"}">${memoryMatchedPairs.has(x.pair)?(x.type==="sound"?"🔊":colorSyl(x.label)):"?"}</button>`).join("")}</div>
+ <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card ${memoryMatchedPairs.has(x.pair)?"matched":""}" ${memoryMatchedPairs.has(x.pair)?"disabled":""} data-action="memory-card" data-index="${i}" aria-label="${memoryMatchedPairs.has(x.pair)?"Paire trouvée : "+esc(x.pair):"Carte "+(i+1)+" masquée"}">${memoryMatchedPairs.has(x.pair)?(x.type==="sound"?"🔊":colorSyl(x.label)):"?"}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`;
  if(memoryMatches===3)finishMemory()
@@ -149,8 +154,10 @@ function memoryFlip(btn,index){
  if(match){
   a.btn.classList.add("matched");b.btn.classList.add("matched");memoryMatches++;memoryMatchedPairs.add(a.card.pair);memoryOpen=[];saveMemoryRound();
   a.btn.setAttribute("aria-label","Paire trouvée : "+a.card.pair);b.btn.setAttribute("aria-label","Paire trouvée : "+b.card.pair);
+  a.btn.disabled=true;b.btn.disabled=true;
   const masteryKey=memoryMissedPairs.has(a.card.pair)?null:a.card.pair;if(!recordAttempt(true,masteryKey,"memory:"+a.card.pair))save();tone("ok");
-  if(memoryMatches===3){finishMemory()}else $("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';
+  if(memoryMatches===3){const wasMission=missionMode;finishMemory();if(!wasMission)document.querySelector('[data-action="game-memory"]')?.focus({preventScroll:true})}
+  else{$("#feedback").innerHTML='<div class="ok">✨ Bonne paire !</div>';document.querySelector('#memoryGrid .memory-card:not(:disabled)')?.focus({preventScroll:true})}
  }else{
   memoryMissedPairs.add(a.card.pair);memoryMissedPairs.add(b.card.pair);saveMemoryRound();if(!recordQuestionError())save();tone("no");$("#feedback").innerHTML='<div class="no">Presque ! Mémorise bien les deux cartes.</div>';
   screenTask(()=>{a.btn.classList.remove("open");b.btn.classList.remove("open");a.btn.textContent="?";b.btn.textContent="?";a.btn.setAttribute("aria-label","Carte "+(a.index+1)+" masquée");b.btn.setAttribute("aria-label","Carte "+(b.index+1)+" masquée");memoryOpen=[]},750)

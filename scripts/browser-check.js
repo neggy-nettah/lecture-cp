@@ -25,6 +25,7 @@ window.supabase={createClient:()=>({
   await require('./microphone-check')(page);
   await require('./saved-state-check')(page);
   await require('./mission-boundaries-check')(page);
+  await require('./practice-navigation-check')(page);
   // Every principal screen must fit on phones, tablets and desktop.
   for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});
@@ -82,7 +83,8 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>state.dailyMission.index),4);
   for(const pair of memoryPairs.slice(1))assert.equal(await page.evaluate(p=>state.mastery[p]?.correct||0,pair),0);
   const memoryStars=await page.evaluate(()=>state.stars);
-  await page.locator('.memory-card').first().click();
+  assert.equal(await page.locator('.memory-card').first().isDisabled(),true);
+  await page.locator('.memory-card').first().evaluate(el=>el.click());
   assert.equal(await page.evaluate(()=>state.stars),memoryStars);
   // A save made after the final pair but before advancing must finish only once.
   const completedMemoryStats=await page.evaluate(()=>JSON.stringify(state.stats));

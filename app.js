@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.25.0";
+const APP_VERSION="0.26.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -751,16 +751,16 @@ document.addEventListener("click",e=>{
  if(a==="mission-bubble-repeat"){speakMission(currentAnswer,.60);return}
  if(a==="mission-discover-done"){practiceDone("Échauffement terminé !");completeMissionStep();return}
  if(a==="speak"){speak(b.dataset.text,Number(b.dataset.rate||.72));return}
- if(a==="sound-next"){const n=activeSoundData().length;state.sound=(state.sound+1)%n;save(false);sounds();return}
- if(a==="sound-prev"){const n=activeSoundData().length;state.sound=(state.sound-1+n)%n;save(false);sounds();return}
- if(a==="sound-repeat"){const pool=activeSoundData(),g=pool[state.sound%pool.length].g;state.soundPractice=state.soundPractice||{};state.soundPractice[g]=true;const needed=activeSoundGraphemes();if([...needed].every(x=>state.soundPractice[x]))setDone("sounds");else save();practiceDone("Bien répété ! Continue comme ça.");return}
- if(a==="set-next"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set+1)%n;save(false);syllables();return}
- if(a==="set-prev"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set-1+n)%n;save(false);syllables();return}
+ if(a==="sound-next"){const n=activeSoundData().length;state.sound=(state.sound+1)%n;save(false);refreshPracticeScreen(sounds,a);return}
+ if(a==="sound-prev"){const n=activeSoundData().length;state.sound=(state.sound-1+n)%n;save(false);refreshPracticeScreen(sounds,a);return}
+ if(a==="sound-repeat"){const pool=activeSoundData(),g=pool[state.sound%pool.length].g;state.soundPractice=state.soundPractice||{};state.soundPractice[g]=true;const needed=activeSoundGraphemes();if([...needed].every(x=>state.soundPractice[x]))setDone("sounds");else save();refreshPracticeScreen(sounds,a);practiceDone("Bien répété ! Continue comme ça.");return}
+ if(a==="set-next"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set+1)%n;save(false);refreshPracticeScreen(syllables,a);return}
+ if(a==="set-prev"){const n=Math.max(1,unlockedFamilyCount());state.set=(state.set-1+n)%n;save(false);refreshPracticeScreen(syllables,a);return}
  if(a==="syllable-quiz"){startSyllableQuiz();return}
  if(a==="syllable-answer"){checkChoice(b,b.dataset.value,"syllables");return}
- if(a==="word-next"){const n=decodableMissionWords().length;state.word=(state.word+1)%n;save(false);words();return}
- if(a==="word-prev"){const n=decodableMissionWords().length;state.word=(state.word-1+n)%n;save(false);words();return}
- if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();words();practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
+ if(a==="word-next"){const n=decodableMissionWords().length;state.word=(state.word+1)%n;save(false);refreshPracticeScreen(words,a);return}
+ if(a==="word-prev"){const n=decodableMissionWords().length;state.word=(state.word-1+n)%n;save(false);refreshPracticeScreen(words,a);return}
+ if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();refreshPracticeScreen(words,a);practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-bubbles"){gameBubbles();return}
  if(a==="parent-review"){
