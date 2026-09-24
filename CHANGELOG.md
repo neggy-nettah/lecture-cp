@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.24.0 — 2026-09-24
+
+- récupération des champs valides d’une sauvegarde partiellement abîmée, sans effacer toute la progression pour une collection invalide
+- compteurs, indices, statistiques, dates de révision et entrées d’historique normalisés au chargement
+- suivi des mots conservé lors des imports ; statistiques incohérentes toujours refusées
+- missions invalides reconstruites, textes importés affichés comme du texte et écran de fin sans récompense si la mission n’est pas terminée
+- focus envoyé vers le contenu après navigation et repère clavier rétabli sur les champs de formulaire
+- tests dédiés aux sauvegardes endommagées, au rechargement, aux imports et au clavier
+
 ## 0.23.0 — 2026-09-24
 
 - une seule session micro à la fois, avec bouton d’arrêt et fermeture lors de la navigation, du changement de profil ou de la mise en arrière-plan

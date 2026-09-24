@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.23.0";
+const APP_VERSION="0.24.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -11,7 +11,35 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 function migrateState(raw){const src=raw&&typeof raw==="object"?{...raw}:{};src.schemaVersion=STATE_SCHEMA_VERSION;return src}
-function normalizeState(raw){raw=migrateState(raw);return {...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION,done:raw.done||{},stats:{...DEFAULT_STATE.stats,...(raw.stats||{})},mastery:raw.mastery||{},reviewQueue:Array.isArray(raw.reviewQueue)?raw.reviewQueue:[],attemptLedger:raw.attemptLedger||{},rewardLedger:raw.rewardLedger||{},soundPractice:raw.soundPractice||{},wordPractice:raw.wordPractice||{},missionHistory:Array.isArray(raw.missionHistory)?raw.missionHistory:[],rewards:{...DEFAULT_STATE.rewards,...(raw.rewards||{}),collection:[...((raw.rewards||{}).collection||[])]}}}
+function stateObject(value){return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}
+function stateCount(value){const n=typeof value==="number"||typeof value==="string"?Number(value):NaN;return Number.isFinite(n)?Math.min(Number.MAX_SAFE_INTEGER,Math.max(0,Math.floor(n))):0}
+function stateStats(value){const v=stateObject(value),attempts=stateCount(v.attempts);return {attempts,correct:Math.min(attempts,stateCount(v.correct))}}
+function stateDay(value){return typeof value==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value?value:null}
+function stateFlags(value){return Object.fromEntries(Object.entries(stateObject(value)).filter(([k,v])=>!["__proto__","constructor","prototype"].includes(k)&&(v===true||v===1)).map(([k])=>[k,true]))}
+function normalizeState(raw){
+ raw=migrateState(stateObject(raw));
+ const out={...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION};
+ for(const key of ["updatedAt","stars","streak","sound","set","word","gameWins"])out[key]=stateCount(raw[key]);
+ out.name=typeof raw.name==="string"?raw.name:"";
+ out.lastView=typeof raw.lastView==="string"?raw.lastView:"home";
+ out.stats=stateStats(raw.stats);
+ for(const key of ["done","attemptLedger","rewardLedger","soundPractice","wordPractice"])out[key]=stateFlags(raw[key]);
+ out.mastery=Object.fromEntries(Object.entries(stateObject(raw.mastery)).filter(([,v])=>v&&typeof v==="object"&&!Array.isArray(v)).map(([k,v])=>[k,{...stateStats(v),lastSeen:stateDay(v.lastSeen),lastCorrect:stateDay(v.lastCorrect)}]));
+ out.reviewQueue=Array.isArray(raw.reviewQueue)?raw.reviewQueue.filter(s=>typeof s==="string"&&DATA.sets.flat().includes(s)):[];
+ out.missionHistory=Array.isArray(raw.missionHistory)?raw.missionHistory.filter(x=>x&&typeof x==="object"&&!Array.isArray(x)).map(x=>{
+  const stats=stateStats(x);return {...x,...stats,date:stateDay(x.date)||"",primary:typeof x.primary==="string"?x.primary:"",review:typeof x.review==="string"?x.review:"",word:typeof x.word==="string"?x.word:"",accuracy:x.accuracy==null?null:(stats.attempts?Math.round(stats.correct/stats.attempts*100):100)}
+ }):[];
+ const rewards=stateObject(raw.rewards),ids=new Set();
+ out.rewards={towardPiece:0,pieces:Math.min(3,stateCount(rewards.pieces)),puzzles:stateCount(rewards.puzzles),collection:[]};
+ for(const item of Array.isArray(rewards.collection)?rewards.collection:[]){
+  const known=COLLECTIBLES.find(x=>x.id===item?.id);
+  if(known&&!ids.has(known.id)){out.rewards.collection.push({...known});ids.add(known.id)}
+ }
+ const m=stateObject(raw.dailyMission);
+ out.dailyMission=Object.keys(m).length?{...m,index:Math.min(5,stateCount(m.index)),completed:stateCount(m.index)>=5,failedSteps:stateFlags(m.failedSteps)}:null;
+ if(out.dailyMission&&m.sessionStats)out.dailyMission.sessionStats=stateStats(m.sessionStats);
+ return out
+}
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
@@ -154,7 +182,7 @@ function toast(msg,type="ok"){
 }
 function title(t,p,pill){return `<div class="titlebar"><div><h2>${t}</h2><p>${p}</p></div>${pill?`<span class="pill">${pill}</span>`:""}</div>`}
 function mission(ico,b,txt){return `<div class="mission"><div class="mission-icon">${ico}</div><div><b>${b}</b><span>${txt}</span></div></div>`}
-function activate(v){stopPronunciationSession();currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render()}
+function activate(v){stopPronunciationSession();currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render();stage.focus({preventScroll:true})}
 function nextRandom(arr,answer,n=4){let a=shuffle(arr.filter(x=>x!==answer)).slice(0,n-1);return shuffle([answer,...a])}
 
 function weeklyRhythmHTML(){
@@ -479,18 +507,20 @@ function parseProgressImport(text){
  let payload;
  try{payload=JSON.parse(String(text||""))}catch(e){throw new Error("JSON invalide")}
  if(!payload||typeof payload!=="object"||payload.app!=="La Fabrique des Syllabes"||!payload.state||typeof payload.state!=="object")throw new Error("Fichier non reconnu");
- const imported=normalizeState(payload.state);
- const numbers=[imported.stars,imported.streak,imported.stats?.attempts,imported.stats?.correct];
+ if(Array.isArray(payload.state))throw new Error("Progression invalide");
+ const numbers=[payload.state.stars??0,payload.state.streak??0,payload.state.stats?.attempts??0,payload.state.stats?.correct??0];
  if(numbers.some(x=>!Number.isFinite(Number(x))||Number(x)<0))throw new Error("Progression invalide");
+ if(Number(numbers[3])>Number(numbers[2]))throw new Error("Statistiques incohérentes");
+ const imported=normalizeState(payload.state);
  imported.stars=Math.floor(Number(imported.stars||0));imported.streak=Math.floor(Number(imported.streak||0));
  imported.stats={attempts:Math.floor(Number(imported.stats?.attempts||0)),correct:Math.floor(Number(imported.stats?.correct||0))};
  if(imported.stats.correct>imported.stats.attempts)throw new Error("Statistiques incohérentes");
  const historyMap=new Map();
  (imported.missionHistory||[]).filter(x=>x&&typeof x==="object"&&/^\d{4}-\d{2}-\d{2}$/.test(String(x.date||""))).forEach(x=>historyMap.set(String(x.date),x));
  imported.missionHistory=[...historyMap.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-365);
- const validSyllables=new Set(DATA.sets.flat()),cleanMastery={};
+ const validSyllables=new Set(DATA.sets.flat()),validMastery=new Set([...validSyllables,...DATA.words.map(w=>"word:"+w.w)]),cleanMastery={};
  Object.entries(imported.mastery||{}).forEach(([k,v])=>{
-  if(!validSyllables.has(k)||!v||typeof v!=="object")return;
+  if(!validMastery.has(k)||!v||typeof v!=="object")return;
   const attempts=Math.max(0,Math.floor(Number(v.attempts||0))),correct=Math.min(attempts,Math.max(0,Math.floor(Number(v.correct||0))));
   cleanMastery[k]={attempts,correct,lastSeen:v.lastSeen||null,lastCorrect:v.lastCorrect||null}
  });
@@ -504,7 +534,7 @@ function parseProgressImport(text){
  const rewardIds=new Set(COLLECTIBLES.map(x=>x.id)),seenRewards=new Set(),collection=[];
  (imported.rewards?.collection||[]).forEach(x=>{if(x&&rewardIds.has(x.id)&&!seenRewards.has(x.id)){collection.push(COLLECTIBLES.find(c=>c.id===x.id));seenRewards.add(x.id)}});
  imported.rewards={towardPiece:0,pieces:Math.min(3,Math.max(0,Math.floor(Number(imported.rewards?.pieces||0)))),puzzles:Math.max(0,Math.floor(Number(imported.rewards?.puzzles||0))),collection};
- if(imported.dailyMission?.date!==localDayKey())imported.dailyMission=null;
+ if(!validDailyMission(imported.dailyMission)||imported.dailyMission.date!==localDayKey())imported.dailyMission=null;
  return imported
 }
 async function importProgressFile(file){

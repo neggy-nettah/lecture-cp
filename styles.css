@@ -12,7 +12,7 @@ color:var(--ink);font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,-apple
 button,input{font:inherit}
 button{border:0;cursor:pointer;touch-action:manipulation}
 button:disabled{cursor:default}
-button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #4037d6;outline-offset:3px}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.field input:focus-visible,.field select:focus-visible,.name input:focus-visible{outline:3px solid #4037d6;outline-offset:3px}
 .app{max-width:1040px;margin:auto;padding:14px 14px 34px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:5px 0 12px}
 .brand{display:flex;gap:11px;align-items:center}.logo{width:52px;height:52px;border-radius:18px;background:linear-gradient(140deg,var(--purple),#a49eff);display:grid;place-items:center;color:#fff;font-size:29px;box-shadow:var(--shadow)}

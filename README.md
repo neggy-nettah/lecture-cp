@@ -254,6 +254,10 @@ Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression
 
 Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`, les exercices dans `exercises.js` et les parcours quotidiens dans `missions.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
 
+### Sauvegardes et clavier (0.24)
+
+Le chargement isole les champs abîmés (compteurs, collection, historique, dates) pour conserver le reste de la progression. L’import garde également les mesures de maîtrise des mots. Une mission devenue invalide est reconstruite, sans récompense automatique depuis un ancien écran de fin. Les titres et consignes importés sont échappés avant affichage. Les tests `scripts/saved-state-check.js`, lancés par la suite navigateur, couvrent ces cas et le focus clavier. Aucun changement de schéma ou de droits Supabase ; les synchronisations sont simulées dans ces tests.
+
 ### Cycle de vie du micro bêta (0.23)
 
 Une seule écoute peut être active. Le bouton « Arrêter l’écoute », la navigation, le changement de profil et le passage en arrière-plan ferment la session. Une autorisation obtenue trop tard ferme immédiatement le flux ; les anciens résultats ne modifient pas le nouvel exercice. Un délai maximum couvre aussi les reconnaissances qui ne démarrent jamais. Les réponses du micro ne donnent ni maîtrise, ni récompense, ni pénalité sur la série. Les tests de `scripts/microphone-check.js` simulent ces événements ; ils ne valident pas la qualité audio ni le fonctionnement matériel sur Safari.
