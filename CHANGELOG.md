@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.28.0 — 2026-09-25
+
+- compteur total des missions indépendant des 60 dernières entrées d’historique
+- migration des sauvegardes à partir des dates disponibles, sans inventer les anciennes missions déjà effacées
+- meilleure série conservée et badge « 3 jours de suite » maintenu après une pause
+- suivi hebdomadaire et série actuelle calculés sur les dates uniques, valides et non futures
+- compteur et meilleure série préservés à l’import et au rechargement ; tests jusqu’à la 61e mission
+
 ## 0.27.0 — 2026-09-25
 
 - application déjà installée disponible malgré une erreur serveur 5xx

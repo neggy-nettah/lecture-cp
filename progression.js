@@ -92,8 +92,20 @@ function knownFamilyFloor(){
  });
  return Math.min(DATA.sets.length,floor)
 }
+function completedMissionCount(snapshot=state){
+ const dates=new Set((snapshot.missionHistory||[]).map(x=>stateDay(x?.date)).filter(Boolean));
+ return Math.max(stateCount(snapshot.missionCount),dates.size)
+}
+function missionDates(snapshot=state){return [...new Set((snapshot.missionHistory||[]).map(x=>stateDay(x?.date)).filter(d=>d&&d<=localDayKey()))].sort()}
+function bestMissionStreak(snapshot=state){
+ let best=0,run=0,previous=null;
+ for(const day of missionDates(snapshot)){
+  const timestamp=Date.parse(day);run=previous!==null&&timestamp-previous===86400000?run+1:1;best=Math.max(best,run);previous=timestamp
+ }
+ return Math.min(completedMissionCount(snapshot),Math.max(stateCount(snapshot.bestMissionStreak),best))
+}
 function unlockedFamilyCount(){
- const missions=(state.missionHistory||[]).length,points=curriculumMasteryPoints();
+ const missions=completedMissionCount(),points=curriculumMasteryPoints();
  const missionCap=Math.min(DATA.sets.length,3+Math.floor(missions/2)),readinessCap=Math.min(DATA.sets.length,3+Math.floor(points/6));
  return Math.min(DATA.sets.length,Math.max(knownFamilyFloor(),Math.min(missionCap,readinessCap)))
 }
@@ -106,9 +118,9 @@ function activeSoundGraphemes(){
  return new Set(["a","e","i","o","u","é",...consonants])
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
-function sentenceUnlocked(){return (state.missionHistory||[]).length>=8}
+function sentenceUnlocked(){return completedMissionCount()>=8}
 function curriculumStatus(){
- const count=unlockedFamilyCount(),missions=(state.missionHistory||[]).length,points=curriculumMasteryPoints();
+ const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints();
  if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
  const next=DATA.sets[count],missionThreshold=2*(count-2),pointThreshold=6*(count-2);
  return {count,complete:false,next,nextInitial:(next?.[0]||"")[0]?.toUpperCase()||"?",remainingMissions:Math.max(0,missionThreshold-missions),remainingPoints:Math.max(0,pointThreshold-points)}
@@ -126,7 +138,7 @@ function familyRoadmapHTML(){
 }
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function wordPracticeComplete(){const pool=decodableMissionWords(),practiced=state.wordPractice||{},target=Math.min(5,pool.length);return target>0&&pool.filter(w=>practiced[w.w]).length>=target}
-function learningCourseCompleted(){return (state.missionHistory||[]).length>=14&&masterySummary().mastered>=40}
+function learningCourseCompleted(){return completedMissionCount()>=14&&masterySummary().mastered>=40}
 const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
 function phraseTokenParts(token){
  const clean=String(token||"").toLowerCase().replace(/[.!?,;:]/g,"");

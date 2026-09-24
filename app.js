@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.27.0";
+const APP_VERSION="0.28.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -29,6 +29,7 @@ function normalizeState(raw){
  out.missionHistory=Array.isArray(raw.missionHistory)?raw.missionHistory.filter(x=>x&&typeof x==="object"&&!Array.isArray(x)).map(x=>{
   const stats=stateStats(x);return {...x,...stats,date:stateDay(x.date)||"",primary:typeof x.primary==="string"?x.primary:"",review:typeof x.review==="string"?x.review:"",word:typeof x.word==="string"?x.word:"",accuracy:x.accuracy==null?null:(stats.attempts?Math.round(stats.correct/stats.attempts*100):100)}
  }):[];
+ out.missionCount=completedMissionCount(out);out.bestMissionStreak=bestMissionStreak(out);
  const rewards=stateObject(raw.rewards),ids=new Set();
  out.rewards={towardPiece:0,pieces:Math.min(3,stateCount(rewards.pieces)),puzzles:stateCount(rewards.puzzles),collection:[]};
  for(const item of Array.isArray(rewards.collection)?rewards.collection:[]){
@@ -383,7 +384,7 @@ function parentReviewHTML(){
  return `<div class="card"><h3>📌 Quoi travailler maintenant ?</h3><p>Une proposition à la fois suffit. Arrêtez si l’enfant se fatigue.</p>${suggestions.length?`<div class="parent-grid">${cards}</div>`:`<p>${Object.keys(state.mastery||{}).length?"Aucune révision prioritaire pour le moment. La mission du jour poursuit le parcours.":"Commencez par la mission du jour : les premières réponses permettront de proposer des révisions adaptées."}</p><button class="btn primary" data-action="go" data-to="home">Voir la mission du jour</button>`}<p style="color:var(--muted);font-size:13px">Ces exercices sont libres : ils ne remplacent pas une étape de la mission en cours.</p></div>`
 }
 function missionDayStreak(){
- const dates=[...new Set((state.missionHistory||[]).map(x=>x.date))].sort().reverse();
+ const dates=missionDates().reverse();
  if(!dates.length)return 0;
  const fmt=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
  let cursor=new Date(),today=fmt(cursor);
@@ -405,10 +406,10 @@ function recentMissionHTML(){
 function missionsLast7Days(){
  const start=new Date();start.setHours(0,0,0,0);start.setDate(start.getDate()-6);
  const key=start.getFullYear()+"-"+String(start.getMonth()+1).padStart(2,"0")+"-"+String(start.getDate()).padStart(2,"0");
- return (state.missionHistory||[]).filter(x=>x.date>=key).length
+ return missionDates().filter(date=>date>=key).length
 }
 function badgeData(){
- const missions=(state.missionHistory||[]).length,ms=masterySummary(),stars=state.stars||0,streak=missionDayStreak();
+ const missions=completedMissionCount(),ms=masterySummary(),stars=state.stars||0,streak=bestMissionStreak();
  return [
   {emoji:"🌟",name:"Première étoile",desc:"Gagner une étoile",ok:stars>=1},
   {emoji:"🏁",name:"Première mission",desc:"Terminer une mission",ok:missions>=1},
@@ -421,7 +422,7 @@ function badgeData(){
  ]
 }
 function companionLevel(){
- const n=(state.missionHistory||[]).length;
+ const n=completedMissionCount();
  if(n>=14)return {emoji:"🦊👑",name:"Léo, gardien des étoiles",level:5};
  if(n>=9)return {emoji:"🦊🚀",name:"Léo, explorateur",level:4};
  if(n>=5)return {emoji:"🦊🛡️",name:"Léo, aventurier",level:3};
@@ -429,7 +430,7 @@ function companionLevel(){
  return {emoji:"🦊",name:"Léo, petit renard",level:1}
 }
 function worldView(){
- const missions=(state.missionHistory||[]).length,comp=companionLevel();
+ const missions=completedMissionCount(),comp=companionLevel();
  let current=0;WORLD_ZONES.forEach((z,i)=>{if(missions>=z.need)current=i});
  const next=WORLD_ZONES[current+1]||null;
  const nextText=next?'<div class="tip">Encore <b>'+Math.max(0,next.need-missions)+'</b> mission(s) pour atteindre <b>'+next.name+'.</b></div>':'<div class="tip">🏆 Toutes les zones sont débloquées !</div>';
@@ -450,7 +451,7 @@ function collectionView(){
  <div class="card"><b>🏅 Mes badges</b><div class="badge-grid">${badges.map(x=>`<div class="badge-card ${x.ok?"":"locked"}"><div class="badge-emoji">${x.ok?x.emoji:"🔒"}</div><b>${x.name}</b><small>${x.ok?"Débloqué !":x.desc}</small></div>`).join("")}</div></div>`
 }
 function backupKey(){return (currentChild?childKey(currentChild.id):guestKey())+"_backup"}
-function stateMeaningful(snapshot=state){return (snapshot?.stars||0)>0||(snapshot?.stats?.attempts||0)>0||(snapshot?.missionHistory||[]).length>0||Object.keys(snapshot?.mastery||{}).length>0}
+function stateMeaningful(snapshot=state){return (snapshot?.stars||0)>0||(snapshot?.stats?.attempts||0)>0||stateCount(snapshot?.missionCount)>0||(snapshot?.missionHistory||[]).length>0||Object.keys(snapshot?.mastery||{}).length>0}
 function saveSnapshotBackup(snapshot=state){
  try{
   if(!stateMeaningful(snapshot)&&hasBackup())return true;
@@ -484,7 +485,7 @@ function diagnosticText(){
   "Mission date: "+(m.date||"aucune"),
   "Mission étape: "+(m.index??"-")+"/"+((m.steps||[]).length||"-"),
   "Mission terminée: "+!!m.completed,
-  "Missions historique: "+(state.missionHistory||[]).length,
+  "Missions terminées: "+completedMissionCount()+" • historique conservé: "+(state.missionHistory||[]).length,
   "Dernière sauvegarde: "+(state.updatedAt?new Date(state.updatedAt).toISOString():"ancienne sauvegarde"),
   "Étoiles: "+(state.stars||0)
  ].join("\n")
@@ -560,7 +561,7 @@ function parents(){
   <div class="parent-box"><h3>🎯 Réussite des tentatives</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${attempts?accuracy+" % ("+correct+"/"+attempts+")":"pas encore de réponse"}</small></p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée dans les exercices de l’app.</p></div>
   <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumNextText()}</p></div>
-  <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${(state.missionHistory||[]).length}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.</p></div>
+  <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${completedMissionCount()}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.<br><small>Meilleure série : ${bestMissionStreak()} jour(s).</small></p></div>
  </div>
  ${parentReviewHTML()}
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>

@@ -118,7 +118,8 @@ function recordCompletedMission(m){
   const correct=sessionStats?Number(sessionStats.correct||0):(legacyMeasured?Math.max(0,(state.stats?.correct||0)-m.startCorrect):0);
   const measured=!!sessionStats||legacyMeasured;
   record={date:m.date,primary:m.primary,review:m.review,word:m.word,attempts,correct,accuracy:measured?(attempts?Math.round(correct/attempts*100):100):null};
-  state.missionHistory.push(record);state.missionHistory=state.missionHistory.slice(-60);gain=advanceRewards();
+  state.missionCount=completedMissionCount()+1;
+  state.missionHistory.push(record);state.bestMissionStreak=bestMissionStreak();state.missionHistory=state.missionHistory.slice(-60);gain=advanceRewards();
   const afterFamilies=unlockedFamilyCount();
   if(afterFamilies>beforeFamilies){const set=DATA.sets[afterFamilies-1];familyUnlock=set?set[0][0].toUpperCase():null}
   record.reward={pieces:state.rewards.pieces,itemId:gain.complete?gain.item.id:null};
