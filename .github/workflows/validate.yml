@@ -22,6 +22,8 @@ jobs:
         run: node scripts/check-content.js
       - name: Runtime smoke test
         run: node scripts/smoke-runtime.js
+      - name: Service worker network failures
+        run: node scripts/check-service-worker.js
 
   browser:
     runs-on: ubuntu-latest
@@ -57,3 +59,5 @@ jobs:
             sleep 1
           done
           node scripts/offline-check.js
+      - name: Check server errors and stalled navigation
+        run: node scripts/network-browser-check.js

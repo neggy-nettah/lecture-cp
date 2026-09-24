@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.27.0 — 2026-09-25
+
+- application déjà installée disponible malgré une erreur serveur 5xx
+- repli sur la version hors ligne après quatre secondes si la navigation reste bloquée
+- page hors ligne conservée avec les fichiers de sa propre version pendant une mise à jour
+- suppression du cache dynamique non borné ; une indisponibilité du cache ne bloque plus un fichier accessible par le réseau
+- tests du service worker et scénarios Chromium réels : erreur 503, requête bloquée, changement de version et progression conservée
+
 ## 0.26.0 — 2026-09-25
 
 - compteur et lettres pratiquées rafraîchis immédiatement après « J’ai répété », sans attribuer d’étoile
