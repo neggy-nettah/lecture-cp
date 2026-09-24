@@ -100,7 +100,7 @@ function completeMissionStep(){
   const next=m.steps[m.index];
   box.innerHTML='<div class="hero-emoji">✅</div><b style="font-size:20px">Étape réussie !</b><p style="color:var(--muted)">Prochaine étape : <b>'+esc(next.title||"Étape "+(m.index+1))+'</b> — '+esc(next.detail||"")+'</p><button class="btn primary" data-action="mission-continue">Continuer → étape '+(m.index+1)+'</button>'
  }
- screenTask(()=>box.scrollIntoView({behavior:"smooth",block:"center"}),80)
+ screenTask(()=>{box.querySelector?.("button")?.focus({preventScroll:true});box.scrollIntoView({behavior:"smooth",block:"center"})},80)
 }
 function refreshExpiredMission(){
  if(!missionMode||state.dailyMission?.date===localDayKey())return false;

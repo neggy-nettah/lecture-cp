@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.26.0 — 2026-09-25
+
+- compteur et lettres pratiquées rafraîchis immédiatement après « J’ai répété », sans attribuer d’étoile
+- position du clavier conservée lors des changements de carte, famille et mot
+- paires trouvées du Memory retirées de la navigation clavier ; focus vers les cartes restantes ou le bouton Rejouer
+- bouton de continuation de mission directement accessible après réussite
+- scénarios navigateur dédiés au clavier et aux compteurs d’entraînement
+
 ## 0.25.0 — 2026-09-25
 
 - mission et morceau de puzzle enregistrés dès la dernière étape réussie, même si l’enfant quitte avant l’écran de récompense
