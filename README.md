@@ -254,6 +254,10 @@ Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression
 
 Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`, les exercices dans `exercises.js` et les parcours quotidiens dans `missions.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
 
+### Suivi sur la durée (0.28)
+
+Le total des missions et la meilleure série sont sauvegardés séparément de l’historique récent, conservé sur 60 missions. Le badge des trois jours consécutifs reste obtenu après une pause. Les séries et le rythme hebdomadaire ignorent doublons, dates invalides et dates futures. Les anciennes sauvegardes démarrent au nombre de dates connues : une mission déjà effacée avant cette version ne peut pas être reconstituée. `scripts/long-term-progress-check.js` vérifie la 61e mission, les imports et les reprises.
+
 ### Connexion instable et mises à jour (0.27)
 
 Après un premier chargement complet, la version installée sert de repli en cas de coupure, d’erreur serveur 5xx ou de navigation bloquée pendant quatre secondes. Son HTML reste associé à ses fichiers jusqu’à l’installation complète de la version suivante. Seuls les fichiers prévus dans le cache de l’application sont conservés ; les requêtes supplémentaires n’accumulent plus de copies. `node scripts/check-service-worker.js` simule les pannes et `node scripts/network-browser-check.js` les reproduit dans Chromium sur un serveur local contrôlé. Cela ne rend pas les connexions aux comptes disponibles hors ligne.

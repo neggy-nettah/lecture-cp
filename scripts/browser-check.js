@@ -26,6 +26,7 @@ window.supabase={createClient:()=>({
   await require('./saved-state-check')(page);
   await require('./mission-boundaries-check')(page);
   await require('./practice-navigation-check')(page);
+  await require('./long-term-progress-check')(page);
   // Every principal screen must fit on phones, tablets and desktop.
   for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});
