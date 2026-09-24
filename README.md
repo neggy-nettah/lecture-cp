@@ -254,6 +254,10 @@ Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression
 
 Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`, les exercices dans `exercises.js` et les parcours quotidiens dans `missions.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
 
+### Fin de mission et changement de jour (0.25)
+
+La dernière réponse réussie enregistre immédiatement la mission et son morceau de puzzle. L’écran de récompense peut être rouvert sans nouveau gain. Les anciennes missions terminées dont cet écran n’a jamais été ouvert sont récupérées avant de générer la mission suivante. Un exercice resté ouvert depuis la veille ne peut pas valider une étape de la nouvelle mission. `scripts/mission-boundaries-check.js` couvre ces transitions dans Chromium, avec rechargement réel et changement de date simulé.
+
 ### Sauvegardes et clavier (0.24)
 
 Le chargement isole les champs abîmés (compteurs, collection, historique, dates) pour conserver le reste de la progression. L’import garde également les mesures de maîtrise des mots. Une mission devenue invalide est reconstruite, sans récompense automatique depuis un ancien écran de fin. Les titres et consignes importés sont échappés avant affichage. Les tests `scripts/saved-state-check.js`, lancés par la suite navigateur, couvrent ces cas et le focus clavier. Aucun changement de schéma ou de droits Supabase ; les synchronisations sont simulées dans ces tests.
