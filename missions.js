@@ -26,16 +26,26 @@ function buildDailyMission(){
  ]};
  save();return state.dailyMission
 }
+function validDailyMission(m){
+ if(!m||!stateDay(m.date)||!DATA.sets.flat().includes(m.primary)||!DATA.sets.flat().includes(m.review)||!DATA.words.some(w=>w.w===m.word)||!Array.isArray(m.steps)||m.steps.length!==5)return false;
+ const expected=[["discover"],["listen"],["bubbles"],["memory","family","missing","comprehension"],["build"]];
+ return m.steps.every((s,i)=>{
+  if(!s||!expected[i].includes(s.type))return false;
+  if(s.type==="memory")return true;
+  if(s.type==="family")return DATA.sets.some(set=>set[0][0]===s.target);
+  return ["build","missing","comprehension"].includes(s.type)?DATA.words.some(w=>w.w===s.target):DATA.sets.flat().includes(s.target)
+ })
+}
 function getDailyMission(){
  const m=state.dailyMission;
- if(!m||m.date!==localDayKey()||!Array.isArray(m.steps)||m.steps.length!==5)return buildDailyMission();
+ if(!validDailyMission(m)||m.date!==localDayKey())return buildDailyMission();
  return m
 }
 function missionProgressHTML(m){
  return '<div class="mission-progress">'+m.steps.map((_,i)=>'<span class="mission-dot '+(i<m.index?"done":i===m.index&&!m.completed?"current":"")+'"></span>').join("")+'</div>'
 }
 function missionStepsHTML(m){
- return '<div class="mission-steps">'+m.steps.map((s,i)=>'<div class="mission-step '+(i<m.index||m.completed?"done":i===m.index?"current":"")+'"><span class="num">'+(i<m.index||m.completed?"✓":i+1)+'</span><div><b>'+s.title+'</b><small>'+s.detail+'</small></div></div>').join("")+'</div>'
+ return '<div class="mission-steps">'+m.steps.map((s,i)=>'<div class="mission-step '+(i<m.index||m.completed?"done":i===m.index?"current":"")+'"><span class="num">'+(i<m.index||m.completed?"✓":i+1)+'</span><div><b>'+esc(s.title||"Étape "+(i+1))+'</b><small>'+esc(s.detail||"")+'</small></div></div>').join("")+'</div>'
 }
 function missionCardHTML(){
  const m=getDailyMission(),done=m.completed||m.index>=m.steps.length;
@@ -82,12 +92,14 @@ function completeMissionStep(){
   box.innerHTML='<div class="hero-emoji">🏆</div><b style="font-size:20px">Mission terminée !</b><p style="color:var(--muted)">Toutes les étapes sont réussies.</p><button class="btn primary" data-action="mission-finish">Voir ma récompense →</button>'
  }else{
   const next=m.steps[m.index];
-  box.innerHTML='<div class="hero-emoji">✅</div><b style="font-size:20px">Étape réussie !</b><p style="color:var(--muted)">Prochaine étape : <b>'+next.title+'</b> — '+next.detail+'</p><button class="btn primary" data-action="mission-continue">Continuer → étape '+(m.index+1)+'</button>'
+  box.innerHTML='<div class="hero-emoji">✅</div><b style="font-size:20px">Étape réussie !</b><p style="color:var(--muted)">Prochaine étape : <b>'+esc(next.title||"Étape "+(m.index+1))+'</b> — '+esc(next.detail||"")+'</p><button class="btn primary" data-action="mission-continue">Continuer → étape '+(m.index+1)+'</button>'
  }
  setTimeout(()=>box.scrollIntoView({behavior:"smooth",block:"center"}),80)
 }
 function missionComplete(){
- const m=getDailyMission();missionMode=false;currentView="mission-complete";state.lastView="mission-complete";
+ const m=getDailyMission();
+ if(m.index<m.steps.length){missionHub();return}
+ missionMode=false;currentView="mission-complete";state.lastView="mission-complete";
  state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
  let gain=null,familyUnlock=null,record=state.missionHistory.find(x=>x.date===m.date)||null;
  if(!record){

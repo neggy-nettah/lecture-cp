@@ -23,6 +23,7 @@ window.supabase={createClient:()=>({
   await page.goto(url);await page.locator('[data-action="mission-start"]').first().waitFor();
   await require('./audit-games-browser')(page);
   await require('./microphone-check')(page);
+  await require('./saved-state-check')(page);
   // Every principal screen must fit on phones, tablets and desktop.
   for(const width of [320,390,768,1280]){
    await page.setViewportSize({width,height:900});

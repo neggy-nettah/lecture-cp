@@ -99,6 +99,14 @@ try{
 }
 
 const probes=[
+  'normalizeState({stars:27,rewards:{collection:{bad:true}}}).stars===27',
+  'normalizeState({stats:{attempts:"12",correct:99}}).stats.correct===12',
+  'normalizeState({sound:-3,set:"bad",word:null}).sound===0',
+  'normalizeState({mastery:{ma:{attempts:"bad",correct:3,lastSeen:"2026-02-31"}}}).mastery.ma.lastSeen===null',
+  'normalizeState({missionHistory:[null,false]}).missionHistory.length===0',
+  '(()=>{const a=normalizeState({}),b=normalizeState({});a.done.listen=true;return !b.done.listen})()',
+  '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{mastery:{"word:moto":{attempts:4,correct:3}}}}));return s.mastery["word:moto"].correct===3})()',
+  '(()=>{try{parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stats:{attempts:1,correct:3}}}));return false}catch(e){return true}})()',
   'typeof normalizeState==="function"',
   'typeof buildDailyMission==="function"',
   'typeof fullyDecodableWords==="function"',
