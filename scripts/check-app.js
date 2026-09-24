@@ -98,7 +98,7 @@ for(const asset of ['styles.css?v='+version,'content.js?v='+version,...scriptFil
 }
 if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Worker registration is missing.");
 if(!app.includes('"controllerchange"')||!app.includes("reg.update()"))fail("Installed-app update notification/check is missing.");
-if(!sw.includes('response.ok&&type.includes("text/html")'))fail("Navigation cache can accept invalid HTML responses.");
+// Network fallback and offline HTML coherence are exercised by check-service-worker.js.
 
 if(!app.includes('function speakMission(text,rate=.60){speak(text,rate)}')){
   fail("Audio engine changed. Review the known Safari macOS issue before merging.");

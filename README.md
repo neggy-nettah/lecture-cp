@@ -254,6 +254,10 @@ Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression
 
 Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`, les exercices dans `exercises.js` et les parcours quotidiens dans `missions.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
 
+### Connexion instable et mises à jour (0.27)
+
+Après un premier chargement complet, la version installée sert de repli en cas de coupure, d’erreur serveur 5xx ou de navigation bloquée pendant quatre secondes. Son HTML reste associé à ses fichiers jusqu’à l’installation complète de la version suivante. Seuls les fichiers prévus dans le cache de l’application sont conservés ; les requêtes supplémentaires n’accumulent plus de copies. `node scripts/check-service-worker.js` simule les pannes et `node scripts/network-browser-check.js` les reproduit dans Chromium sur un serveur local contrôlé. Cela ne rend pas les connexions aux comptes disponibles hors ligne.
+
 ### Fin de mission et changement de jour (0.25)
 
 La dernière réponse réussie enregistre immédiatement la mission et son morceau de puzzle. L’écran de récompense peut être rouvert sans nouveau gain. Les anciennes missions terminées dont cet écran n’a jamais été ouvert sont récupérées avant de générer la mission suivante. Un exercice resté ouvert depuis la veille ne peut pas valider une étape de la nouvelle mission. `scripts/mission-boundaries-check.js` couvre ces transitions dans Chromium, avec rechargement réel et changement de date simulé.

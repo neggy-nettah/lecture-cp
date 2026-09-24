@@ -1,16 +1,16 @@
 "use strict";
-const CACHE_NAME="lecture-cp-shell-v0.26.0";
+const CACHE_NAME="lecture-cp-shell-v0.27.0";
 const BASE="/lecture-cp/";
 const SHELL=[
   BASE,
   BASE+"index.html",
-  BASE+"styles.css?v=0.26.0",
-  BASE+"content.js?v=0.26.0",
-  BASE+"progression.js?v=0.26.0",
-  BASE+"rewards.js?v=0.26.0",
-  BASE+"exercises.js?v=0.26.0",
-  BASE+"missions.js?v=0.26.0",
-  BASE+"app.js?v=0.26.0",
+  BASE+"styles.css?v=0.27.0",
+  BASE+"content.js?v=0.27.0",
+  BASE+"progression.js?v=0.27.0",
+  BASE+"rewards.js?v=0.27.0",
+  BASE+"exercises.js?v=0.27.0",
+  BASE+"missions.js?v=0.27.0",
+  BASE+"app.js?v=0.27.0",
   BASE+"manifest.webmanifest",
   BASE+"icon.svg"
 ];
@@ -31,6 +31,20 @@ self.addEventListener("activate",event=>{
   )
 });
 
+async function cachedShellPage(){
+ try{const cache=await caches.open(CACHE_NAME);return await cache.match(BASE+"index.html")||await cache.match(BASE)}catch(e){return null}
+}
+async function navigateWithFallback(request){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),4000);
+ try{
+  const response=await fetch(request,{signal:controller.signal});
+  if(response.status>=500)return await cachedShellPage()||response;
+  // Keep the offline HTML installed with its own assets. A newer online page
+  // must not replace it before the next worker's complete shell is installed.
+  return response
+ }catch(error){const cached=await cachedShellPage();if(cached)return cached;throw error}
+ finally{clearTimeout(timer)}
+}
 self.addEventListener("fetch",event=>{
   const request=event.request;
   if(request.method!=="GET")return;
@@ -38,31 +52,12 @@ self.addEventListener("fetch",event=>{
   if(url.origin!==self.location.origin||!url.pathname.startsWith(BASE))return;
 
   if(request.mode==="navigate"){
-    event.respondWith(
-      fetch(request)
-        .then(response=>{
-          const type=response.headers.get("content-type")||"";
-          if(response.ok&&type.includes("text/html")){
-            const copy=response.clone();
-            caches.open(CACHE_NAME).then(cache=>cache.put(BASE+"index.html",copy))
-          }
-          return response
-        })
-        .catch(()=>caches.match(BASE+"index.html").then(r=>r||caches.match(BASE)))
-    );
+    event.respondWith(navigateWithFallback(request));
     return
   }
 
   event.respondWith(
-    caches.match(request).then(cached=>{
-      if(cached)return cached;
-      return fetch(request).then(response=>{
-        if(response.ok){
-          const copy=response.clone();
-          caches.open(CACHE_NAME).then(cache=>cache.put(request,copy))
-        }
-        return response
-      })
-    })
+    caches.open(CACHE_NAME).then(cache=>cache.match(request)).catch(()=>null)
+      .then(cached=>cached||fetch(request))
   )
 });
