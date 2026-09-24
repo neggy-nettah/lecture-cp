@@ -38,6 +38,8 @@ function validDailyMission(m){
 }
 function getDailyMission(){
  const m=state.dailyMission;
+ // Recover a finished session even if its reward screen was never opened.
+ if(validDailyMission(m)&&m.date!==localDayKey()&&m.index>=m.steps.length)recordCompletedMission(m);
  if(!validDailyMission(m)||m.date!==localDayKey())return buildDailyMission();
  return m
 }
@@ -82,24 +84,32 @@ function startMissionStep(){
 }
 function completeMissionStep(){
  if(!missionMode)return;
+ if(refreshExpiredMission())return;
  missionMode=false;locked=true;
  const m=getDailyMission();m.index=Math.min(m.steps.length,m.index+1);
  if(m.index>=m.steps.length)m.completed=true;
- state.dailyMission=m;save();
+ state.dailyMission=m;
+ const completion=m.completed?recordCompletedMission(m):null;
+ save();
  let box=$("#missionContinue");
  if(!box){box=document.createElement("div");box.id="missionContinue";box.className="card center";stage.appendChild(box)}
  if(m.completed){
   box.innerHTML='<div class="hero-emoji">🏆</div><b style="font-size:20px">Mission terminée !</b><p style="color:var(--muted)">Toutes les étapes sont réussies.</p><button class="btn primary" data-action="mission-finish">Voir ma récompense →</button>'
+  if(completion?.gain){tone("ok");starFx();if(completion.gain.complete)confetti()}
  }else{
   const next=m.steps[m.index];
   box.innerHTML='<div class="hero-emoji">✅</div><b style="font-size:20px">Étape réussie !</b><p style="color:var(--muted)">Prochaine étape : <b>'+esc(next.title||"Étape "+(m.index+1))+'</b> — '+esc(next.detail||"")+'</p><button class="btn primary" data-action="mission-continue">Continuer → étape '+(m.index+1)+'</button>'
  }
- setTimeout(()=>box.scrollIntoView({behavior:"smooth",block:"center"}),80)
+ screenTask(()=>box.scrollIntoView({behavior:"smooth",block:"center"}),80)
 }
-function missionComplete(){
- const m=getDailyMission();
- if(m.index<m.steps.length){missionHub();return}
- missionMode=false;currentView="mission-complete";state.lastView="mission-complete";
+function refreshExpiredMission(){
+ if(!missionMode||state.dailyMission?.date===localDayKey())return false;
+ missionHub();
+ const notice=document.createElement("p");notice.className="tip";notice.setAttribute("role","status");notice.textContent="Un nouveau jour commence : voici ta nouvelle mission. Tes progrès précédents sont conservés.";stage.prepend(notice);
+ stage.focus({preventScroll:true});return true
+}
+function recordCompletedMission(m){
+ if(!validDailyMission(m)||m.index<m.steps.length)return {record:null,gain:null,familyUnlock:null};
  state.missionHistory=Array.isArray(state.missionHistory)?state.missionHistory:[];
  let gain=null,familyUnlock=null,record=state.missionHistory.find(x=>x.date===m.date)||null;
  if(!record){
@@ -108,12 +118,27 @@ function missionComplete(){
   const correct=sessionStats?Number(sessionStats.correct||0):(legacyMeasured?Math.max(0,(state.stats?.correct||0)-m.startCorrect):0);
   const measured=!!sessionStats||legacyMeasured;
   record={date:m.date,primary:m.primary,review:m.review,word:m.word,attempts,correct,accuracy:measured?(attempts?Math.round(correct/attempts*100):100):null};
-  state.missionHistory.push(record);state.missionHistory=state.missionHistory.slice(-60);gain=rewardMissionPiece();
+  state.missionHistory.push(record);state.missionHistory=state.missionHistory.slice(-60);gain=advanceRewards();
   const afterFamilies=unlockedFamilyCount();
   if(afterFamilies>beforeFamilies){const set=DATA.sets[afterFamilies-1];familyUnlock=set?set[0][0].toUpperCase():null}
+  record.reward={pieces:state.rewards.pieces,itemId:gain.complete?gain.item.id:null};
+  record.unlockedFamily=familyUnlock;
+  save()
  }
+ return {record,gain,familyUnlock}
+}
+function missionComplete(){
+ const m=getDailyMission();
+ if(m.index<m.steps.length){missionHub();return}
+ missionMode=false;currentView="mission-complete";state.lastView="mission-complete";
+ const completion=recordCompletedMission(m),record=completion.record;
+ // Display the recorded reward after reload without granting it again.
+ const item=COLLECTIBLES.find(x=>x.id===record?.reward?.itemId);
+ const gain=completion.gain||(record?.reward?{complete:!!item,item}:null);
+ const rewardPieces=Math.min(3,stateCount(record?.reward?.pieces??state.rewards?.pieces));
+ const familyUnlock=DATA.sets.map(set=>set[0][0].toUpperCase()).includes(record?.unlockedFamily)?record.unlockedFamily:null;
  save();confetti();
- const reward=gain?(gain.complete?'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">'+gain.item.emoji+'</div><h3 style="margin:5px">Nouveau trésor !</h3><b>'+gain.item.name+'</b><p style="color:var(--muted)">Le puzzle est terminé et ce personnage rejoint ta collection.</p><button class="btn yellow" data-action="go" data-to="collection">🎁 Voir ma collection</button></div>':'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">🧩</div><h3 style="margin:5px">Tu gagnes un morceau !</h3><b>'+(state.rewards?.pieces||0)+' / 4 morceaux</b><p style="color:var(--muted)">Encore '+Math.max(0,4-(state.rewards?.pieces||0))+' mission(s) pour terminer le puzzle.</p></div>'):'<div class="tip">Cette mission a déjà donné sa récompense aujourd’hui.</div>';
+ const reward=gain?(gain.complete?'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">'+gain.item.emoji+'</div><h3 style="margin:5px">Nouveau trésor !</h3><b>'+gain.item.name+'</b><p style="color:var(--muted)">Le puzzle est terminé et ce personnage rejoint ta collection.</p><button class="btn yellow" data-action="go" data-to="collection">🎁 Voir ma collection</button></div>':'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">🧩</div><h3 style="margin:5px">Tu gagnes un morceau !</h3><b>'+rewardPieces+' / 4 morceaux</b><p style="color:var(--muted)">Encore '+Math.max(0,4-rewardPieces)+' mission(s) pour terminer le puzzle.</p></div>'):'<div class="tip">Cette mission a déjà donné sa récompense aujourd’hui.</div>';
  const unlock=familyUnlock?'<div class="card center" style="background:#f3f1ff;border-color:#c9c3ff"><div class="mission-celebrate">🔓</div><h3 style="margin:5px">Nouvelle famille !</h3><p>Tu peux maintenant travailler les syllabes de la famille <b style="font-size:24px">'+familyUnlock+'</b>.</p><button class="btn primary" data-action="go" data-to="syllables">🧩 Découvrir la famille</button></div>':"";
  const measured=record?.accuracy!=null;
  const score='<div class="parent-grid" style="margin-top:13px"><div class="parent-box"><h3>✅ Bonnes réponses</h3><p><b style="font-size:25px">'+(measured?(record.correct+" / "+record.attempts):"—")+'</b></p></div><div class="parent-box"><h3>🎯 Réussite</h3><p><b style="font-size:25px">'+(measured?(record.accuracy+" %"):"Ancien suivi")+'</b></p></div></div>';

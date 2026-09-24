@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.25.0 — 2026-09-25
+
+- mission et morceau de puzzle enregistrés dès la dernière étape réussie, même si l’enfant quitte avant l’écran de récompense
+- récompense et famille débloquée réaffichées après rechargement, sans gain supplémentaire
+- récupération des anciennes missions terminées mais non enregistrées avant le changement de jour
+- réponse à un exercice de la veille ignorée avant toute attribution de points ; nouvelle mission proposée avec une explication
+- défilement différé de fin d’étape annulé si l’écran a changé
+- tests navigateur de fermeture/reprise, puzzle terminé, récupération et changement de jour
+
 ## 0.24.0 — 2026-09-24
 
 - récupération des champs valides d’une sauvegarde partiellement abîmée, sans effacer toute la progression pour une collection invalide
