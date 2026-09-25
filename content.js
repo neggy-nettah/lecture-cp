@@ -17,6 +17,11 @@ const CP_READING_ROADMAP=[
  {id:"texts-comprehension",label:"Comprendre des textes courts",skills:["lire un texte court décodable","répondre à des questions explicites","enrichir le vocabulaire"],app:[],planned:true}
 ];
 
+// Future complex syllables can override their grapheme decomposition here.
+// Examples once taught: {lou:["l","ou"],cha:["ch","a"]}. Keep empty until the
+// corresponding graphemes and content have been explicitly introduced.
+const SYLLABLE_GRAPHEME_OVERRIDES={};
+
 const DATA={
  sounds:[
   {g:"a",say:"a",hint:"comme dans ami",emoji:"🍍"},
