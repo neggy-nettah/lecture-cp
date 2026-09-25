@@ -160,7 +160,7 @@ window.supabase={createClient:()=>({
   assert.deepEqual(await page.evaluate(()=>orderMade),['sa','la','mi']);
   // Reading aloud is deliberate practice: the model stays hidden until the child finishes and no score/mastery changes.
   await page.setViewportSize({width:320,height:900});
-  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')}))});gameReadAloud()});
+  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameReadAloud()});
   assert.equal(await page.locator('#readaloudModel').isHidden(),true);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'read-aloud overflows at 320px');
   const readAloudBefore=await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger,reviewQueue:state.reviewQueue}));
