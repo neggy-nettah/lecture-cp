@@ -151,6 +151,17 @@ L'encodage progresse lui aussi par paliers : d'abord une syllabe entendue à rec
 
 Le jeu d'encodage de mots est actuellement déverrouillé à partir de 4 missions terminées et 10 points de maîtrise des syllabes. Ce seuil est un réglage produit prudent, pas une norme officielle : il pourra être ajusté à partir d'observations d'usage réelles sans changer le principe pédagogique.
 
+### Extension des correspondances
+
+L'ordre précis des nouvelles correspondances reste un **choix de conception de l'application**, pas un ordre imposé par le programme officiel. Le projet conserve maintenant un `CGP_EXPANSION_PLAN` séparé des contenus actifs :
+
+- consonnes simples et relativement stables : `d`, `j`, `z`, `k` ;
+- premier digramme consonantique prévu : `ch` ;
+- graphèmes vocaliques complexes à traiter avec une décomposition explicite des syllabes : `ou`, `on`, `an`, `en`, `in`, `oi` ;
+- `c` et `g` restent hors des familles uniformes car leur valeur dépend du contexte graphique.
+
+Aucun de ces graphèmes n'est encore activé pour l'enfant. Ils ne doivent entrer dans le curriculum qu'avec un corpus de mots vérifié, les aides audio correspondantes et les tests de décodabilité.
+
 ## Curriculum actuel
 
 Les familles sont actuellement débloquées progressivement à partir de la liste définie dans `DATA.sets`.
