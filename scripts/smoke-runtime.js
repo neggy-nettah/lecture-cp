@@ -155,6 +155,7 @@ const probes=[
   'typeof gameMissing==="function"',
   'typeof collectionView==="function"',
   'typeof diagnosticText==="function"',
+  '(()=>{const oldSession=session,oldChild=currentChild;try{session={user:{id:"parent-secret",email:"secret@example.test"}};currentChild={id:"child-secret",nickname:"Caly"};const d=diagnosticText();return !d.includes("secret@example.test")&&!d.includes("parent-secret")&&!d.includes("child-secret")}finally{session=oldSession;currentChild=oldChild}})()',
   'normalizeState({}).stars===0',
   '(()=>{delete navigator.serviceWorker;registerServiceWorker();return true})()',
   '(()=>{navigator.onLine=false;updateConnectivityUI();const ok=$("#syncStatus").textContent.includes("Hors ligne");navigator.onLine=true;return ok})()',
