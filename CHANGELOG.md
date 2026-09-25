@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.33.0 — 2026-09-25
+
+- synchronisation multi-appareils renforcée : les progrès locaux et distants sont fusionnés au lieu de remplacer systématiquement l’un par l’autre
+- conservation monotone des étoiles, ateliers terminés, pratiques, acquis, historique de missions et collection
+- mission du jour conservée à l’étape la plus avancée lorsqu’un iPhone et un Mac ont progressé séparément
+- scénario navigateur automatisé simulant deux appareils avec des acquis différents puis vérifiant la réécriture de l’état fusionné
+- aide audio autonome pour les mots-outils des phrases (`a`, `un`, `une`, `le`) sans prononcer le mot-réponse
+- aide ajoutée à la compréhension et à la remise en ordre des phrases
+- tests garantissant que l’aide des mots-outils ne révèle pas la réponse
+
 ## 0.32.0 — 2026-09-25
 
 - moteur `speechSynthesis` renforcé pour Safari/WebKit : attente des voix lorsqu’elles ne sont pas encore chargées
