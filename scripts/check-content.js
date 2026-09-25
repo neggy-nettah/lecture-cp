@@ -55,6 +55,10 @@ if(cpRoadmap.findIndex(x=>x.id==="complex-graphemes")>cpRoadmap.findIndex(x=>x.i
 
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
 if(!Array.isArray(data.sets)||data.sets.length<10)fail("Expected at least 10 syllable families.");
+const STABILIZATION_FROZEN_FAMILIES=["m","l","s","r","f","v","p","t","n","b","d","j"];
+if(data.familyGraphemes?.join("|")!==STABILIZATION_FROZEN_FAMILIES.join("|")||data.sets.length!==STABILIZATION_FROZEN_FAMILIES.length)fail("Pedagogical expansion is frozen during product stabilization.");
+if(Object.keys(syllableOverrides).length!==0)fail("Complex syllable overrides must remain inactive during product stabilization.");
+
 if(!Array.isArray(data.familyGraphemes)||data.familyGraphemes.length!==data.sets.length)fail("Syllable family grapheme metadata is incomplete.");
 if(!Array.isArray(data.words)||data.words.length<35)fail("Word bank is unexpectedly small.");
 for(const expected of [{w:"judo",parts:["ju","do"]},{w:"joli",parts:["jo","li"]}]){
