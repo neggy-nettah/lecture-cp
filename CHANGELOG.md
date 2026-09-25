@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.34.0 — 2026-09-25
+
+- nouveau mini-jeu libre « J’écris la syllabe » : écouter une syllabe puis choisir les deux lettres dans le bon ordre
+- banque de lettres limitée aux consonnes des familles accessibles et aux voyelles déjà enseignées
+- une réussite autonome d’encodage peut renforcer la maîtrise ; une erreur remet la syllabe en révision
+- correction après erreur encouragée sans augmenter artificiellement la maîtrise ; garde-fous contre doubles récompenses
+- audit navigateur de l’encodage sur tous les paliers du curriculum et affichage mobile à 320 px
+- jeu « syllabe manquante » renforcé : une ancienne cible invalide est remplacée par un mot compatible au lieu de provoquer une erreur
+- fin de mission accompagnée d’un message audio clair indiquant que la séance peut s’arrêter
+- fusion iPhone/Mac affinée : conservation de la pondération des erreurs récentes et réconciliation cohérente de l’avancement des puzzles
+- référentiel pédagogique actualisé avec le programme cycle 2 en vigueur et le livret CP 2025
+- l’encodage reste pour l’instant un jeu libre ; il n’est pas encore injecté dans la mission quotidienne
+
 ## 0.33.0 — 2026-09-25
 
 - synchronisation multi-appareils renforcée : les progrès locaux et distants sont fusionnés au lieu de remplacer systématiquement l’un par l’autre
