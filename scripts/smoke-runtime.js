@@ -103,6 +103,7 @@ const probes=[
   'normalizeState({stats:{attempts:"12",correct:99}}).stats.correct===12',
   'normalizeState({sound:-3,set:"bad",word:null}).sound===0',
   'normalizeState({mastery:{ma:{attempts:"bad",correct:3,lastSeen:"2026-02-31"}}}).mastery.ma.lastSeen===null',
+  '(()=>{const s=normalizeState({mastery:{ma:{attempts:1,correct:1},"word:silo":{attempts:2,correct:1},"sentence:Lili a un vélo.":{attempts:3,correct:2},fake:{attempts:1,correct:1}}});return !!s.mastery.ma&&!!s.mastery["word:silo"]&&!s.mastery["sentence:Lili a un vélo."]&&!s.mastery.fake})()',
   'normalizeState({missionHistory:[null,false]}).missionHistory.length===0',
   '(()=>{const a=normalizeState({}),b=normalizeState({});a.done.listen=true;return !b.done.listen})()',
   '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{mastery:{"word:moto":{attempts:4,correct:3}}}}));return s.mastery["word:moto"].correct===3})()',
