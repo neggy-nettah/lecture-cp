@@ -214,6 +214,9 @@ if(!app.includes('else if(currentView==="mini-text")gameMiniText()')||!app.inclu
   fail("Mini-text view no longer restores through the main router.");
 }
 if(app.includes('recordQuestionSuccess("sentence:"')||app.includes('recordQuestionError("sentence:"'))fail("Sentence ordering must not create unused mastery keys.");
+if(!app.includes("function validMasteryKey(")||!app.includes("validMasteryKey(k)&&v")){
+  fail("Saved mastery is no longer pruned to known syllable and word keys.");
+}
 if(app.includes('!!state.soundPractice?.[initial]'))fail("Sound practice alone can unlock an entire legacy family.");
 if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fail("Legacy word practice no longer preserves previously worked families.");
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="encode"')||!app.includes('s.type==="comprehension"')||!app.includes('visualModes=["memory","family","missing"')||!app.includes('["encode"]')||!app.includes('["comprehension"]')){
