@@ -197,6 +197,24 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger,reviewQueue:state.reviewQueue})),readAloudBefore);
   assert.equal(await page.locator('[data-action="readaloud-done"]').isDisabled(),true);
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.action),'readaloud-model');
+  // Mini-text comprehension uses two decodable sentences and an oral question without reading the text for the child.
+  await page.setViewportSize({width:320,height:900});
+  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:12},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la','li'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameMiniText('velo-polo')});
+  assert.equal(await page.evaluate(()=>currentMiniText.id),'velo-polo');
+  assert.equal(await page.locator('.mini-text-reading .readaloud-sentence').count(),2);
+  assert.equal(await page.evaluate(()=>stage.textContent.includes('Qui a le vélo ?')),false);
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'mini-text overflows at 320px');
+  const miniMasteryBefore=await page.evaluate(()=>JSON.stringify(state.mastery));
+  const miniStarsBefore=await page.evaluate(()=>state.stars);
+  await page.locator('[data-action="mini-text-question"]').click();
+  await page.locator('[data-action="mini-text-answer"][data-value="Mila"]').click();
+  assert.equal(await page.evaluate(()=>locked),false);
+  assert.equal(await page.locator('[data-action="mini-text-answer"][data-value="Mila"]').isDisabled(),true);
+  assert.equal(await page.evaluate(()=>JSON.stringify(state.mastery)),miniMasteryBefore);
+  await page.locator('[data-action="mini-text-answer"][data-value="Lili"]').click();
+  assert.equal(await page.evaluate(()=>locked),true);
+  assert.equal(await page.evaluate(()=>state.stars),miniStarsBefore+1);
+  assert.equal(await page.evaluate(()=>JSON.stringify(state.mastery)),miniMasteryBefore);
   await page.setViewportSize({width:390,height:844});
   // Large text is a device preference: it persists locally and must not touch learning progress.
   const largeTextBefore=await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger}));
