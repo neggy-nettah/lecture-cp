@@ -1056,6 +1056,12 @@ async function bootstrap(){
  if(!sb&&!localSaveFailed){$("#syncStatus").textContent="Mode local • service de synchronisation indisponible";$("#syncStatus").className="sync err"}
 }
 
+let serviceWorkerRegistration=null,lastServiceWorkerCheck=0;
+function checkForAppUpdate(force=false){
+ if(!serviceWorkerRegistration)return;
+ const now=Date.now();if(!force&&now-lastServiceWorkerCheck<3600000)return;
+ lastServiceWorkerCheck=now;serviceWorkerRegistration.update().catch(error=>console.error("Service Worker update check error",error))
+}
 function registerServiceWorker(){
  if(!("serviceWorker" in navigator))return;
  const hadController=!!navigator.serviceWorker.controller;
@@ -1063,9 +1069,10 @@ function registerServiceWorker(){
  navigator.serviceWorker.addEventListener?.("controllerchange",()=>{
   if(hadController&&!updateNotified){updateNotified=true;toast("✨ Mise à jour installée • elle sera utilisée au prochain rechargement.","ok")}
  });
+ document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkForAppUpdate()});
  window.addEventListener("load",()=>{
   navigator.serviceWorker.register("./sw.js")
-   .then(reg=>reg.update().catch(()=>{}))
+   .then(reg=>{serviceWorkerRegistration=reg;checkForAppUpdate(true)})
    .catch(error=>console.error("Service Worker registration error",error))
  })
 }
