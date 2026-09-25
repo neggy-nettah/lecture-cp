@@ -69,6 +69,7 @@ Les missions ne tirent plus dans les 60 syllabes dès le premier jour.
 - une syllabe déjà travaillée reste dans le pool même si elle n'appartient pas au palier normalement ouvert
 - les distracteurs des missions utilisent uniquement les familles actuellement débloquées
 - le mot final de mission doit être entièrement décodable avec les syllabes actives et les voyelles isolées disponibles
+- les activités de phrase demandent au moins 8 missions terminées **et** 12 points de maîtrise des syllabes ; le temps seul ne les débloque plus
 
 Les jeux libres restent plus ouverts, mais les écrans de lecture et de construction utilisent seulement des mots dont les morceaux se recomposent exactement.
 
@@ -98,7 +99,7 @@ Une mission contient 5 étapes :
 1. découverte
 2. écoute et choix
 3. révision avec Bulles
-4. Memory, Trouve l'intrus ou Syllabe manquante selon le jour
+4. Memory, Trouve l'intrus, Syllabe manquante, encodage de syllabe ou compréhension selon les prérequis et le jour
 5. construction d'un mot
 
 La progression est sauvegardée. Une étape réussie affiche explicitement un bouton pour continuer.
@@ -123,6 +124,8 @@ Une mission terminée :
 ## Jeux actuels
 
 - Écoute & trouve
+- J’écris la syllabe
+- J’écris le mot — mot entendu à reconstruire sans modèle écrit
 - Bulles express
 - Memory des sons
 - Trouve l'intrus
@@ -130,6 +133,8 @@ Une mission terminée :
 - Mot & image
 - Construis le mot
 - Phrase en ordre
+- Je lis à voix haute — entraînement sans note
+- Je comprends — phrase vers image
 - Écoute & répète — BÊTA
 
 Le jeu micro reste un entraînement BÊTA et ne doit pas décider de la maîtrise ou donner des récompenses.
@@ -147,7 +152,7 @@ Le jeu micro reste un entraînement BÊTA et ne doit pas décider de la maîtris
 
 - sauvegarde locale immédiate
 - Supabase quand un compte enfant est connecté
-- la sauvegarde locale ou distante la plus récente gagne lors du chargement
+- la progression locale et distante est fusionnée de façon conservatrice afin de préserver les acquis des deux appareils
 - reconnexion automatique après un passage hors ligne
 - navigation seule non considérée comme un nouveau progrès
 - l’app reste utilisable localement si Supabase est indisponible
@@ -176,7 +181,7 @@ Point restant : Safari macOS doit encore être vérifié sur un appareil réel. 
 
 ## Priorités suivantes
 
-- tester sur un vrai enfant le jeu d’encodage et la lecture à voix haute avant de les injecter dans les missions quotidiennes
+- tester sur un vrai enfant l’encodage de mots et la lecture à voix haute ; l’encodage de syllabes est déjà introduit progressivement dans les missions
 - ajouter une progression explicite pour les premières règles orthographiques, notamment le `e` final muet, avant de réintroduire les mots concernés
 - travailler progressivement la prosodie et la lecture expressive sans notation automatique fragile
 - remplacer progressivement les emojis de récompense par un univers graphique original
