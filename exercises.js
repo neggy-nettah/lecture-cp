@@ -75,6 +75,7 @@ function gamesMenu(){
  stage.innerHTML=title("Les mini-jeux","Des exercices très courts pour garder l'envie de lire.","À toi de jouer !")+
  `<div class="levels">
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
+  <button class="level" data-action="game-encode"><div class="ico">✍️</div><b>J’écris la syllabe</b><small>J’entends puis je choisis les lettres</small></button>
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
   <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
@@ -87,6 +88,40 @@ function gamesMenu(){
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
+function encodeLetterPool(target){
+ const consonant=target[0],vowel=target.slice(1),initials=[...new Set(activeLearningSyllables().map(s=>s[0]))],vowels=["a","e","i","o","u","é"];
+ const consonants=shuffle(initials.filter(x=>x!==consonant)).slice(0,3),otherVowels=shuffle(vowels.filter(x=>x!==vowel)).slice(0,3);
+ return shuffle([consonant,...consonants,vowel,...otherVowels])
+}
+function gameEncode(forcedTarget=null){
+ missionMode=false;currentView="encode";state.lastView="encode";save(false);currentAnswer=forcedTarget||pickLearningSyllable();encodeMade=[];locked=false;resetQuestionTracking();
+ const letters=encodeLetterPool(currentAnswer);
+ stage.innerHTML=title("J’écris la syllabe","Écoute, puis fabrique la syllabe avec deux lettres.","Encodage")+
+ instructionAudio("Écoute la syllabe, puis touche les deux lettres dans le bon ordre.")+
+ `<div class="card center"><div class="hero-emoji">✍️🔤</div>
+ <button class="btn yellow" data-action="speak" data-text="${esc(currentAnswer)}" data-rate=".60">🔊 Écouter la syllabe</button>
+ <div class="encode-zone" id="encodeZone"><span>?</span><span>?</span></div>
+ <div class="encode-bank" id="encodeBank">${letters.map((letter,i)=>`<button class="encode-letter" data-action="encode-letter" data-value="${esc(letter)}" data-id="${i}">${esc(letter)}</button>`).join("")}</div>
+ <div class="actions" style="margin-top:12px"><button class="btn gray" data-action="encode-reset">↩ Recommencer</button></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-encode">Nouvelle syllabe →</button></div>`;
+ playInstruction("Écoute la syllabe, puis touche les deux lettres dans le bon ordre.",()=>speak(currentAnswer,.60))
+}
+function updateEncode(){
+ const zone=$("#encodeZone");if(!zone)return;
+ zone.innerHTML=[0,1].map(i=>'<span class="'+(encodeMade[i]?"filled":"")+'">'+esc(encodeMade[i]||"?")+'</span>').join("");
+ if(encodeMade.length<2)return;
+ const ok=encodeMade.join("")===currentAnswer;
+ if(ok){
+  locked=true;recordQuestionSuccess(currentAnswer,"encode:"+currentAnswer);rewardVerified("Syllabe écrite !","encode:"+currentAnswer);setDone("encoding");confetti();speak(currentAnswer,.60);
+  $("#feedback").innerHTML='<div class="ok">🎉 Bravo : '+colorSyl(currentAnswer)+'</div>'
+ }else{
+  locked=true;recordQuestionError(currentAnswer);miss("Écoute encore et recommence.");
+  $("#feedback").innerHTML='<div class="no">Presque ! Écoute encore la syllabe.</div>';
+  screenTask(()=>{locked=false;encodeMade=[];document.querySelectorAll("#encodeBank .encode-letter").forEach(b=>b.disabled=false);updateEncode()},850)
+ }
+}
+
 function gameListen(forcedTarget=null,fromMission=false,fromParent=false){
  missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":fromParent?"parents":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
  const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
