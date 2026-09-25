@@ -166,6 +166,19 @@ function sentenceUnlockText(){
  if(s.remainingMissions>0)return "Encore "+s.remainingMissions+" mission(s)";
  return "Consolide encore les syllabes"
 }
+const TEXT_COMPREHENSION_MIN_MISSIONS=12,TEXT_COMPREHENSION_MIN_MASTERY_POINTS=20;
+function textComprehensionReadiness(){
+ const missions=completedMissionCount(),points=curriculumMasteryPoints();
+ return {missions,points,ready:missions>=TEXT_COMPREHENSION_MIN_MISSIONS&&points>=TEXT_COMPREHENSION_MIN_MASTERY_POINTS,remainingMissions:Math.max(0,TEXT_COMPREHENSION_MIN_MISSIONS-missions),remainingPoints:Math.max(0,TEXT_COMPREHENSION_MIN_MASTERY_POINTS-points)}
+}
+function textComprehensionUnlocked(){return textComprehensionReadiness().ready}
+function textComprehensionUnlockText(){
+ const s=textComprehensionReadiness();
+ if(s.ready)return "Mini-textes disponibles";
+ if(s.remainingMissions>0&&s.remainingPoints>0)return "Encore "+s.remainingMissions+" mission(s) et un peu de consolidation";
+ if(s.remainingMissions>0)return "Encore "+s.remainingMissions+" mission(s)";
+ return "Consolide encore les syllabes"
+}
 function curriculumStatus(){
  const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints();
  if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
@@ -231,6 +244,11 @@ function comprehensionSentencePool(){
   const clean=targetToken?String(targetToken).toLowerCase().replace(/[.!?,;:]/g,""):"",word=DATA.words.find(w=>w.w===clean);
   return word&&PICTURE_WORDS.includes(word.w)?{sentence,word}:null
  }).filter(Boolean)
+}
+function miniTextPool(){
+ if(!textComprehensionUnlocked())return [];
+ const decodable=new Set(decodableSentencePool().map(sentence=>sentence.join("\u0000")));
+ return MINI_TEXTS.filter(item=>item.sentences.every(sentence=>decodable.has(sentence.join("\u0000"))))
 }
 function pickLearningSyllable(){
  const all=activeLearningSyllables(),weighted=[];
