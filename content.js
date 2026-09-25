@@ -2,13 +2,17 @@
 // CP reading roadmap aligned with the 2025 cycle-2 programme.
 // It is intentionally explicit: future content must attach to a taught stage instead of
 // becoming available only because enough missions have elapsed.
+const CP_OFFICIAL_MILESTONES=[
+ {id:"period-1",label:"Fin de période 1",cgpMin:12,cgpMax:15,skills:["décoder et encoder des CGP régulières et fréquentes","déchiffrer syllabes, mots puis phrases selon les CGP étudiées"]},
+ {id:"midyear",label:"Milieu d’année",cgpMin:25,cgpMax:30,skills:["étendre le nombre de CGP décodées et encodées","prendre conscience des lettres finales muettes","mémoriser des mots fréquents et réguliers"]}
+];
 const CP_READING_ROADMAP=[
  {id:"cg-basic",label:"Décoder des correspondances simples",skills:["identifier les graphèmes simples","fusionner consonne + voyelle","lire des syllabes CV"],app:["sounds","syllables","listen"]},
  {id:"encode-basic",label:"Encoder avec les correspondances connues",skills:["écrire une syllabe entendue","assembler les graphèmes connus"],app:["encoding"]},
  {id:"words-basic",label:"Lire et écrire des mots réguliers",skills:["fusionner plusieurs syllabes","lire des mots entièrement décodables","encoder un mot régulier entendu"],app:["words","build","missing","pictures","word-encoding"]},
  {id:"sentences-basic",label:"Lire et comprendre des phrases décodables",skills:["lire une phrase courte","identifier une information explicite","remettre une phrase en ordre"],app:["order","comprehension","readaloud"]},
- {id:"orthography-rules",label:"Premières régularités orthographiques",skills:["repérer des lettres muettes fréquentes","traiter le e final muet"],app:[],planned:true},
- {id:"complex-graphemes",label:"Graphèmes complexes",skills:["lire des graphèmes complexes fréquents","étendre le corpus décodable"],app:[],planned:true},
+ {id:"complex-graphemes",label:"Étendre les correspondances graphème-phonème",skills:["ajouter des CGP régulières fréquentes","introduire progressivement des graphèmes complexes fréquents","étendre le corpus décodable"],app:[],planned:true},
+ {id:"orthography-rules",label:"Premières régularités orthographiques",skills:["repérer des lettres finales muettes fréquentes","traiter explicitement le e final muet"],app:[],planned:true},
  {id:"fluency-prosody",label:"Fluence et prosodie",skills:["lire avec précision","respecter les groupes de sens et la ponctuation"],app:["readaloud"],planned:true},
  {id:"texts-comprehension",label:"Comprendre des textes courts",skills:["lire un texte court décodable","répondre à des questions explicites","enrichir le vocabulaire"],app:[],planned:true}
 ];
