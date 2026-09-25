@@ -678,6 +678,7 @@ function resetDailyMission(){
 function parents(){
  const ms=masterySummary(),wm=wordMasterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
  const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Aucune difficulté repérée dans les réponses enregistrées. Les syllabes non évaluées restent à découvrir.</span>`;
+ const weakWords=wm.weakest.length?wm.weakest.map(x=>`<span class="collectible">${esc(x.word.w.toUpperCase())} ${masteryStars(x.key)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses sur les mots pour repérer une difficulté.</span>`;
  stage.innerHTML=title("Coin parent","Suivi simple de la progression réelle.","Tableau de bord")+
  `<div class="parent-grid">
   <div class="parent-box"><h3>🎯 Réussite des tentatives</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${attempts?accuracy+" % ("+correct+"/"+attempts+")":"pas encore de réponse"}</small></p></div>
@@ -690,6 +691,7 @@ function parents(){
  </div>
  ${parentReviewHTML()}
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>
+ <div class="card"><b>📝 Mots à renforcer</b><p style="color:var(--muted);font-size:13px">Les mots évalués dans « J’écris le mot » sont suivis séparément des syllabes.</p><div class="collection-row">${weakWords}</div></div>
  <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les ${DATA.sets.flat().length} syllabes en détail</summary><p>Choisissez une syllabe disponible pour un entraînement court, sans modifier la mission en cours.</p><div class="mastery-grid">${parentSyllableGridHTML()}</div></details>
  <div class="card"><b>Comment lire ce bilan ?</b><p>Le pourcentage de réussite compte les tentatives, y compris les réponses corrigées après une erreur. Il ne mesure pas à lui seul l’autonomie.</p><p>Les étoiles de maîtrise suivent les réponses vérifiées. Depuis la version 0.17, corriger une erreur dans la même question ne les fait plus monter. Les résultats plus anciens sont conservés.</p><p>☆☆☆ peut signifier « pas encore évaluée » : ce n’est pas un échec. Les récompenses valorisent l’effort et sont distinctes de la maîtrise.</p></div>
  <div class="card"><b>📚 7 dernières missions</b>${recentMissionHTML()}</div>
