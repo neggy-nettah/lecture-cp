@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.32.0 — 2026-09-25
+
+- moteur `speechSynthesis` renforcé pour Safari/WebKit : attente des voix lorsqu’elles ne sont pas encore chargées
+- prise en compte de l’événement `voiceschanged` et cache des voix disponibles
+- voix française assignée explicitement lorsqu’elle existe, avec repli sur la voix par défaut de l’appareil
+- suppression des `cancel()` systématiques lorsque rien n’est en cours de lecture ; courte temporisation seulement lors d’un remplacement réel
+- reprise explicite du moteur avant lecture et message visible en cas d’erreur audio
+- nouveau test `scripts/audio-engine-check.js` simulant le chargement tardif des voix et le remplacement d’une lecture en cours
+- Safari macOS réel reste à vérifier avant de considérer le problème définitivement résolu
+
 ## 0.31.0 — 2026-09-25
 
 - missions plus cohérentes : les étapes de mot, syllabe manquante et compréhension privilégient maintenant les syllabes ciblées ou à réviser
