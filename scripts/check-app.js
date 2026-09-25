@@ -20,6 +20,7 @@ if(!html.includes('src="./content.js?v='))fail("index.html is not loading conten
 if(!html.includes('src="./app.js?v='))fail("index.html is not loading app.js.");
 if(!html.includes('rel="manifest" href="./manifest.webmanifest"'))fail("index.html is not loading the web app manifest.");
 if(!html.includes('rel="icon" href="./icon.svg"'))fail("index.html is not loading the app icon.");
+if(!html.includes('@supabase/supabase-js@2.117.1')||html.includes('@supabase/supabase-js@2"></script>'))fail("Supabase JS CDN dependency is not pinned to the reviewed version.");
 if(html.includes("<style>"))fail("Large inline style block returned to index.html.");
 if(/<script>\s*"use strict"/.test(html))fail("Large inline application script returned to index.html.");
 if(css.length<5000)fail("styles.css looks unexpectedly small.");
