@@ -277,6 +277,9 @@ if(!app.includes("rewardLedger")||!app.includes("reviewQueue")||!app.includes("s
 if(!app.includes("missionHistory")||!app.includes("startAttempts")||!app.includes("startCorrect")){
   fail("Per-mission tracking is incomplete.");
 }
+if(!app.includes("function flushPendingProgress()")||!app.includes('"visibilitychange"')||!app.includes('"pagehide"')){
+  fail("Background progress flush protection is missing.");
+}
 if(!app.includes("startAttempts:null")||!app.includes("if(m.startAttempts==null)")){
   fail("Mission performance timing guard is missing.");
 }
