@@ -91,9 +91,11 @@ function gamesMenu(){
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
 function encodeLetterPool(target){
- const consonant=familyGraphemeForSyllable(target),vowel=syllableRemainder(target),initials=[...new Set(activeLearningSyllables().map(familyGraphemeForSyllable).filter(Boolean))],vowels=["a","e","i","o","u","é"];
- const consonants=shuffle(initials.filter(x=>x!==consonant)).slice(0,3),otherVowels=shuffle(vowels.filter(x=>x!==vowel)).slice(0,3);
- return shuffle([consonant,...consonants,vowel,...otherVowels])
+ const parts=syllableGraphemes(target);if(parts.length!==2)return [];
+ const [first,second]=parts,activeParts=activeLearningSyllables().map(syllableGraphemes).filter(x=>x.length===2);
+ const firstPool=[...new Set(activeParts.map(x=>x[0]).filter(Boolean))],secondPool=[...new Set(activeParts.map(x=>x[1]).filter(Boolean))];
+ const otherFirst=shuffle(firstPool.filter(x=>x!==first)).slice(0,3),otherSecond=shuffle(secondPool.filter(x=>x!==second)).slice(0,3);
+ return shuffle([first,...otherFirst,second,...otherSecond])
 }
 function gameEncode(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="encode";state.lastView=fromMission?"mission":"encode";save(false);currentAnswer=forcedTarget||pickLearningSyllable();encodeMade=[];locked=false;resetQuestionTracking();
