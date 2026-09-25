@@ -47,6 +47,8 @@ const requiredFunctions=[
   "function migrateState(",
   "function normalizeState(",
   "function buildDailyMission(",
+  "function missionWordMatchesFocus(",
+  "function missionFocusedWords(",
   "function getDailyMission(",
   "function completeMissionStep(",
   "function missionComplete(",
@@ -154,6 +156,9 @@ if(app.includes('!!state.soundPractice?.[initial]'))fail("Sound practice alone c
 if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fail("Legacy word practice no longer preserves previously worked families.");
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="comprehension"')||!app.includes('["memory","family","missing",...(comprehensionPool.length?["comprehension"]:[])]')){
   fail("Daily mission is missing the adaptive visual/comprehension rotation.");
+}
+if(!app.includes("missionFocusedWords(missingCandidates,primary,review)")||!app.includes("focusedComprehension=comprehensionPool.filter")){
+  fail("Mission word/context steps no longer reinforce the current learning focus.");
 }
 if(!app.includes('sentence=item.sentence;currentAnswer=item.word.w')){
   fail("Comprehension game is not assigning its answer to shared state.");
