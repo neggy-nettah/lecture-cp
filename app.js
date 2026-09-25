@@ -298,12 +298,13 @@ function gamePronunciation(){
  missionMode=false;currentView="pronunciation";state.lastView="pronunciation";save(false);currentAnswer=pickLearningSyllable();locked=false;
  const micAvailable=!!navigator.mediaDevices?.getUserMedia;
  stage.innerHTML=title("Écoute & répète","Écoute la syllabe, puis dis-la dans le micro.","Jeu micro")+
+ instructionAudio("Écoute la syllabe, puis répète-la dans le micro.")+
  `<div class="card center"><div class="hero-emoji">🎤</div><div class="big purple" style="font-size:82px">${colorSyl(currentAnswer)}</div>
  <div class="actions"><button class="btn yellow" data-action="pronunciation-listen">🔊 Écouter</button><button class="btn primary" data-action="pronunciation-record" ${micAvailable?"":"disabled"}>🎙️ À toi !</button><button class="btn gray" data-action="pronunciation-stop" hidden>Arrêter l’écoute</button></div>
  <div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : ${masteryStars(currentAnswer)}</div><div id="micStatus" class="mic-status">${micAvailable?"Appuie sur « À toi ! ». Le micro restera actif pendant l’écoute et aucune réponse ne sera validée sans voix détectée.":"Le microphone n’est pas disponible sur ce navigateur."}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-pronunciation">Nouvelle syllabe →</button></div>`;
- screenTask(()=>{if(!pronunciationSession)speak(currentAnswer,.60)},120)
+ playInstruction("Écoute la syllabe, puis répète-la dans le micro.",()=>{if(!pronunciationSession)speak(currentAnswer,.60)})
 }
 let pronunciationSession=null;
 function closePronunciationRun(run,message=""){
