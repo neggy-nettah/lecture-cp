@@ -348,8 +348,17 @@ window.supabase={createClient:()=>({
   assert.equal(await storagePage.evaluate(()=>localSaveFailed),true);
   assert(await storagePage.locator('#syncStatus').textContent().then(t=>t.includes('Sauvegarde locale indisponible')));
   await storagePage.close();
+  // A Supabase CDN outage must leave the local learning experience usable.
+  const localOnlyPage=await page.context().newPage();
+  localOnlyPage.on('pageerror',e=>errors.push(e.message));
+  await localOnlyPage.route('https://cdn.jsdelivr.net/**',route=>route.abort());
+  await localOnlyPage.goto(url,{waitUntil:'domcontentloaded'});
+  await localOnlyPage.locator('[data-action="mission-start"]').first().waitFor();
+  assert.equal(await localOnlyPage.evaluate(()=>sb===null),true);
+  assert(await localOnlyPage.locator('#syncStatus').textContent().then(t=>t.includes('service de synchronisation indisponible')));
+  await localOnlyPage.close();
   await page.screenshot({path:'/tmp/caly-mobile.png',fullPage:true});
   assert.deepEqual(errors,[]);
-  console.log('Browser checks OK: responsive screens, mission resume/completion, storage degradation, profile races, save queue, token refresh, password recovery, auth errors and duplicate submissions.');
+  console.log('Browser checks OK: responsive screens, mission resume/completion, storage/CDN degradation, profile races, save queue, token refresh, password recovery, auth errors and duplicate submissions.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
