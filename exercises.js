@@ -84,6 +84,7 @@ function gamesMenu(){
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
   <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":"Se débloque après 8 missions"}</small></button>
+  <button class="level" data-action="game-readaloud" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🗣️":"🔒"}</div><b>Je lis à voix haute</b><small>${sentenceUnlocked()?"Je lis puis j’écoute le modèle":"Se débloque après 8 missions"}</small></button>
   <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Lis la phrase et choisis l’image":"Se débloque après 8 missions"}</small></button>
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
@@ -281,6 +282,29 @@ function gameComprehension(forcedTarget=null,fromMission=false){
  '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div>'+phraseToolHelpHTML(sentence)+'<div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>';
  if(fromMission)playInstruction("Lis la phrase, puis touche l’image qui répond à la question.")
+}
+
+function gameReadAloud(forcedSentence=null){
+ if(!sentenceUnlocked()){activate("games");return}
+ const pool=decodableSentencePool();if(!pool.length){activate("games");return}
+ const validForced=Array.isArray(forcedSentence)&&pool.some(sentence=>sentence.join("\u0000")===forcedSentence.join("\u0000"));
+ missionMode=false;currentView="readaloud";state.lastView="readaloud";save(false);locked=false;
+ readAloudSentence=validForced?[...forcedSentence]:[...pick(pool)];
+ const text=readAloudSentence.join(" ");
+ stage.innerHTML=title("Je lis à voix haute","Lis la phrase tranquillement. Le modèle audio apparaît seulement après ton essai.","Lecture à voix haute")+
+ instructionAudio("Lis la phrase à voix haute. Prends ton temps, puis appuie sur « J’ai fini de lire ».")+
+ `<div class="card center"><div class="hero-emoji">📖🗣️</div>
+ <div class="readaloud-sentence">${readAloudSentence.map(esc).join(" ")}</div>
+ ${phraseToolHelpHTML(readAloudSentence)}
+ <div class="tip">Lis d’abord avec ta propre voix. Il n’y a ni chrono, ni note, ni étoile : on s’entraîne simplement à lire de plus en plus facilement.</div>
+ <div class="actions" style="margin-top:14px"><button class="btn primary" data-action="readaloud-done">✅ J’ai fini de lire</button></div>
+ <div id="readaloudModel" class="readaloud-model" hidden>
+   <b>Maintenant, compare avec le modèle :</b>
+   <button class="btn yellow" data-action="readaloud-model" data-text="${esc(text)}">🔊 Écouter la phrase</button>
+ </div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-readaloud">Nouvelle phrase →</button></div>`;
+ playInstruction("Lis la phrase à voix haute. Prends ton temps, puis appuie sur « J’ai fini de lire ».")
 }
 
 function gameOrder(){
