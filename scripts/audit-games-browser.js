@@ -3,7 +3,7 @@
 module.exports=async function auditGames(page){
  await page.setViewportSize({width:320,height:900});
  const result=await page.evaluate(()=>{
-  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,readAloud:0,comprehension:0};
+  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,readAloud:0,comprehension:0};
   speak=()=>{};tone=()=>{};confetti=()=>{};starFx=()=>{};
   const check=(ok,message)=>{if(!ok)throw Error('Exercise audit: '+message)};
   const buttons=action=>[...document.querySelectorAll(`[data-action="${action}"]`)];
@@ -35,7 +35,7 @@ module.exports=async function auditGames(page){
      check(state.stars===beforeStars+1,'encoding reward missing '+target);counts.encoding++;
     }
     const correctionTarget=activeLearningSyllables()[0];gameEncode(correctionTarget);
-    const expectedLetters=[correctionTarget[0],correctionTarget.slice(1)],encodeButtons=buttons('encode-letter'),wrongLetter=encodeButtons.find(b=>b.dataset.value!==expectedLetters[0]&&!"aeioué".includes(b.dataset.value));
+    const expectedLetters=syllableGraphemes(correctionTarget),encodeButtons=buttons('encode-letter'),firstComponents=new Set(activeLearningSyllables().map(syllableGraphemes).filter(parts=>parts.length===2).map(parts=>parts[0])),wrongLetter=encodeButtons.find(b=>b.dataset.value!==expectedLetters[0]&&firstComponents.has(b.dataset.value));
     if(wrongLetter){
      const beforeMastery=state.mastery[correctionTarget]?.correct||0;
      wrongLetter.click();encodeButtons.find(b=>b.dataset.value===expectedLetters[1]).click();
@@ -88,6 +88,17 @@ module.exports=async function auditGames(page){
      const emojis=buttons('comprehension-answer').map(b=>b.textContent);check(new Set(emojis).size===emojis.length,'ambiguous images');
      answer('comprehension-answer',target,true);counts.comprehension++;
     }
+   }
+   state=normalizeState({missionHistory:Array.from({length:20},(_,i)=>({date:'2020-02-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(DATA.sets.flat().map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});
+   check(wordEncodingUnlocked(),'word encoding fixture is not ready');
+   for(const word of wordEncodePool()){
+    gameWordEncode(word);check(currentAnswer.w===word.w,'wrong dictated word target');
+    check(document.documentElement.scrollWidth<=innerWidth+1,'word encoding mobile overflow');
+    const before=state.mastery['word:'+word.w]?.correct||0;
+    for(const part of word.parts){const b=buttons('word-encode-token').find(b=>!b.disabled&&b.dataset.value===part);check(!!b,'missing word encoding token '+word.w+':'+part);b.click()}
+    check(locked&&wordEncodeMade.join('')===word.w,'word encoding failed '+word.w);
+    check((state.mastery['word:'+word.w]?.correct||0)===before+1,'word encoding mastery missing '+word.w);
+    const snapshot=JSON.stringify([state.stats,state.stars,state.mastery]);buttons('word-encode-token')[0]?.click();check(JSON.stringify([state.stats,state.stars,state.mastery])===snapshot,'word encoding duplicate reward '+word.w);counts.wordEncoding++;
    }
    state=normalizeState({});gamePicture();const independentTarget=currentAnswer;answer('picture-answer',independentTarget);
    check(state.mastery['word:'+independentTarget]?.correct===1,'independent picture answer lost mastery');
