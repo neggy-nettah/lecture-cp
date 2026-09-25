@@ -104,6 +104,9 @@ if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Wo
 if(!app.includes('"controllerchange"')||!app.includes("reg.update()"))fail("Installed-app update notification/check is missing.");
 // Network fallback and offline HTML coherence are exercised by check-service-worker.js.
 
+if(!app.includes("function refreshSpeechVoices(")||!app.includes("function speakNow(")||!app.includes('addEventListener?.("voiceschanged",tryVoices)')){
+  fail("Speech synthesis voice-loading safeguards are missing.");
+}
 if(!app.includes('function speakMission(text,rate=.60,cb){speak(text,rate,cb)}')){
   fail("Mission audio wrapper changed unexpectedly.");
 }
