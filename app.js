@@ -10,6 +10,13 @@ const DEFAULT_STATE={schemaVersion:STATE_SCHEMA_VERSION,updatedAt:0,stars:0,stre
 let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight=false;
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
+const UI_TEXT_SIZE_KEY="lectureCpLargeText";
+function applyTextSizePreference(enabled=localStorage.getItem(UI_TEXT_SIZE_KEY)==="1"){
+ document.body.classList.toggle("large-text",!!enabled);
+ const button=document.querySelector("#textSizeBtn");if(button){button.setAttribute("aria-pressed",enabled?"true":"false");button.textContent=enabled?"Aa−":"Aa+";button.title=enabled?"Revenir à la taille normale":"Agrandir les textes"}
+ return !!enabled
+}
+
 function migrateState(raw){const src=raw&&typeof raw==="object"?{...raw}:{};src.schemaVersion=STATE_SCHEMA_VERSION;return src}
 function stateObject(value){return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}
 function stateCount(value){const n=typeof value==="number"||typeof value==="string"?Number(value):NaN;return Number.isFinite(n)?Math.min(Number.MAX_SAFE_INTEGER,Math.max(0,Math.floor(n))):0}
@@ -966,6 +973,7 @@ async function openParentAccount(){
 }
 $("#accountBtn").addEventListener("click",openParentAccount);
 $("#switchChildBtn").addEventListener("click",openParentAccount);
+$("#textSizeBtn").addEventListener("click",()=>{const enabled=!document.body.classList.contains("large-text");try{localStorage.setItem(UI_TEXT_SIZE_KEY,enabled?"1":"0")}catch(e){}applyTextSizePreference(enabled);stage.focus({preventScroll:true})});
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")closeAuth()});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
 document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
@@ -995,6 +1003,7 @@ async function restoreSessionProfile(ownerId){
  if(child){enterChildProfile(child);await loadRemoteState()}else topUI()
 }
 async function bootstrap(){
+ applyTextSizePreference();
  if(sb){
   try{
    // Subscribe before getSession, otherwise a recovery event may already be over.
