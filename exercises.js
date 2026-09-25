@@ -76,6 +76,7 @@ function gamesMenu(){
  `<div class="levels">
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
   <button class="level" data-action="game-encode"><div class="ico">✍️</div><b>J’écris la syllabe</b><small>J’entends puis je choisis les lettres</small></button>
+  <button class="level" data-action="game-word-encode"><div class="ico">📝</div><b>J’écris le mot</b><small>J’écoute puis j’assemble les syllabes</small></button>
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
   <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
@@ -120,6 +121,46 @@ function updateEncode(){
   locked=true;recordQuestionError(currentAnswer);miss("Écoute encore et recommence.");
   $("#feedback").innerHTML='<div class="no">Presque ! Écoute encore la syllabe.</div>';
   screenTask(()=>{locked=false;encodeMade=[];document.querySelectorAll("#encodeBank .encode-letter").forEach(b=>b.disabled=false);updateEncode()},850)
+ }
+}
+
+
+function wordEncodePool(){
+ return decodableMissionWords().filter(word=>word.parts.length>=2&&word.parts.length<=4)
+}
+function gameWordEncode(forcedWord=null){
+ missionMode=false;currentView="word-encode";state.lastView="word-encode";save(false);locked=false;resetQuestionTracking();
+ const pool=wordEncodePool(),answer=forcedWord&&pool.some(w=>w.w===forcedWord.w)?forcedWord:pick(pool);
+ if(!answer){activate("games");return}
+ currentAnswer=answer;wordEncodeMade=[];
+ const extraCount=Math.max(1,5-answer.parts.length),extraBase=activeLearningSyllables().filter(s=>!answer.parts.includes(s)),extras=shuffle(extraBase).slice(0,extraCount);
+ const tokens=shuffle([...answer.parts,...extras].map((value,index)=>({value,index})));
+ stage.innerHTML=title("J’écris le mot","Écoute le mot, puis assemble les syllabes dans le bon ordre.","Encodage d’un mot")+
+ instructionAudio("Écoute le mot, puis touche les syllabes dans le bon ordre pour l’écrire.")+
+ \`<div class="card center"><div class="hero-emoji">👂📝</div>
+ <button class="btn yellow" data-action="word-encode-listen">🔊 Écouter le mot</button>
+ <div class="order-zone" id="wordEncodeZone"><span class="empty">Les syllabes arrivent ici…</span></div>
+ <div class="choices" id="wordEncodeChoices">\${tokens.map(token=>\`<button class="choice" style="font-size:27px" data-action="word-encode-token" data-value="\${esc(token.value)}" data-id="\${token.index}">\${colorSyl(token.value)}</button>\`).join("")}</div>
+ <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="word-encode-reset">↩ Recommencer</button></div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-word-encode">Nouveau mot →</button></div>\`;
+ playInstruction("Écoute le mot, puis touche les syllabes dans le bon ordre pour l’écrire.",()=>speak(answer.w,.68))
+}
+function updateWordEncode(){
+ const zone=$("#wordEncodeZone");if(!zone||!currentAnswer?.parts)return;
+ zone.innerHTML=wordEncodeMade.length?wordEncodeMade.map(x=>\`<span class="token">\${esc(x)}</span>\`).join(""):\`<span class="empty">Les syllabes arrivent ici…</span>\`;
+ if(wordEncodeMade.length<currentAnswer.parts.length)return;
+ const ok=wordEncodeMade.join("")===currentAnswer.parts.join("");
+ const key="word-encode:"+currentAnswer.w;
+ if(ok){
+  locked=true;recordQuestionSuccess(null,key);rewardVerified("Mot écrit !",key);
+  state.wordPractice=state.wordPractice||{};state.wordPractice[currentAnswer.w]=true;setDone("wordEncoding");
+  confetti();speak(currentAnswer.w,.70);
+  $("#feedback").innerHTML=\`<div class="ok">🎉 Bravo : <b>\${esc(currentAnswer.w)}</b> \${currentAnswer.emoji||""}</div>\`
+ }else{
+  locked=true;recordQuestionError();miss("Écoute encore le mot et recommence.");
+  $("#feedback").innerHTML='<div class="no">Presque ! Écoute encore le mot.</div>';
+  screenTask(()=>{locked=false;wordEncodeMade=[];document.querySelectorAll("#wordEncodeChoices .choice").forEach(b=>b.disabled=false);updateWordEncode();speak(currentAnswer.w,.68)},850)
  }
 }
 
