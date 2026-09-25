@@ -147,6 +147,8 @@ Pour le passage aux phrases, l'application exige désormais **deux conditions** 
 
 L'encodage progresse lui aussi par paliers : d'abord une syllabe entendue à reconstruire avec des lettres, puis un mot régulier entièrement décodable à reconstruire avec ses syllabes. Dans ce deuxième exercice, le mot écrit n'est pas montré avant la réponse afin d'éviter une simple copie visuelle.
 
+Le jeu d'encodage de mots est actuellement déverrouillé à partir de 4 missions terminées et 10 points de maîtrise des syllabes. Ce seuil est un réglage produit prudent, pas une norme officielle : il pourra être ajusté à partir d'observations d'usage réelles sans changer le principe pédagogique.
+
 ## Curriculum actuel
 
 Les familles sont actuellement débloquées progressivement à partir de la liste définie dans `DATA.sets`.
