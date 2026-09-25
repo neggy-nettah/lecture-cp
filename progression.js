@@ -118,7 +118,19 @@ function activeSoundGraphemes(){
  return new Set(["a","e","i","o","u","é",...consonants])
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
-function sentenceUnlocked(){return completedMissionCount()>=8}
+const SENTENCE_MIN_MISSIONS=8,SENTENCE_MIN_MASTERY_POINTS=12;
+function sentenceReadiness(){
+ const missions=completedMissionCount(),points=curriculumMasteryPoints();
+ return {missions,points,ready:missions>=SENTENCE_MIN_MISSIONS&&points>=SENTENCE_MIN_MASTERY_POINTS,remainingMissions:Math.max(0,SENTENCE_MIN_MISSIONS-missions),remainingPoints:Math.max(0,SENTENCE_MIN_MASTERY_POINTS-points)}
+}
+function sentenceUnlocked(){return sentenceReadiness().ready}
+function sentenceUnlockText(){
+ const s=sentenceReadiness();
+ if(s.ready)return "Phrases disponibles";
+ if(s.remainingMissions>0&&s.remainingPoints>0)return "Encore "+s.remainingMissions+" mission(s) et un peu de consolidation";
+ if(s.remainingMissions>0)return "Encore "+s.remainingMissions+" mission(s)";
+ return "Consolide encore les syllabes"
+}
 function curriculumStatus(){
  const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints();
  if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
