@@ -2,14 +2,23 @@
 // Daily mission composition, navigation, completion and summary.
 // Uses progression rules, exercise functions and rewards; no startup side effects.
 
+function missionWordMatchesFocus(word,primary,review){
+ return !!word?.parts?.some(part=>part===primary||part===review)
+}
+function missionFocusedWords(words,primary,review){
+ return (words||[]).filter(word=>missionWordMatchesFocus(word,primary,review))
+}
+
 function buildDailyMission(){
  const primary=pickLearningSyllable(),review=pickReviewSyllable(primary),decodable=decodableMissionWords();
  const recentWords=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word));
- const related=decodable.filter(w=>w.parts.includes(primary)||w.parts.includes(review)),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
+ const related=missionFocusedWords(decodable,primary,review),freshRelated=related.filter(w=>!recentWords.has(w.w)),freshAll=decodable.filter(w=>!recentWords.has(w.w));
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
- const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],comprehensionPool=sentenceUnlocked()?comprehensionSentencePool():[],visualModes=["memory","family","missing",...(comprehensionPool.length?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
- const missingCandidates=missingSyllableWords(),missingPool=missingCandidates.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingCandidates)||word;
- const comprehensionChoices=comprehensionPool.filter(x=>x.word.w!==word.w),comprehensionItem=pick(comprehensionChoices.length?comprehensionChoices:comprehensionPool);
+ const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],comprehensionPool=sentenceUnlocked()?comprehensionSentencePool():[];
+ const focusedComprehension=comprehensionPool.filter(item=>missionWordMatchesFocus(item.word,primary,review));
+ const visualModes=["memory","family","missing",...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
+ const missingCandidates=missingSyllableWords(),focusedMissing=missionFocusedWords(missingCandidates,primary,review),missingBase=focusedMissing.length?focusedMissing:missingCandidates,missingPool=missingBase.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingBase)||word;
+ const comprehensionBase=focusedComprehension.length?focusedComprehension:comprehensionPool,comprehensionChoices=comprehensionBase.filter(x=>x.word.w!==word.w),comprehensionItem=pick(comprehensionChoices.length?comprehensionChoices:comprehensionBase);
  const visualStep=visualType==="memory"
   ?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}
   :visualType==="family"
