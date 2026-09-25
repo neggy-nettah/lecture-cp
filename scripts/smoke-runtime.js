@@ -109,6 +109,8 @@ const probes=[
   '(()=>{try{parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stats:{attempts:1,correct:3}}}));return false}catch(e){return true}})()',
   'typeof normalizeState==="function"',
   'typeof mergeProgressStates==="function"',
+  'typeof mergeReviewQueues==="function"',
+  'typeof rewardProgressUnits==="function"',
   'typeof buildDailyMission==="function"',
   'typeof missionWordMatchesFocus==="function"',
   'typeof missionFocusedWords==="function"',
@@ -149,6 +151,9 @@ const probes=[
   '(()=>{const a={updatedAt:100,dailyMission:{date:localDayKey(),index:4,steps:[1,2,3,4,5]}},b={updatedAt:200,dailyMission:{date:localDayKey(),index:2,steps:[1,2,3,4,5]}};return mergeProgressStates(a,b).dailyMission.index===4})()',
   '(()=>{const a={updatedAt:300,dailyMission:{date:localDayKey(),index:2,steps:[1,2,3,4,5],marker:"local"}},b={updatedAt:200,dailyMission:{date:localDayKey(),index:2,steps:[1,2,3,4,5],marker:"remote"}};return mergeProgressStates(a,b).dailyMission.marker==="local"})()',
   '(()=>{const a={updatedAt:100,missionHistory:[{date:"2026-09-20",attempts:1,correct:0,word:"moto"}]},b={updatedAt:200,missionHistory:[{date:"2026-09-20",attempts:3,correct:2,word:"moto"}]};const m=mergeProgressStates(a,b);return m.missionHistory.length===1&&m.missionHistory[0].attempts===3&&m.missionHistory[0].correct===2})()',
+  '(()=>{const m=mergeProgressStates({updatedAt:100,reviewQueue:["ma","ma"]},{updatedAt:200,reviewQueue:["ma","mi","mi"]});return m.reviewQueue.filter(x=>x==="ma").length===2&&m.reviewQueue.filter(x=>x==="mi").length===2&&m.reviewQueue.at(-1)==="mi"})()',
+  '(()=>{const m=mergeProgressStates({updatedAt:100,rewards:{puzzles:1,pieces:0,collection:[]}},{updatedAt:200,rewards:{puzzles:0,pieces:3,collection:[]}});return m.rewards.puzzles===1&&m.rewards.pieces===0})()',
+  '(()=>{const m=mergeProgressStates({updatedAt:100,stars:1,rewardLedger:{a:1}},{updatedAt:200,stars:1,rewardLedger:{b:1}});return m.stars===2&&m.rewardLedger.a&&m.rewardLedger.b})()',
   'fullyDecodableWords().length>=4',
   'fullyDecodableWords().every(w=>w.parts.join("")===w.w)',
   'fullyDecodableWords().length>=40',
@@ -280,6 +285,7 @@ console.log("- Portable progress import validation: OK");
 console.log("- Service Worker unsupported-browser fallback: OK");
 console.log("- Mission/free-play attempt scoping: OK");
 console.log("- Cross-device monotonic progress merge: OK");
+console.log("- Review weighting and puzzle reconciliation across devices: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
 console.log("- Curriculum expands only when missions and mastery are both ready");
