@@ -138,6 +138,9 @@ if(!app.includes('.eq("parent_id",session.user.id)')){
 if(!app.includes('x.parent_id===session?.user?.id')){
   fail("Child selection ownership guard is missing.");
 }
+if(!app.includes('<option value="CP">CP — disponible</option>')||!app.includes('<option disabled>Grande section — à venir</option>')||!app.includes('<option disabled>CE1 — à venir</option>')){
+  fail("New child profiles expose unsupported school levels.");
+}
 
 const wordBlock=content.match(/words:\[([\s\S]*?)\],\n sentences:/)?.[1]||"";
 const words=[...wordBlock.matchAll(/\{w:"([^"]+)",parts:\[([^\]]*)\],emoji:"([^"]+)"\}/g)].map(m=>({
