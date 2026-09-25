@@ -15,7 +15,7 @@ Expected columns used by the app:
 - avatar
 - created_at
 
-Enable RLS and only allow the authenticated parent to access rows where `parent_id = auth.uid()`.
+Enable RLS and only allow the authenticated parent to access rows where `parent_id = (select auth.uid())`.
 
 Example:
 
@@ -26,26 +26,26 @@ create policy "parents read own children"
 on public.children
 for select
 to authenticated
-using (parent_id = auth.uid());
+using (parent_id = (select auth.uid()));
 
 create policy "parents create own children"
 on public.children
 for insert
 to authenticated
-with check (parent_id = auth.uid());
+with check (parent_id = (select auth.uid()));
 
 create policy "parents update own children"
 on public.children
 for update
 to authenticated
-using (parent_id = auth.uid())
-with check (parent_id = auth.uid());
+using (parent_id = (select auth.uid()))
+with check (parent_id = (select auth.uid()));
 
 create policy "parents delete own children"
 on public.children
 for delete
 to authenticated
-using (parent_id = auth.uid());
+using (parent_id = (select auth.uid()));
 ```
 
 ### progress
@@ -76,7 +76,7 @@ using (
     select 1
     from public.children c
     where c.id = progress.child_id
-      and c.parent_id = auth.uid()
+      and c.parent_id = (select auth.uid())
   )
 );
 
@@ -89,7 +89,7 @@ with check (
     select 1
     from public.children c
     where c.id = progress.child_id
-      and c.parent_id = auth.uid()
+      and c.parent_id = (select auth.uid())
   )
 );
 
@@ -102,7 +102,7 @@ using (
     select 1
     from public.children c
     where c.id = progress.child_id
-      and c.parent_id = auth.uid()
+      and c.parent_id = (select auth.uid())
   )
 )
 with check (
@@ -110,7 +110,7 @@ with check (
     select 1
     from public.children c
     where c.id = progress.child_id
-      and c.parent_id = auth.uid()
+      and c.parent_id = (select auth.uid())
   )
 );
 
@@ -123,7 +123,7 @@ using (
     select 1
     from public.children c
     where c.id = progress.child_id
-      and c.parent_id = auth.uid()
+      and c.parent_id = (select auth.uid())
   )
 );
 ```
@@ -168,6 +168,29 @@ The app also:
 - never uses a service-role key in the browser
 
 These client checks are defense in depth. They do **not** replace RLS.
+
+## Data API permissions
+
+RLS and Data API exposure are separate controls. Before public launch, verify that only the required tables are exposed and that database grants match the app:
+
+```sql
+grant select, insert, update, delete on public.children to authenticated;
+grant select, insert, update, delete on public.progress to authenticated;
+```
+
+Do not grant these tables to `anon` unless a deliberate anonymous-access design is introduced later. The current app expects authenticated parent ownership for cloud data.
+
+## Verification
+
+After any schema or policy change:
+
+1. run Supabase security advisors;
+2. inspect `pg_policies` for both tables;
+3. confirm RLS is enabled on `children` and `progress`;
+4. test with two different authenticated users;
+5. verify that an UPDATE cannot move a child or progress row to another parent.
+
+The UPDATE policies intentionally include both `USING` and `WITH CHECK`, and the SELECT policy must remain present because PostgreSQL RLS UPDATE also depends on row visibility.
 
 ## Before public launch
 
