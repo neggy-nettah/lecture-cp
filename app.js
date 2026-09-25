@@ -235,7 +235,7 @@ function topUI(){
  const version=$("#appVersion");if(version)version.textContent="v"+APP_VERSION;
  $("#stars").textContent=state.stars||0;$("#streak").textContent=(state.streak||0)>=2?`🔥${state.streak}`:"";
  const displayName=currentChild?currentChild.nickname:(state.name||"");
- $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : devenir une super lectrice 🌟";
+ $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : progresser en lecture 🌟";
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
  const keys=["sounds","syllables","words","listen","encoding","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order","comprehension"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";$("#progressBarWrap")?.setAttribute("aria-valuenow",String(pct));
@@ -562,7 +562,7 @@ function badgeData(){
   {emoji:"📚",name:"10 syllabes",desc:"Maîtriser 10 syllabes",ok:ms.mastered>=10},
   {emoji:"💫",name:"50 étoiles",desc:"Gagner 50 étoiles",ok:stars>=50},
   {emoji:"🗺️",name:"Grande aventure",desc:"Terminer 10 missions",ok:missions>=10},
-  {emoji:"👑",name:"Super lectrice",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30}
+  {emoji:"👑",name:"As de la lecture",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30}
  ]
 }
 function companionLevel(){
