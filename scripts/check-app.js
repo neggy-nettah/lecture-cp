@@ -40,7 +40,7 @@ try{
 let manifest;
 try{manifest=JSON.parse(manifestText)}catch(error){fail("Manifest JSON is invalid:",error.message)}
 if(manifest.name!=="La Fabrique des Syllabes"||manifest.display!=="standalone")fail("Manifest identity/display is invalid.");
-if(manifest.start_url!=="./"||manifest.scope!=="./")fail("Manifest start_url/scope is invalid.");
+if(manifest.id!=="./"||manifest.start_url!=="./"||manifest.scope!=="./")fail("Manifest id/start_url/scope is invalid.");
 if(!Array.isArray(manifest.icons)||!manifest.icons.some(x=>x.src==="./icon.svg"))fail("Manifest icon is missing.");
 if(!icon.includes("<svg")||!icon.includes('viewBox="0 0 512 512"'))fail("App icon SVG is invalid.");
 
