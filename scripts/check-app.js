@@ -154,7 +154,7 @@ if(!app.includes('Math.min(missionCap,readinessCap)')||!app.includes('Math.max(k
 }
 if(app.includes('!!state.soundPractice?.[initial]'))fail("Sound practice alone can unlock an entire legacy family.");
 if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fail("Legacy word practice no longer preserves previously worked families.");
-if(!app.includes('s.type==="missing"')||!app.includes('s.type==="comprehension"')||!app.includes('["memory","family","missing",...(comprehensionPool.length?["comprehension"]:[])]')){
+if(!app.includes('s.type==="missing"')||!app.includes('s.type==="comprehension"')||!app.includes('visualModes=["memory","family","missing"')||!app.includes('["comprehension"]')){
   fail("Daily mission is missing the adaptive visual/comprehension rotation.");
 }
 if(!app.includes("missionFocusedWords(missingCandidates,primary,review)")||!app.includes("focusedComprehension=comprehensionPool.filter")){
