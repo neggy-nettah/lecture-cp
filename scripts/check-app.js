@@ -21,6 +21,9 @@ if(!html.includes('src="./app.js?v='))fail("index.html is not loading app.js.");
 if(!html.includes('rel="manifest" href="./manifest.webmanifest"'))fail("index.html is not loading the web app manifest.");
 if(!html.includes('rel="icon" href="./icon.svg"'))fail("index.html is not loading the app icon.");
 if(!html.includes('http-equiv="Content-Security-Policy"')||!html.includes("object-src 'none'")||!html.includes("base-uri 'self'")||!html.includes('name="referrer" content="no-referrer"'))fail("Browser security policy headers are missing from the static shell.");
+const supabaseUrl=app.match(/const SUPABASE_URL="([^"]+)"/)?.[1]||"",supabaseHost=supabaseUrl.replace(/^https:\/\//,"");
+if(!supabaseHost||!html.includes("https://"+supabaseHost)||!html.includes("wss://"+supabaseHost)||html.includes("https://*.supabase.co"))fail("CSP is not restricted to the configured Supabase project.");
+
 if(!html.includes('@supabase/supabase-js@2.117.1')||html.includes('@supabase/supabase-js@2"></script>'))fail("Supabase JS CDN dependency is not pinned to the reviewed version.");
 if(html.includes("<style>"))fail("Large inline style block returned to index.html.");
 if(/<script>\s*"use strict"/.test(html))fail("Large inline application script returned to index.html.");
