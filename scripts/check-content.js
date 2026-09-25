@@ -7,6 +7,7 @@ try{vm.runInContext(src,context,{timeout:1000})}
 catch(error){console.error("CONTENT VALIDATION FAILED: syntax/runtime",error);process.exit(1)}
 
 const data=vm.runInContext("DATA",context);
+const cpRoadmap=vm.runInContext("CP_READING_ROADMAP",context);
 const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
 const silentFinalEWords=vm.runInContext("SILENT_FINAL_E_WORDS",context);
 const pictureWords=vm.runInContext("PICTURE_WORDS",context);
@@ -20,6 +21,15 @@ function fail(message,details=""){
   process.exit(1);
 }
 function duplicates(arr){return [...new Set(arr.filter((x,i,a)=>a.indexOf(x)!==i))]}
+
+if(!Array.isArray(cpRoadmap)||cpRoadmap.length<8)fail("CP reading roadmap is incomplete.");
+const roadmapIds=new Set(cpRoadmap.map(x=>x.id));
+for(const id of ["cg-basic","encode-basic","words-basic","sentences-basic","orthography-rules","complex-graphemes","fluency-prosody","texts-comprehension"]){
+  if(!roadmapIds.has(id))fail("Missing CP roadmap stage:",id);
+}
+for(const stage of cpRoadmap){
+  if(!stage.label||!Array.isArray(stage.skills)||!stage.skills.length||!Array.isArray(stage.app))fail("Invalid CP roadmap stage:",stage.id);
+}
 
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
 if(!Array.isArray(data.sets)||data.sets.length!==10)fail("Expected 10 syllable families.");
