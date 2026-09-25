@@ -70,6 +70,7 @@ Les missions ne tirent plus dans les 60 syllabes dès le premier jour.
 - les distracteurs des missions utilisent uniquement les familles actuellement débloquées
 - le mot final de mission doit être entièrement décodable avec les syllabes actives et les voyelles isolées disponibles
 - les activités de phrase demandent au moins 8 missions terminées **et** 12 points de maîtrise des syllabes ; le temps seul ne les débloque plus
+- l’encodage de mots se débloque après 4 missions et 10 points de maîtrise, pour éviter une dictée trop précoce
 
 Les jeux libres restent plus ouverts, mais les écrans de lecture et de construction utilisent seulement des mots dont les morceaux se recomposent exactement.
 
