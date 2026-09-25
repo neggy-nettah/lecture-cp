@@ -109,6 +109,8 @@ const probes=[
   '(()=>{try{parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stats:{attempts:1,correct:3}}}));return false}catch(e){return true}})()',
   'typeof normalizeState==="function"',
   'typeof buildDailyMission==="function"',
+  'typeof missionWordMatchesFocus==="function"',
+  'typeof missionFocusedWords==="function"',
   'typeof fullyDecodableWords==="function"',
   'typeof decodableMissionWords==="function"',
   'typeof activeSoundData==="function"',
@@ -173,6 +175,11 @@ const probes=[
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5]}}),missionMode=false,recordAttempt(true,"ma","listen:ma"),missionMode=true,recordAttempt(true,"ma","listen:ma"),state.stats.correct===2&&state.mastery.ma.correct===2)',
   '(state=normalizeState({dailyMission:{date:localDayKey(),index:1,steps:[1,2,3,4,5],sessionStats:{attempts:0,correct:0}}}),missionMode=false,recordAttempt(true,"ma","free:test"),missionMode=true,recordAttempt(false,"mi"),recordAttempt(true,"mi","mission:test"),state.dailyMission.sessionStats.attempts===2&&state.dailyMission.sessionStats.correct===1&&state.stats.attempts===3)',
   '(state=normalizeState({}),buildDailyMission(),activeLearningSyllables().includes(state.dailyMission.primary))',
+  'missionWordMatchesFocus({parts:["ma","mi"]},"ma","lu")===true&&missionWordMatchesFocus({parts:["pa"]},"ma","lu")===false',
+  'missionFocusedWords([{w:"mami",parts:["ma","mi"]},{w:"papi",parts:["pa","pi"]}],"ma","lu").length===1',
+  '(()=>{state=normalizeState({reviewQueue:["ma","mi"]});const m=buildDailyMission(),w=DATA.words.find(x=>x.w===m.word),related=missionFocusedWords(decodableMissionWords(),m.primary,m.review);return !related.length||missionWordMatchesFocus(w,m.primary,m.review)})()',
+  '(()=>{state=normalizeState({reviewQueue:["ma","mi"]});const m=buildDailyMission(),s=m.steps[3];if(s.type!=="missing")return true;const w=DATA.words.find(x=>x.w===s.target),focused=missionFocusedWords(missingSyllableWords(),m.primary,m.review);return !focused.length||missionWordMatchesFocus(w,m.primary,m.review)})()',
+  '(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}])),reviewQueue:["ma","mi"]});const m=buildDailyMission(),s=m.steps[3];if(s.type!=="comprehension")return true;const item=comprehensionSentencePool().find(x=>x.word.w===s.target),focused=comprehensionSentencePool().filter(x=>missionWordMatchesFocus(x.word,m.primary,m.review));return !focused.length||missionWordMatchesFocus(item?.word,m.primary,m.review)})()',
   '(()=>{const random=Math.random;try{Math.random=()=>0;state=normalizeState({reviewQueue:["mi","ma"],missionHistory:[{primary:"mi"},{primary:"mi"}]});return pickLearningSyllable()==="ma"}finally{Math.random=random}})()',
   '(state=normalizeState({missionHistory:[{date:"2026-09-01"},{date:"2026-09-02"},{date:"2026-09-03"},{date:"2026-09-04"}],mastery:Object.fromEntries(["ma","mi","mo","mu"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),unlockedFamilyCount()===5)',
   '(state=normalizeState({lastView:"unknown-view"}),currentView="unknown-view",render(),currentView==="home")',
@@ -265,6 +272,7 @@ console.log("- Previously practiced later families remain accessible");
 console.log("- Free reading words are fully decodable");
 console.log("- Schwa e families and expanded decodable word coverage: OK");
 console.log("- Mission words use currently unlocked syllables");
+console.log("- Adaptive word, missing-syllable and comprehension focus: OK");
 console.log("- Unknown saved views recover to home");
 console.log("- Navigation alone does not validate sound practice");
 console.log("- Sound browser follows unlocked curriculum");
