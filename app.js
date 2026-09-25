@@ -188,7 +188,6 @@ function save(touch=true){
  clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)
 }
 function flushPendingProgress(){
- saveLocal();
  if(!sb||!session||!currentChild)return;
  clearTimeout(saveTimer);void saveRemoteNow()
 }
