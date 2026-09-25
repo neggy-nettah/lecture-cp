@@ -146,6 +146,7 @@ const probes=[
   '(()=>{navigator.onLine=false;updateConnectivityUI();const ok=$("#syncStatus").textContent.includes("Hors ligne");navigator.onLine=true;return ok})()',
   '(state=normalizeState({}),unlockedFamilyCount()===3)',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),unlockedFamilyCount()===3)',
+  '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),sentenceUnlocked()===false&&sentenceReadiness().remainingPoints===12)',
   '(state=normalizeState({missionHistory:Array.from({length:2},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),unlockedFamilyCount()===4)',
   '(state=normalizeState({mastery:{ba:{attempts:1,correct:1,lastSeen:localDayKey()}}}),unlockedFamilyCount()===10)',
   '(state=normalizeState({soundPractice:{b:true}}),unlockedFamilyCount()===3)',
@@ -260,9 +261,9 @@ const screenProbes=[
   'state=normalizeState({}),gameMissing(),stage.innerHTML.length>50',
   'state=normalizeState({}),gamePicture(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBuild(),stage.innerHTML.length>50',
-  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameOrder(),stage.innerHTML.length>50',
-  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameReadAloud(),stage.innerHTML.length>50&&readAloudSentence.length>=3&&stage.innerHTML.includes("readaloudModel")',
-  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameComprehension(),stage.innerHTML.length>50&&currentAnswer.length>0'
+  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),gameOrder(),stage.innerHTML.length>50',
+  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),gameReadAloud(),stage.innerHTML.length>50&&readAloudSentence.length>=3&&stage.innerHTML.includes("readaloudModel")',
+  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),gameComprehension(),stage.innerHTML.length>50&&currentAnswer.length>0'
 ];
 
 for(const probe of screenProbes){
