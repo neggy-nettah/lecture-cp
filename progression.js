@@ -86,7 +86,10 @@ function familyGraphemeAt(index){
  return DATA.familyGraphemes?.[index]||((DATA.sets?.[index]?.[0]||"")[0]||"")
 }
 function familyGraphemeForSet(set){
- const index=DATA.sets.indexOf(set);return index>=0?familyGraphemeAt(index):""
+ const index=DATA.sets.indexOf(set);
+ if(index>=0)return familyGraphemeAt(index);
+ const first=Array.isArray(set)?set[0]:"";
+ return first?familyGraphemeForSyllable(first):""
 }
 function familyGraphemeForSyllable(syllable){
  const index=DATA.sets.findIndex(set=>set.includes(syllable));return index>=0?familyGraphemeAt(index):""
