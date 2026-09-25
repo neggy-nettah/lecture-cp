@@ -118,6 +118,7 @@ const probes=[
   'typeof decodableSentencePool==="function"',
   'typeof comprehensionSentencePool==="function"',
   'typeof gameComprehension==="function"',
+  'typeof phraseToolHelpHTML==="function"',
   'typeof recentPerformance==="function"',
   'typeof recordQuestionError==="function"',
   'typeof parseProgressImport==="function"',
@@ -192,6 +193,7 @@ const probes=[
   '(state=normalizeState({}),activeSoundData().length===9&&activeSoundData().some(x=>x.g==="e"))',
   '(state=normalizeState({missionHistory:[{accuracy:50,attempts:2,correct:1},{accuracy:100,attempts:2,correct:2}]}),recentPerformance().accuracy===75)',
   '(state=normalizeState({}),sentenceUnlocked()===false)',
+  '(()=>{const h=phraseToolHelpHTML(["Papa","a","une","moto."]);return h.includes("data-text=\\\"a\\\"")&&h.includes("data-text=\\\"une\\\"")&&!h.includes("data-text=\\\"moto\\\"")&&!h.includes("data-text=\\\"Papa\\\"")})()',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),sentenceUnlocked()===true&&unlockedFamilyCount()===7&&decodableSentencePool().length>=3)',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),comprehensionSentencePool().length>=3&&comprehensionSentencePool().every(x=>x.word&&x.sentence.length>=3))',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),new Set(comprehensionSentencePool().map(x=>x.word.w)).size>=3)',
@@ -284,6 +286,7 @@ console.log("- Navigation alone does not validate sound practice");
 console.log("- Sound browser follows unlocked curriculum");
 console.log("- Phrase game unlocks after 8 missions with decodable sentences");
 console.log("- Sentence comprehension game: OK");
+console.log("- Tool-word audio help without answer leakage: OK");
 console.log("- Advanced missions can rotate comprehension into step 4: OK");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
