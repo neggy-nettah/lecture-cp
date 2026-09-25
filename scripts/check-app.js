@@ -173,6 +173,9 @@ if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fa
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="comprehension"')||!app.includes('visualModes=["memory","family","missing"')||!app.includes('["comprehension"]')){
   fail("Daily mission is missing the adaptive visual/comprehension rotation.");
 }
+if(!app.includes('if(!hideable.length){word=pick(pool)')||!app.includes('if(!word||!hideable.length)')){
+  fail("Missing-syllable game no longer recovers safely from invalid legacy targets.");
+}
 if(!app.includes("missionFocusedWords(missingCandidates,primary,review)")||!app.includes("focusedComprehension=comprehensionPool.filter")){
   fail("Mission word/context steps no longer reinforce the current learning focus.");
 }
