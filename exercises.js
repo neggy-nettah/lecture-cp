@@ -37,7 +37,7 @@ function sounds(){
 }
 function syllables(){
  const max=Math.max(1,unlockedFamilyCount());if(state.set>=max)state.set=max-1;
- const set=DATA.sets[state.set%max],first=set[0][0];
+ const set=DATA.sets[state.set%max],first=familyGraphemeAt(state.set%max);
  stage.innerHTML=title("Fabrique les syllabes","Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.","Niveau 2")+
  instructionAudio("Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.")+
  `<div class="card center">
@@ -91,7 +91,7 @@ function gamesMenu(){
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
 function encodeLetterPool(target){
- const consonant=target[0],vowel=target.slice(1),initials=[...new Set(activeLearningSyllables().map(s=>s[0]))],vowels=["a","e","i","o","u","é"];
+ const consonant=familyGraphemeForSyllable(target),vowel=syllableRemainder(target),initials=[...new Set(activeLearningSyllables().map(familyGraphemeForSyllable).filter(Boolean))],vowels=["a","e","i","o","u","é"];
  const consonants=shuffle(initials.filter(x=>x!==consonant)).slice(0,3),otherVowels=shuffle(vowels.filter(x=>x!==vowel)).slice(0,3);
  return shuffle([consonant,...consonants,vowel,...otherVowels])
 }
@@ -194,7 +194,7 @@ function gameFamily(forcedFamily=null,fromMission=false){
  missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;resetQuestionTracking();
  const availableFamilies=DATA.sets.slice(0,unlockedFamilyCount()),family=forcedFamily||pick(availableFamilies),base=activeLearningSyllables(),others=base.filter(x=>!family.includes(x));
  const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
- const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
+ const initial=(familyGraphemeForSet(family)||"?").toUpperCase(),opts=shuffle([...familyChoices,intruder]);
  stage.innerHTML=title("Trouve l’intrus","Trois syllabes commencent par "+initial+". Une seule n’est pas de la même famille.","Jeu visuel")+
  instructionAudio("Trouve la syllabe qui ne commence pas comme les trois autres.")+
  '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
