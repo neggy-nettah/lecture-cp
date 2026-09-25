@@ -4,12 +4,14 @@ Ce fichier fixe les règles de contenu de **La Fabrique des Syllabes** afin que 
 
 ## Références principales
 
-- Éduscol — *Pour enseigner la lecture et l'écriture au CP*  
-  https://eduscol.education.fr/document/1508/download
+- Ministère de l'Éducation nationale — *Programme de français du cycle 2*, BO du 31 octobre 2024, applicable depuis la rentrée 2025  
+  https://www.education.gouv.fr/bo/2024/Hebdo41/MENE2415135A
+- Éduscol — *Livret d'accompagnement du programme de français — CP* (2025)  
+  https://eduscol.education.gouv.fr/sites/default/files/document/2025livretaccompagnementfrancaiscp-112431_0.pdf
 - Éduscol — Ressources d'accompagnement du programme de français au cycle 2  
   https://eduscol.education.gouv.fr/4740/ressources-d-accompagnement-du-programme-de-francais-au-cycle-2
-- Ministère de l'Éducation nationale — L'apprentissage de la lecture à l'École  
-  https://www.education.gouv.fr/l-apprentissage-de-la-lecture-l-ecole-452883
+- Éduscol — *Pour enseigner la lecture et l'écriture au CP*  
+  https://eduscol.education.fr/document/1508/download
 
 ## Principes retenus
 
@@ -41,7 +43,21 @@ Les données pédagogiques sont centralisées dans `content.js`. Le code appliqu
 
 Ne pas contourner ces filtres pour augmenter artificiellement la quantité de contenu.
 
-### 4. Progression spiralaire
+### 4. Décodage et encodage se renforcent mutuellement
+
+Le programme et le livret CP 2025 associent explicitement décodage et encodage des correspondances graphème-phonème. L'application peut donc proposer des activités où l'enfant entend une syllabe et reconstruit son écriture, à condition de rester dans les graphèmes déjà enseignés.
+
+Le mini-jeu `J’écris la syllabe` :
+
+- choisit uniquement une syllabe du curriculum actif ;
+- limite les consonnes proposées aux familles déjà accessibles ;
+- utilise les voyelles déjà enseignées ;
+- considère une réponse autonome correcte comme une preuve vérifiable ;
+- remet la syllabe en révision après une erreur ;
+- ne transforme pas une correction après erreur en nouvelle preuve de maîtrise ;
+- reste d'abord disponible en jeu libre avant toute intégration aux missions quotidiennes.
+
+### 5. Progression spiralaire
 
 Une nouvelle notion ne remplace pas les précédentes.
 
@@ -52,7 +68,7 @@ Le moteur doit :
 - réviser les acquis anciens après plusieurs jours ;
 - mélanger apprentissage et révision dans une même mission.
 
-### 5. Réussite mesurée, pas simple navigation
+### 6. Réussite mesurée, pas simple navigation
 
 Faire défiler une carte ou appuyer sur un bouton audio ne signifie pas qu'une notion est maîtrisée.
 
@@ -60,37 +76,37 @@ La maîtrise doit être alimentée uniquement par des réponses vérifiables. Un
 
 Les activités d'écoute/répétition peuvent compter comme pratique mais pas comme preuve de maîtrise.
 
-### 6. Précision avant vitesse
+### 7. Précision avant vitesse
 
 Aucun chronomètre ne doit pousser l'enfant à deviner.
 
 Une future mesure de fluence pourra exister, mais seulement après une lecture suffisamment précise.
 
-### 7. Séances courtes
+### 8. Séances courtes
 
 Une mission quotidienne vise environ 5 à 10 minutes de travail réel.
 
 L'objectif est la régularité plutôt que la durée.
 
-### 8. Compréhension et vocabulaire
+### 9. Compréhension et vocabulaire
 
 Le décodage est indispensable mais ne suffit pas à lui seul.
 
-Les futures versions devront ajouter progressivement :
+L'application comprend déjà des associations phrase-image et des phrases à remettre en ordre. Les prochaines évolutions devront approfondir progressivement :
 
-- compréhension de phrases ;
-- vocabulaire ;
+- compréhension de phrases variées ;
+- vocabulaire explicite ;
 - petites consignes ;
-- associations phrase-image ;
+- lecture à voix haute sans notation automatique fragile ;
 - mini-histoires entièrement ou majoritairement décodables.
 
-### 9. Mots-outils
+### 10. Mots-outils
 
 Des mots très fréquents comme `un`, `une`, `le` ou `a` peuvent apparaître dans les phrases accompagnées.
 
-Ils ne doivent pas être confondus avec les mots proposés comme exercices de décodage autonome.
+Ils ne doivent pas être confondus avec les mots proposés comme exercices de décodage autonome. Une aide audio ciblée peut prononcer ces seuls mots-outils pour rendre l'exercice autonome, mais ne doit pas lire le mot-réponse d'un exercice de compréhension.
 
-### 10. Images
+### 11. Images
 
 L'image sert à :
 
