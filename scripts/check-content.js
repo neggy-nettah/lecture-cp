@@ -8,6 +8,7 @@ catch(error){console.error("CONTENT VALIDATION FAILED: syntax/runtime",error);pr
 
 const data=vm.runInContext("DATA",context);
 const cpRoadmap=vm.runInContext("CP_READING_ROADMAP",context);
+const cpMilestones=vm.runInContext("CP_OFFICIAL_MILESTONES",context);
 const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
 const silentFinalEWords=vm.runInContext("SILENT_FINAL_E_WORDS",context);
 const pictureWords=vm.runInContext("PICTURE_WORDS",context);
@@ -30,6 +31,11 @@ for(const id of ["cg-basic","encode-basic","words-basic","sentences-basic","orth
 for(const stage of cpRoadmap){
   if(!stage.label||!Array.isArray(stage.skills)||!stage.skills.length||!Array.isArray(stage.app))fail("Invalid CP roadmap stage:",stage.id);
 }
+
+if(!Array.isArray(cpMilestones)||cpMilestones.length<2)fail("Official CP milestones are missing.");
+const period1=cpMilestones.find(x=>x.id==="period-1"),midyear=cpMilestones.find(x=>x.id==="midyear");
+if(period1?.cgpMin!==12||period1?.cgpMax!==15||midyear?.cgpMin!==25||midyear?.cgpMax!==30)fail("Official CP CGP milestones changed unexpectedly.");
+if(cpRoadmap.findIndex(x=>x.id==="complex-graphemes")>cpRoadmap.findIndex(x=>x.id==="orthography-rules"))fail("CGP expansion must precede silent-letter rules in the current roadmap.");
 
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
 if(!Array.isArray(data.sets)||data.sets.length!==10)fail("Expected 10 syllable families.");
