@@ -206,10 +206,10 @@ function pickReviewSyllable(exclude=""){
 }
 function masterySummary(){
  const syllables=DATA.sets.flat(),levels=syllables.map(s=>({s,level:masteryLevel(s),m:state.mastery?.[s]||{attempts:0,correct:0}}));
- const mastered=levels.filter(x=>x.level===3).length,learning=levels.filter(x=>x.level===1||x.level===2).length,unseen=levels.filter(x=>x.level===0).length;
+ const mastered=levels.filter(x=>x.level===3).length,learning=levels.filter(x=>x.level===1||x.level===2).length,unseen=levels.filter(x=>!x.m.attempts).length,needsReview=levels.filter(x=>x.level===0&&x.m.attempts>0).length;
  const attempted=levels.filter(x=>x.m.attempts>0).sort((a,b)=>{
   const aa=a.m.correct/Math.max(1,a.m.attempts),ab=b.m.correct/Math.max(1,b.m.attempts);
   return aa-ab || b.m.attempts-a.m.attempts
  });
- return {total:syllables.length,mastered,learning,unseen,weakest:attempted.filter(x=>x.level<3).slice(0,6)}
+ return {total:syllables.length,mastered,learning,unseen,needsReview,weakest:attempted.filter(x=>x.level<3).slice(0,6)}
 }

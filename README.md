@@ -254,6 +254,10 @@ Les scripts classiques sont chargés dans cet ordre : `content.js`, `progression
 
 Pour ajouter un fichier JavaScript, mettre à jour `index.html`, le cache `sw.js` et les contrôles de chargement. Modifier les règles d’acquis dans `progression.js`, les récompenses dans `rewards.js`, les exercices dans `exercises.js` et les parcours quotidiens dans `missions.js`. Les tests navigateur couvrent leur fonctionnement conjoint ; `scripts/offline-check.js` vérifie le rechargement réel sans réseau.
 
+### Bilan parent et entraînement ciblé (0.29)
+
+Le bilan distingue quatre catégories exclusives : pas encore évaluée, à reprendre, en apprentissage et maîtrisée. Depuis le détail, chaque syllabe disponible lance un exercice d’écoute ciblé ; les familles futures restent verrouillées. Un bouton retourne au bilan et un rechargement y ramène également. Ces exercices ne remplacent ni ne valident une étape de la mission en cours. `scripts/parent-detail-check.js` couvre ces règles et le clavier sur quatre tailles d’écran.
+
 ### Suivi sur la durée (0.28)
 
 Le total des missions et la meilleure série sont sauvegardés séparément de l’historique récent, conservé sur 60 missions. Le badge des trois jours consécutifs reste obtenu après une pause. Les séries et le rythme hebdomadaire ignorent doublons, dates invalides et dates futures. Les anciennes sauvegardes démarrent au nombre de dates connues : une mission déjà effacée avant cette version ne peut pas être reconstituée. `scripts/long-term-progress-check.js` vérifie la 61e mission, les imports et les reprises.

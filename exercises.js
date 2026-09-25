@@ -74,14 +74,14 @@ function gamesMenu(){
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
-function gameListen(forcedTarget=null,fromMission=false){
- missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
+function gameListen(forcedTarget=null,fromMission=false,fromParent=false){
+ missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":fromParent?"parents":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
  const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
- <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
+ <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:fromParent?`<button class="btn gray" data-action="go" data-to="parents">← Retour au bilan</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
  if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
 }
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.29.0 — 2026-09-25
+
+- bilan parent distinguant syllabes jamais évaluées et syllabes à reprendre après une erreur
+- entraînement ciblé accessible depuis chaque syllabe disponible du détail parent
+- familles encore verrouillées désactivées ; noms accessibles et navigation clavier
+- retour explicite au bilan, y compris après rechargement, sans modifier la mission en cours
+- tests des catégories du bilan, des exercices ciblés, des verrous et de l’affichage sur quatre largeurs d’écran
+
 ## 0.28.0 — 2026-09-25
 
 - compteur total des missions indépendant des 60 dernières entrées d’historique
