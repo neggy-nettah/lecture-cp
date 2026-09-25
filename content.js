@@ -6,6 +6,13 @@ const CP_OFFICIAL_MILESTONES=[
  {id:"period-1",label:"Fin de période 1",cgpMin:12,cgpMax:15,skills:["décoder et encoder des CGP régulières et fréquentes","déchiffrer syllabes, mots puis phrases selon les CGP étudiées"]},
  {id:"midyear",label:"Milieu d’année",cgpMin:25,cgpMax:30,skills:["étendre le nombre de CGP décodées et encodées","prendre conscience des lettres finales muettes","mémoriser des mots fréquents et réguliers"]}
 ];
+const CGP_EXPANSION_PLAN=[
+ {id:"stable-single",label:"Consonnes simples stables",graphemes:["d","j","z","k"],mode:"family",note:"Peuvent rejoindre le modèle consonne + voyelle après création d’un corpus décodable."},
+ {id:"consonant-digraph",label:"Digrammes consonantiques",graphemes:["ch"],mode:"family",note:"Le moteur sait désormais traiter un graphème initial de plusieurs lettres."},
+ {id:"vowel-complex",label:"Graphèmes vocaliques complexes",graphemes:["ou","on","an","en","in","oi"],mode:"syllable-override",note:"Demandent une décomposition explicite des syllabes, par exemple lou = l + ou."},
+ {id:"context-sensitive",label:"Graphèmes dépendants du contexte",graphemes:["c","g"],mode:"rule",note:"Ne pas les ajouter comme une famille uniforme : leur valeur dépend notamment de la voyelle suivante."}
+];
+
 const CP_READING_ROADMAP=[
  {id:"cg-basic",label:"Décoder des correspondances simples",skills:["identifier les graphèmes simples","fusionner consonne + voyelle","lire des syllabes CV"],app:["sounds","syllables","listen"]},
  {id:"encode-basic",label:"Encoder avec les correspondances connues",skills:["écrire une syllabe entendue","assembler les graphèmes connus"],app:["encoding"]},
