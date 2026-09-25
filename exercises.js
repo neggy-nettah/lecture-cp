@@ -128,9 +128,9 @@ function updateEncode(){
 function wordEncodePool(){
  return decodableMissionWords().filter(word=>word.parts.length>=2&&word.parts.length<=4)
 }
-function gameWordEncode(forcedWord=null){
+function gameWordEncode(forcedWord=null,fromParent=false){
  if(!wordEncodingUnlocked()){activate("games");return}
- missionMode=false;currentView="word-encode";state.lastView="word-encode";save(false);locked=false;resetQuestionTracking();
+ missionMode=false;currentView="word-encode";state.lastView=fromParent?"parents":"word-encode";save(false);locked=false;resetQuestionTracking();
  const pool=wordEncodePool(),answer=forcedWord&&pool.some(w=>w.w===forcedWord.w)?forcedWord:pickLearningWord(pool);
  if(!answer){activate("games");return}
  currentAnswer=answer;wordEncodeMade=[];
@@ -144,7 +144,7 @@ function gameWordEncode(forcedWord=null){
  <div class="choices" id="wordEncodeChoices">${tokens.map(token=>`<button class="choice" style="font-size:27px" data-action="word-encode-token" data-value="${esc(token.value)}" data-id="${token.index}">${colorSyl(token.value)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="word-encode-reset">↩ Recommencer</button></div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-word-encode">Nouveau mot →</button></div>`;
+ <div class="nextbar">${fromParent?`<button class="btn gray" data-action="go" data-to="parents">← Retour au bilan</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-word-encode">Nouveau mot →</button>`}</div>`;
  playInstruction("Écoute le mot, puis touche les syllabes dans le bon ordre pour l’écrire.",()=>speak(answer.w,.68))
 }
 function updateWordEncode(){
