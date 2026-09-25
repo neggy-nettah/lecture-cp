@@ -157,12 +157,12 @@ Le premier palier de compréhension de texte se débloque à partir de 12 missio
 
 L'ordre précis des nouvelles correspondances reste un **choix de conception de l'application**, pas un ordre imposé par le programme officiel. Le projet conserve maintenant un `CGP_EXPANSION_PLAN` séparé des contenus actifs :
 
-- la famille `d` est désormais active ; les prochaines consonnes simples prévues sont `j`, `z`, `k` ;
+- les familles `d` puis `j` sont désormais actives ; les prochaines consonnes simples prévues sont `z`, `k` ;
 - premier digramme consonantique prévu : `ch` ;
 - graphèmes vocaliques complexes à traiter avec une décomposition explicite des syllabes : `ou`, `on`, `an`, `en`, `in`, `oi` ;
 - `c` et `g` restent hors des familles uniformes car leur valeur dépend du contexte graphique.
 
-En dehors de la famille `d`, déjà active, les graphèmes encore listés comme prévus ne sont pas exposés à l'enfant. Ils ne doivent entrer dans le curriculum qu'avec un corpus de mots vérifié, les aides audio correspondantes et les tests de décodabilité.
+En dehors des familles `d` et `j`, déjà actives, les graphèmes encore listés comme prévus ne sont pas exposés à l'enfant. Ils ne doivent entrer dans le curriculum qu'avec un corpus de mots vérifié, les aides audio correspondantes et les tests de décodabilité.
 
 ## Curriculum actuel
 
@@ -170,7 +170,7 @@ Les familles sont actuellement débloquées progressivement à partir de la list
 
 Le moteur :
 
-- contient actuellement 11 familles (66 syllabes CV), la famille `d` ayant été ajoutée en dernier pour préserver la progression des anciens profils ;
+- contient actuellement 12 familles (72 syllabes CV), les familles `d` puis `j` ayant été ajoutées en dernier pour préserver la progression des anciens profils ;
 - commence avec 3 familles ;
 - ajoute une famille environ toutes les 2 missions terminées ;
 - conserve les syllabes déjà travaillées ;
