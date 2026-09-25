@@ -43,6 +43,14 @@ Les données pédagogiques sont centralisées dans `content.js`. Le code appliqu
 
 Ne pas contourner ces filtres pour augmenter artificiellement la quantité de contenu.
 
+#### Cas du `e` final muet
+
+Le `e` entendu dans une syllabe CV et le `e` muet de fin de mot ne sont pas la même difficulté de lecture. Le guide Éduscol traite les lettres muettes de fin de mot, dont le `e` muet, comme une règle explicite distincte.
+
+En conséquence, les mots de `SILENT_FINAL_E_WORDS` restent dans le corpus mais sont exclus du décodage autonome tant que cette règle n'a pas été enseignée. Il ne faut pas représenter **lune** comme une simple fusion orale `lu + ne`, ni **tomate** comme `to + ma + te`, avant cet enseignement.
+
+Pour compenser sans gonfler artificiellement le corpus, privilégier des mots CV réguliers comme **menu, poli, puni, revu, relu, pari, rami, vomi**.
+
 ### 4. Décodage et encodage se renforcent mutuellement
 
 Le programme et le livret CP 2025 associent explicitement décodage et encodage des correspondances graphème-phonème. L'application peut donc proposer des activités où l'enfant entend une syllabe et reconstruit son écriture, à condition de rester dans les graphèmes déjà enseignés.
