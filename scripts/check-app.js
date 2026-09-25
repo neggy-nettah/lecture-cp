@@ -183,6 +183,9 @@ if(!app.includes('const pool=decodableSentencePool()')){
 if(!app.includes('Math.min(missionCap,readinessCap)')||!app.includes('Math.max(knownFamilyFloor()')){
   fail("Family unlocks are no longer gated by both mission cadence and learning readiness.");
 }
+if(!app.includes("SENTENCE_MIN_MISSIONS=8,SENTENCE_MIN_MASTERY_POINTS=12")||!app.includes("function sentenceReadiness()")||!app.includes("missions>=SENTENCE_MIN_MISSIONS&&points>=SENTENCE_MIN_MASTERY_POINTS")){
+  fail("Sentence activities are no longer gated by both practice cadence and demonstrated mastery.");
+}
 if(app.includes('!!state.soundPractice?.[initial]'))fail("Sound practice alone can unlock an entire legacy family.");
 if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fail("Legacy word practice no longer preserves previously worked families.");
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="encode"')||!app.includes('s.type==="comprehension"')||!app.includes('visualModes=["memory","family","missing"')||!app.includes('["encode"]')||!app.includes('["comprehension"]')){
