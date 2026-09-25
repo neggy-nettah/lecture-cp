@@ -9,6 +9,7 @@ catch(error){console.error("CONTENT VALIDATION FAILED: syntax/runtime",error);pr
 const data=vm.runInContext("DATA",context);
 const cpRoadmap=vm.runInContext("CP_READING_ROADMAP",context);
 const cpMilestones=vm.runInContext("CP_OFFICIAL_MILESTONES",context);
+const cgpExpansionPlan=vm.runInContext("CGP_EXPANSION_PLAN",context);
 const syllableOverrides=vm.runInContext("SYLLABLE_GRAPHEME_OVERRIDES",context);
 const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
 const silentFinalEWords=vm.runInContext("SILENT_FINAL_E_WORDS",context);
@@ -37,6 +38,13 @@ if(!syllableOverrides||typeof syllableOverrides!=="object"||Array.isArray(syllab
 for(const [syllable,parts] of Object.entries(syllableOverrides)){
   if(!Array.isArray(parts)||parts.length<2||parts.some(x=>typeof x!=="string"||!x)||parts.join("")!==syllable)fail("Invalid syllable grapheme override:",syllable);
 }
+if(!Array.isArray(cgpExpansionPlan)||cgpExpansionPlan.length<4)fail("CGP expansion plan is incomplete.");
+const expansionIds=new Set(cgpExpansionPlan.map(x=>x.id));
+for(const id of ["stable-single","consonant-digraph","vowel-complex","context-sensitive"]){
+  if(!expansionIds.has(id))fail("Missing CGP expansion stage:",id);
+}
+const contextStage=cgpExpansionPlan.find(x=>x.id==="context-sensitive");
+if(!contextStage?.graphemes?.includes("c")||!contextStage?.graphemes?.includes("g")||contextStage.mode!=="rule")fail("Context-sensitive c/g handling is no longer protected.");
 if(!Array.isArray(cpMilestones)||cpMilestones.length<2)fail("Official CP milestones are missing.");
 const period1=cpMilestones.find(x=>x.id==="period-1"),midyear=cpMilestones.find(x=>x.id==="midyear");
 if(period1?.cgpMin!==12||period1?.cgpMax!==15||midyear?.cgpMin!==25||midyear?.cgpMax!==30)fail("Official CP CGP milestones changed unexpectedly.");
