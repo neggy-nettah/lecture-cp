@@ -685,6 +685,7 @@ function parents(){
  const ms=masterySummary(),wm=wordMasterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
  const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Aucune difficulté repérée dans les réponses enregistrées. Les syllabes non évaluées restent à découvrir.</span>`;
  const weakWords=wm.weakest.length?wm.weakest.map(x=>`<button class="collectible" data-action="parent-word-review" data-word="${esc(x.word.w)}">${esc(x.word.w.toUpperCase())} ${masteryStars(x.key)} • ${x.m.correct}/${x.m.attempts}</button>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses sur les mots pour repérer une difficulté.</span>`;
+ const milestoneCards=learningMilestones().map(item=>`<div class="parent-box"><h3>${item.icon} ${esc(item.label)}</h3><p><b>${item.ready?"✅ Disponible":"🔒 En préparation"}</b><br><small>${esc(item.detail)}</small></p></div>`).join("");
  stage.innerHTML=title("Coin parent","Suivi simple de la progression réelle.","Tableau de bord")+
  `<div class="parent-grid">
   <div class="parent-box"><h3>🎯 Réussite des tentatives</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${attempts?accuracy+" % ("+correct+"/"+attempts+")":"pas encore de réponse"}</small></p></div>
@@ -695,6 +696,7 @@ function parents(){
   <div class="parent-box"><h3>🔎 Pas encore évaluées</h3><p><b style="font-size:26px">${ms.unseen}</b><br>Aucune réponse évaluée pour ces syllabes. Ce n’est pas une difficulté constatée.</p></div>
   <div class="parent-box"><h3>📅 Missions terminées</h3><p><b style="font-size:26px">${completedMissionCount()}</b><br>🔥 Série : ${missionDayStreak()} jour(s) • ${missionsLast7Days()} cette semaine.<br><small>Meilleure série : ${bestMissionStreak()} jour(s).</small></p></div>
  </div>
+ <div class="card"><b>🪜 Prochains paliers</b><p style="color:var(--muted);font-size:13px">Ces paliers s’ouvrent selon les missions réalisées et la maîtrise réellement observée.</p><div class="parent-grid" style="margin-top:10px">${milestoneCards}</div></div>
  ${parentReviewHTML()}
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>
  <div class="card"><b>📝 Mots à renforcer</b><p style="color:var(--muted);font-size:13px">Les mots évalués dans « J’écris le mot » sont suivis séparément des syllabes.</p><div class="collection-row">${weakWords}</div></div>
