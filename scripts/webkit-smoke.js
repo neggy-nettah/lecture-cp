@@ -36,7 +36,7 @@ const mockClient=`window.supabase={createClient:()=>({
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
 
   await page.reload({waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>window.currentView==='word-encode');
+  await page.waitForFunction(()=>currentView==='word-encode');
   assert.equal(await page.locator('#wordEncodeZone').isVisible(),true);
 
   await page.evaluate(()=>activate('home'));
