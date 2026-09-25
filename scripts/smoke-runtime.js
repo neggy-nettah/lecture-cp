@@ -32,6 +32,8 @@ function makeElement(){
     appendChild(){},
     remove(){},
     addEventListener(){},
+    setAttribute(name,value){this[name]=String(value)},
+    getAttribute(name){return this[name]??null},
     scrollIntoView(){},
     focus(){},
     closest(){return null}
