@@ -248,6 +248,9 @@ if(!app.includes('const UI_TEXT_SIZE_KEY="lectureCpLargeText"')||!app.includes("
 if(!app.includes("function safeStorageGet(")||!app.includes("function safeStorageSet(")||app.includes('localStorage.getItem("lastChildId")')){
   fail("Local storage access is not fully routed through resilient helpers.");
 }
+if((app.match(/localStorage\.getItem\(/g)||[]).length!==1||(app.match(/localStorage\.setItem\(/g)||[]).length!==1||(app.match(/localStorage\.removeItem\(/g)||[]).length!==0){
+  fail("Direct localStorage access escaped the resilient storage helpers.");
+}
 if(!html.includes('id="textSizeBtn"')||!css.includes(".large-text .titlebar h2")){
   fail("Large-text control or styles are missing.");
 }
