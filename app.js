@@ -149,15 +149,45 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function colorSyl(s){return `<span class="red">${esc(s[0]||"")}</span><span class="blue">${esc(s.slice(1))}</span>`}
 function wordHTML(parts){return parts.map((p,i)=>`<span>${esc(p)}</span>`).join("·")}
 
-function voice(){
+let speechVoiceCache=[],speechRequestId=0;
+function refreshSpeechVoices(){
  const vs=window.speechSynthesis?.getVoices?.()||[];
- return vs.find(v=>/^fr[-_]/i.test(v.lang)&&/France|French|fr-FR/i.test(v.lang+" "+v.name))||vs.find(v=>/^fr/i.test(v.lang))||null
+ if(vs.length)speechVoiceCache=vs;
+ return speechVoiceCache
+}
+function voice(){
+ const vs=refreshSpeechVoices();
+ return vs.find(v=>/^fr[-_]/i.test(v.lang)&&/France|French|fr-FR/i.test(v.lang+" "+v.name))||vs.find(v=>/^fr/i.test(v.lang))||vs.find(v=>v.default)||vs[0]||null
+}
+function speakNow(text,rate=.72,cb,requestId=speechRequestId){
+ if(requestId!==speechRequestId||!("speechSynthesis" in window))return;
+ const synth=window.speechSynthesis,busy=!!(synth.speaking||synth.pending);
+ if(busy)synth.cancel();
+ synth.resume?.();
+ const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
+ const v=voice();if(v)u.voice=v;
+ if(cb)u.onend=cb;
+ u.onerror=e=>{if(e?.error!=="canceled")toast("🔈 L’audio n’a pas démarré. Réessaie dans un instant.")};
+ const launch=()=>{if(requestId===speechRequestId)synth.speak(u)};
+ if(busy)setTimeout(launch,24);else launch()
 }
 function speak(text,rate=.72,cb){
  if(!("speechSynthesis" in window)){toast("🔈 Audio non disponible sur ce navigateur.");return}
- speechSynthesis.cancel();
- const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
- const v=voice();if(v)u.voice=v;if(cb)u.onend=cb;speechSynthesis.speak(u)
+ const synth=window.speechSynthesis,requestId=++speechRequestId;
+ if(voice()){speakNow(text,rate,cb,requestId);return}
+ let finished=false;
+ const tryVoices=()=>{
+  if(finished||requestId!==speechRequestId)return;
+  if(!voice())return;
+  finished=true;synth.removeEventListener?.("voiceschanged",tryVoices);speakNow(text,rate,cb,requestId)
+ };
+ synth.addEventListener?.("voiceschanged",tryVoices);
+ setTimeout(()=>{
+  if(finished||requestId!==speechRequestId)return;
+  finished=true;synth.removeEventListener?.("voiceschanged",tryVoices);
+  // Some engines expose no list at all but can still use their internal default.
+  speakNow(text,rate,cb,requestId)
+ },450)
 }
 function speakMission(text,rate=.60,cb){speak(text,rate,cb)}
 function instructionAudio(text){
@@ -898,7 +928,7 @@ async function bootstrap(){
   }catch(e){console.error("Supabase bootstrap error",e);session=null;currentChild=null}
  }
  authBootstrapping=false;
- if("speechSynthesis" in window){speechSynthesis.getVoices();speechSynthesis.addEventListener?.("voiceschanged",()=>speechSynthesis.getVoices())}
+ if("speechSynthesis" in window){refreshSpeechVoices();speechSynthesis.addEventListener?.("voiceschanged",refreshSpeechVoices)}
  render();topUI();
  if(passwordRecovery&&session)openPasswordRecovery();
  else if(incomingAuthLinkError&&!session){openAuth();authMsg("Ce lien est expiré ou invalide. Demande un nouveau lien depuis « Mot de passe oublié ».","error")}
