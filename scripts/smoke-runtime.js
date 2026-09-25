@@ -145,6 +145,7 @@ const probes=[
   'typeof parseProgressImport==="function"',
   'typeof importProgressFile==="function"',
   'typeof registerServiceWorker==="function"',
+  '(()=>{let checks=0;serviceWorkerRegistration={update:()=>{checks++;return Promise.resolve()}};lastServiceWorkerCheck=0;checkForAppUpdate(true);checkForAppUpdate(false);serviceWorkerRegistration=null;return checks===1})()',
   'typeof updateConnectivityUI==="function"',
   'typeof dueReviewSyllables==="function"',
   '(state=normalizeState({mastery:{ma:{attempts:1,correct:1,lastSeen:"2000-01-01"}}}),reviewIntervalDays("ma")===1&&dueReviewSyllables().includes("ma"))',
