@@ -139,7 +139,7 @@ Le programme officiel fixe aussi des repères utiles : **12 à 15 CGP** décodé
 | Extension des CGP | ajouter d’autres correspondances régulières puis les graphèmes complexes fréquents | à construire |
 | Régularités orthographiques | lettres finales muettes fréquentes, notamment `e` final muet | à construire explicitement |
 | Fluence et prosodie | lecture précise puis plus fluide, respect de la ponctuation et des groupes de sens | amorcé sans notation automatique |
-| Textes courts et compréhension | lire un texte court, répondre à des questions explicites, enrichir le vocabulaire | à construire |
+| Textes courts et compréhension | lire un texte court, répondre à des questions explicites, enrichir le vocabulaire | amorcé en jeu libre avec des mini-textes de 2 phrases |
 
 ### Règle de progression
 
@@ -150,6 +150,8 @@ Pour le passage aux phrases, l'application exige désormais **deux conditions** 
 L'encodage progresse lui aussi par paliers : d'abord une syllabe entendue à reconstruire avec des lettres, puis un mot régulier entièrement décodable à reconstruire avec ses syllabes. Dans ce deuxième exercice, le mot écrit n'est pas montré avant la réponse afin d'éviter une simple copie visuelle.
 
 Le jeu d'encodage de mots est actuellement déverrouillé à partir de 4 missions terminées et 10 points de maîtrise des syllabes. Ce seuil est un réglage produit prudent, pas une norme officielle : il pourra être ajusté à partir d'observations d'usage réelles sans changer le principe pédagogique.
+
+Le premier palier de compréhension de texte se débloque à partir de 12 missions et 20 points de maîtrise. Il utilise deux phrases déjà validées par le corpus décodable. La question est donnée oralement afin d'évaluer la compréhension du texte sans ajouter artificiellement des mots de question encore non enseignés. Le texte lui-même n'est pas lu automatiquement avant la réponse. Ce seuil est également un réglage produit provisoire.
 
 ### Extension des correspondances
 
