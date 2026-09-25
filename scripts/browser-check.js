@@ -170,6 +170,19 @@ window.supabase={createClient:()=>({
   assert.equal(await page.locator('[data-action="readaloud-done"]').isDisabled(),true);
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.action),'readaloud-model');
   await page.setViewportSize({width:390,height:844});
+  // Large text is a device preference: it persists locally and must not touch learning progress.
+  const largeTextBefore=await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger}));
+  await page.locator('#textSizeBtn').click();
+  assert.equal(await page.evaluate(()=>document.body.classList.contains('large-text')),true);
+  assert.equal(await page.locator('#textSizeBtn').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('lectureCpLargeText')),'1');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+  assert.equal(await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger})),largeTextBefore);
+  await page.reload();await page.waitForFunction(()=>document.body.classList.contains('large-text'));
+  assert.equal(await page.locator('#textSizeBtn').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+  await page.locator('#textSizeBtn').click();
+  assert.equal(await page.evaluate(()=>localStorage.getItem('lectureCpLargeText')),'0');
   // The account dialog traps focus and closes back to its opener with Escape.
   await page.locator('#accountBtn').click();
   assert.equal(await page.evaluate(()=>document.activeElement.id),'loginEmail');
