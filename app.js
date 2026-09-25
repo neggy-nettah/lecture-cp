@@ -16,6 +16,55 @@ function stateCount(value){const n=typeof value==="number"||typeof value==="stri
 function stateStats(value){const v=stateObject(value),attempts=stateCount(v.attempts);return {attempts,correct:Math.min(attempts,stateCount(v.correct))}}
 function stateDay(value){return typeof value==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value?value:null}
 function stateFlags(value){return Object.fromEntries(Object.entries(stateObject(value)).filter(([k,v])=>!["__proto__","constructor","prototype"].includes(k)&&(v===true||v===1)).map(([k])=>[k,true]))}
+function newerState(a,b){return Number(a?.updatedAt||0)>=Number(b?.updatedAt||0)?a:b}
+function strongerMastery(a,b){
+ if(!a)return b;if(!b)return a;
+ const aa=stateStats(a),bb=stateStats(b);
+ if(aa.attempts!==bb.attempts)return aa.attempts>bb.attempts?a:b;
+ if(aa.correct!==bb.correct)return aa.correct>bb.correct?a:b;
+ const aSeen=stateDay(a.lastSeen)||"",bSeen=stateDay(b.lastSeen)||"";
+ return aSeen>=bSeen?a:b
+}
+function mergeMissionHistory(a,b){
+ const byDay=new Map();
+ for(const item of [...(a||[]),...(b||[])]){
+  const day=stateDay(item?.date);if(!day)continue;
+  const prev=byDay.get(day);
+  if(!prev||stateCount(item?.attempts)>stateCount(prev?.attempts)||(stateCount(item?.attempts)===stateCount(prev?.attempts)&&stateCount(item?.correct)>stateCount(prev?.correct)))byDay.set(day,item)
+ }
+ return [...byDay.values()].sort((x,y)=>String(x.date).localeCompare(String(y.date))).slice(-60)
+}
+function mergeDailyMission(a,b,preferred){
+ const ma=stateObject(a),mb=stateObject(b),da=stateDay(ma.date),db=stateDay(mb.date);
+ if(!da&&!db)return null;if(!da)return mb;if(!db)return ma;
+ if(da!==db)return da>db?ma:mb;
+ const ia=stateCount(ma.index),ib=stateCount(mb.index);
+ if(ia!==ib)return ia>ib?ma:mb;
+ return preferred===a?ma:mb
+}
+function mergeProgressStates(localRaw,remoteRaw){
+ const local=normalizeState(localRaw),remote=normalizeState(remoteRaw),preferred=newerState(local,remote),other=preferred===local?remote:local;
+ const merged=normalizeState({...other,...preferred});
+ merged.updatedAt=Math.max(local.updatedAt||0,remote.updatedAt||0);
+ merged.stars=Math.max(local.stars||0,remote.stars||0);
+ merged.gameWins=Math.max(local.gameWins||0,remote.gameWins||0);
+ merged.missionHistory=mergeMissionHistory(local.missionHistory,remote.missionHistory);
+ merged.missionCount=Math.max(completedMissionCount(local),completedMissionCount(remote),merged.missionHistory.length);
+ merged.bestMissionStreak=Math.max(bestMissionStreak(local),bestMissionStreak(remote),bestMissionStreak({...merged,missionHistory:merged.missionHistory}));
+ for(const key of ["done","attemptLedger","rewardLedger","soundPractice","wordPractice"])merged[key]={...(local[key]||{}),...(remote[key]||{})};
+ const masteryKeys=new Set([...Object.keys(local.mastery||{}),...Object.keys(remote.mastery||{})]);
+ merged.mastery={};for(const key of masteryKeys)merged.mastery[key]=strongerMastery(local.mastery?.[key],remote.mastery?.[key]);
+ const queue=[...(preferred.reviewQueue||[]),...(other.reviewQueue||[])].filter((x,i,a)=>DATA.sets.flat().includes(x)&&a.indexOf(x)===i);
+ merged.reviewQueue=queue.slice(-24);
+ const collectionIds=new Set(),collection=[];
+ for(const item of [...(local.rewards?.collection||[]),...(remote.rewards?.collection||[])]){const known=COLLECTIBLES.find(x=>x.id===item?.id);if(known&&!collectionIds.has(known.id)){collection.push({...known});collectionIds.add(known.id)}}
+ merged.rewards={towardPiece:Math.max(local.rewards?.towardPiece||0,remote.rewards?.towardPiece||0),pieces:Math.max(local.rewards?.pieces||0,remote.rewards?.pieces||0),puzzles:Math.max(local.rewards?.puzzles||0,remote.rewards?.puzzles||0),collection};
+ merged.dailyMission=mergeDailyMission(local.dailyMission,remote.dailyMission,preferred);
+ merged.stats={attempts:Math.max(local.stats?.attempts||0,remote.stats?.attempts||0),correct:Math.max(local.stats?.correct||0,remote.stats?.correct||0)};
+ if(merged.stats.correct>merged.stats.attempts)merged.stats.correct=merged.stats.attempts;
+ return normalizeState(merged)
+}
+
 function normalizeState(raw){
  raw=migrateState(stateObject(raw));
  const out={...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION};
@@ -125,10 +174,14 @@ async function loadRemoteState(){
  const cached=cachedProfileState(child);
  const local=Number(state.updatedAt||0)>=Number(cached.updatedAt||0)?state:cached,remote=data?.lesson_state||null;
  const remoteTs=Number(remote?.updatedAt||0),localTs=Number(local.updatedAt||0);
- if(!remote||localTs>remoteTs){state=normalizeState(local);state.name=child.nickname;if(wasLoading)render();await saveRemoteNow();return}
+ if(!remote){state=normalizeState(local);state.name=child.nickname;if(wasLoading)render();await saveRemoteNow();return}
  if(remoteTs===localTs&&localTs>0){if(wasLoading)render();topUI();$("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok";return}
- saveSnapshotBackup(normalizeState(local));state=normalizeState(remote);state.name=child.nickname;
+ const merged=mergeProgressStates(local,remote);
+ const localChanged=JSON.stringify(normalizeState(local))!==JSON.stringify(merged),remoteChanged=JSON.stringify(normalizeState(remote))!==JSON.stringify(merged);
+ if(localChanged)saveSnapshotBackup(normalizeState(local));
+ state=merged;state.name=child.nickname;
  missionMode=false;currentView=state.lastView||"home";saveLocal();render();topUI();
+ if(remoteChanged){state.updatedAt=Math.max(state.updatedAt,Date.now());saveLocal();await saveRemoteNow();return}
  $("#syncStatus").textContent="☁️ Progression synchronisée";$("#syncStatus").className="sync ok"
 }
 
