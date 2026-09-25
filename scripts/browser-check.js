@@ -176,6 +176,16 @@ window.supabase={createClient:()=>({
   await page.waitForTimeout(250);
   assert.equal(await page.evaluate(()=>currentView),'word-encode');
   assert.equal(await page.locator('#wordEncodeZone').isVisible(),true);
+  // Parent can launch a targeted weak-word practice without changing the daily mission.
+  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:4},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:{ma:{attempts:4,correct:4,lastSeen:localDayKey()},mi:{attempts:4,correct:4,lastSeen:localDayKey()},mo:{attempts:4,correct:4,lastSeen:localDayKey()},la:{attempts:4,correct:4,lastSeen:localDayKey()},'word:silo':{attempts:2,correct:0,lastSeen:localDayKey()}}});parents()});
+  const parentMissionBefore=await page.evaluate(()=>JSON.stringify(state.dailyMission));
+  await page.locator('[data-action="parent-word-review"][data-word="silo"]').click();
+  assert.equal(await page.evaluate(()=>currentView),'word-encode');
+  assert.equal(await page.evaluate(()=>state.lastView),'parents');
+  assert.equal(await page.evaluate(()=>currentAnswer.w),'silo');
+  assert.equal(await page.evaluate(()=>JSON.stringify(state.dailyMission)),parentMissionBefore);
+  await page.locator('[data-action="go"][data-to="parents"]').click();
+  assert.equal(await page.evaluate(()=>currentView),'parents');
   // Reading aloud is deliberate practice: the model stays hidden until the child finishes and no score/mastery changes.
   await page.setViewportSize({width:320,height:900});
   await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameReadAloud()});
