@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.37.0 — 2026-09-25
+
+- nouveau jeu libre `J’écris le mot` : écouter un mot décodable puis assembler ses syllabes sans modèle écrit
+- encodage de syllabes introduit progressivement dans les missions quand les prérequis sont suffisants
+- correction du contexte mission pendant l’encodage
+- activités de phrase débloquées avec 8 missions terminées et 12 points de maîtrise, pas avec le temps seul
+- test navigateur du nouvel encodage sur écran 320 px
+- préférence `Aa+` sécurisée lorsque le stockage local est indisponible
+- cache hors ligne et assets mis à jour pour la v0.37.0
+
 ## 0.36.0 — 2026-09-25
 
 - mode texte agrandi `Aa+` mémorisé localement sur chaque appareil, sans modifier les scores ni la progression
