@@ -117,7 +117,7 @@ function normalizeState(raw){
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],encodeMade=[],wordEncodeMade=[],readAloudSentence=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,currentMiniText=null,orderTarget=[],orderMade=[],encodeMade=[],wordEncodeMade=[],readAloudSentence=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -705,7 +705,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","word-encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","word-encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -728,6 +728,7 @@ function render(){
  else if(currentView==="order")gameOrder();
  else if(currentView==="readaloud")gameReadAloud();
  else if(currentView==="comprehension")gameComprehension();
+ else if(currentView==="mini-text")gameMiniText();
  else if(currentView==="parents")parents();
  else{currentView="home";state.lastView="home";save(false);home()}
  topUI();window.scrollTo({top:0,behavior:"smooth"});
@@ -946,11 +947,20 @@ document.addEventListener("click",e=>{
  if(a==="readaloud-done"){if(locked)return;locked=true;b.disabled=true;const model=$("#readaloudModel");if(model)model.hidden=false;$("#feedback").innerHTML='<div class="ok">👏 Bravo pour ta lecture ! Maintenant, tu peux écouter le modèle et comparer.</div>';practiceDone("Bravo d’avoir lu la phrase à voix haute !");model?.querySelector("button")?.focus({preventScroll:true});return}
  if(a==="readaloud-model"){speak(readAloudSentence.join(" "),.76);return}
  if(a==="game-comprehension"){gameComprehension();return}
+ if(a==="game-mini-text"){gameMiniText();return}
+ if(a==="mini-text-question"){if(currentMiniText?.question)speak(currentMiniText.question,.78);return}
  if(a==="comprehension-answer"){
    if(locked)return;
    const value=b.dataset.value,key="comprehension:"+currentAnswer;
    if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(null,key);rewardVerified("Phrase comprise !",key);setDone("comprehension");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as bien compris la phrase !</div>';completeMissionStep()}
    else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Relis la phrase tranquillement.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   return
+ }
+ if(a==="mini-text-answer"){
+   if(locked||!currentMiniText)return;
+   const value=b.dataset.value,key="mini-text:"+currentMiniText.id;
+   if(value===currentMiniText.answer){locked=true;b.classList.add("correct");recordQuestionSuccess(null,key);rewardVerified("Mini-texte compris !",key);setDone("miniText");$("#feedback").innerHTML='<div class="ok">🎉 Bravo ! Tu as trouvé la bonne information dans le texte.</div>'}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Relis les deux phrases tranquillement.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
  if(a==="repeat-answer"){speak(typeof currentAnswer==="string"?currentAnswer:currentAnswer.w,.60);return}
