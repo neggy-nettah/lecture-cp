@@ -90,11 +90,11 @@ if(exactWords.length<30)fail("Too few exactly assembled words:",String(exactWord
 const taughtParts=new Set([...syllables,"a","e","i","o","u","é"]);
 const fullyDecodable=data.words.filter(w=>w.parts.join("")===w.w&&w.parts.every(p=>taughtParts.has(p))&&!deferredWords.includes(w.w));
 if(fullyDecodable.length<40)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
-for(const expected of ["menu","poli","puni","revu","relu","pari","rami","vomi"]){
+for(const expected of ["menu","poli","puni","revu","relu","pari","rami","vomi","domino","dodo","midi","radio","défi","dino"]){
   if(!fullyDecodable.some(w=>w.w===expected))fail("Expected regular CV word is not fully decodable:",expected);
 }
 if(!silentFinalEWords.every(w=>deferredWords.includes(w)))fail("Silent-final-e vocabulary must stay deferred until the rule is taught.");
-for(const deferred of ["maman","domino","robot","tapis",...deferredWords]){
+for(const deferred of ["maman","robot","tapis",...deferredWords]){
   if(fullyDecodable.some(w=>w.w===deferred))fail("Word with an untaught rule became decodable too early:",deferred);
 }
 if(pictureWords.some(w=>deferredWords.includes(w)))fail("A deferred word remains in the picture-answer bank.");
