@@ -120,6 +120,7 @@ const probes=[
   'typeof decodableSentencePool==="function"',
   'typeof comprehensionSentencePool==="function"',
   'typeof gameComprehension==="function"',
+  'typeof gameReadAloud==="function"',
   'typeof gameEncode==="function"',
   'typeof encodeLetterPool==="function"',
   'typeof phraseToolHelpHTML==="function"',
@@ -200,6 +201,8 @@ const probes=[
   '(state=normalizeState({}),activeSoundData().length===9&&activeSoundData().some(x=>x.g==="e"))',
   '(state=normalizeState({missionHistory:[{accuracy:50,attempts:2,correct:1},{accuracy:100,attempts:2,correct:2}]}),recentPerformance().accuracy===75)',
   '(state=normalizeState({}),sentenceUnlocked()===false)',
+  '(state=normalizeState({}),gameReadAloud(),currentView==="games")',
+
   '(()=>{const h=phraseToolHelpHTML(["Papa","a","une","moto."]);return h.includes("data-text=\\\"a\\\"")&&h.includes("data-text=\\\"une\\\"")&&!h.includes("data-text=\\\"moto\\\"")&&!h.includes("data-text=\\\"Papa\\\"")})()',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),sentenceUnlocked()===true&&unlockedFamilyCount()===7&&decodableSentencePool().length>=3)',
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),comprehensionSentencePool().length>=3&&comprehensionSentencePool().every(x=>x.word&&x.sentence.length>=3))',
@@ -251,6 +254,7 @@ const screenProbes=[
   'state=normalizeState({}),gamePicture(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBuild(),stage.innerHTML.length>50',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameOrder(),stage.innerHTML.length>50',
+  'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameReadAloud(),stage.innerHTML.length>50&&readAloudSentence.length>=3&&stage.innerHTML.includes("readaloudModel")',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")}))}),gameComprehension(),stage.innerHTML.length>50&&currentAnswer.length>0'
 ];
 
@@ -300,6 +304,7 @@ console.log("- Sound browser follows unlocked curriculum");
 console.log("- Phrase game unlocks after 8 missions with decodable sentences");
 console.log("- Sentence comprehension game: OK");
 console.log("- Tool-word audio help without answer leakage: OK");
+console.log("- Unscored read-aloud practice and delayed model: OK");
 console.log("- Advanced missions can rotate comprehension into step 4: OK");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
