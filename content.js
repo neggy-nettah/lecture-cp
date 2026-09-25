@@ -5,7 +5,7 @@
 const CP_READING_ROADMAP=[
  {id:"cg-basic",label:"Décoder des correspondances simples",skills:["identifier les graphèmes simples","fusionner consonne + voyelle","lire des syllabes CV"],app:["sounds","syllables","listen"]},
  {id:"encode-basic",label:"Encoder avec les correspondances connues",skills:["écrire une syllabe entendue","assembler les graphèmes connus"],app:["encoding"]},
- {id:"words-basic",label:"Lire et écrire des mots réguliers",skills:["fusionner plusieurs syllabes","lire des mots entièrement décodables"],app:["words","build","missing","pictures"]},
+ {id:"words-basic",label:"Lire et écrire des mots réguliers",skills:["fusionner plusieurs syllabes","lire des mots entièrement décodables","encoder un mot régulier entendu"],app:["words","build","missing","pictures","word-encoding"]},
  {id:"sentences-basic",label:"Lire et comprendre des phrases décodables",skills:["lire une phrase courte","identifier une information explicite","remettre une phrase en ordre"],app:["order","comprehension","readaloud"]},
  {id:"orthography-rules",label:"Premières régularités orthographiques",skills:["repérer des lettres muettes fréquentes","traiter le e final muet"],app:[],planned:true},
  {id:"complex-graphemes",label:"Graphèmes complexes",skills:["lire des graphèmes complexes fréquents","étendre le corpus décodable"],app:[],planned:true},
