@@ -37,9 +37,20 @@ window.supabase={createClient:()=>({
    }
   }
   await page.setViewportSize({width:390,height:844});
+  for(const view of ['home','sounds','syllables','words','games','world','collection','parents']){
+   await page.evaluate(view=>activate(view),view);
+   const accessibilityIssues=await page.evaluate(()=>{
+    const visible=el=>!!(el.offsetWidth||el.offsetHeight||el.getClientRects().length);
+    const ids=[...document.querySelectorAll('[id]')].map(el=>el.id),duplicates=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
+    const unnamedButtons=[...document.querySelectorAll('button')].filter(visible).filter(b=>!(b.getAttribute('aria-label')||b.getAttribute('title')||(b.textContent||'').trim())).length;
+    const unlabeledFields=[...document.querySelectorAll('input:not([type="hidden"]),select,textarea')].filter(visible).filter(el=>!(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')||(el.id&&document.querySelector('label[for="'+CSS.escape(el.id)+'"]')))).length;
+    return {duplicates,unnamedButtons,unlabeledFields};
+   });
+   assert.deepEqual(accessibilityIssues,{duplicates:[],unnamedButtons:0,unlabeledFields:0},view+' has basic accessibility regressions');
+   const shortTargets=await page.locator('button:visible').evaluateAll(buttons=>buttons.map(b=>({text:(b.textContent||'').trim().slice(0,40),height:b.getBoundingClientRect().height})).filter(x=>x.height<43.5));
+   assert.deepEqual(shortTargets,[],view+' has touch targets below 44px');
+  }
   await page.evaluate(()=>activate('home'));
-  const shortTargets=await page.locator('button:visible').evaluateAll(buttons=>buttons.map(b=>({text:(b.textContent||'').trim().slice(0,40),height:b.getBoundingClientRect().height})).filter(x=>x.height<43.5));
-  assert.deepEqual(shortTargets,[],'visible home touch targets must be at least 44px high');
   await page.evaluate(()=>{state=normalizeState({});activate('home')});
   await page.locator('[data-action="mission-start"]').first().click();
   await page.locator('[data-action="mission-next"]').click();
