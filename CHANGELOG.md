@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.38.0 — 2026-09-25
+
+- l’encodage de mots reste verrouillé jusqu’à 4 missions terminées et 10 points de maîtrise
+- la feuille de route CP intègre les repères officiels : 12–15 CGP en fin de période 1 puis 25–30 au milieu de l’année
+- l’extension des correspondances graphème-phonème passe désormais avant l’enseignement explicite des lettres finales muettes
+- ajout de métadonnées explicites pour les familles de syllabes afin de ne plus supposer qu’un graphème fait une seule lettre
+- exercices, missions, couleurs de syllabes et encodage utilisent maintenant ces métadonnées
+- tests de régression avec une famille multi-lettres simulée comme `ch`
+- mise à jour du cache hors ligne et des assets vers v0.38.0
+
 ## 0.37.0 — 2026-09-25
 
 - nouveau jeu libre `J’écris le mot` : écouter un mot décodable puis assembler ses syllabes sans modèle écrit
