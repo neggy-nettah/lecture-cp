@@ -171,6 +171,9 @@ if(!app.includes("function gameEncode(forcedTarget=null,fromMission=false)")||!a
 if(!app.includes("function gameWordEncode(")||!app.includes("function wordEncodePool(")||!app.includes("function updateWordEncode(")||!app.includes('data-action="game-word-encode"')){
   fail("Dictated word encoding practice is missing.");
 }
+if(!app.includes('else if(currentView==="word-encode")gameWordEncode()')||!app.includes('"word-encode","bubbles"')){
+  fail("Word encoding view no longer restores through the main router.");
+}
 if(!app.includes("WORD_ENCODING_MIN_MISSIONS=4,WORD_ENCODING_MIN_MASTERY_POINTS=10")||!app.includes("function wordEncodingReadiness()")||!app.includes("if(!wordEncodingUnlocked()){activate(\"games\");return}")){
   fail("Word encoding is no longer protected by its readiness gate.");
 }
