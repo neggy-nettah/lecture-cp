@@ -89,6 +89,12 @@ function mergeProgressStates(localRaw,remoteRaw){
  return normalizeState(merged)
 }
 
+function validMasteryKey(key){
+ if(typeof key!=="string")return false;
+ if(DATA.sets.flat().includes(key))return true;
+ if(!key.startsWith("word:"))return false;
+ const word=key.slice(5);return DATA.words.some(item=>item.w===word)
+}
 function normalizeState(raw){
  raw=migrateState(stateObject(raw));
  const out={...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION};
@@ -97,7 +103,7 @@ function normalizeState(raw){
  out.lastView=typeof raw.lastView==="string"?raw.lastView:"home";
  out.stats=stateStats(raw.stats);
  for(const key of ["done","attemptLedger","rewardLedger","soundPractice","wordPractice"])out[key]=stateFlags(raw[key]);
- out.mastery=Object.fromEntries(Object.entries(stateObject(raw.mastery)).filter(([,v])=>v&&typeof v==="object"&&!Array.isArray(v)).map(([k,v])=>[k,{...stateStats(v),lastSeen:stateDay(v.lastSeen),lastCorrect:stateDay(v.lastCorrect)}]));
+ out.mastery=Object.fromEntries(Object.entries(stateObject(raw.mastery)).filter(([k,v])=>validMasteryKey(k)&&v&&typeof v==="object"&&!Array.isArray(v)).map(([k,v])=>[k,{...stateStats(v),lastSeen:stateDay(v.lastSeen),lastCorrect:stateDay(v.lastCorrect)}]));
  out.reviewQueue=Array.isArray(raw.reviewQueue)?raw.reviewQueue.filter(s=>typeof s==="string"&&DATA.sets.flat().includes(s)):[];
  out.missionHistory=Array.isArray(raw.missionHistory)?raw.missionHistory.filter(x=>x&&typeof x==="object"&&!Array.isArray(x)).map(x=>{
   const stats=stateStats(x);return {...x,...stats,date:stateDay(x.date)||"",primary:typeof x.primary==="string"?x.primary:"",review:typeof x.review==="string"?x.review:"",word:typeof x.word==="string"?x.word:"",accuracy:x.accuracy==null?null:(stats.attempts?Math.round(stats.correct/stats.attempts*100):100)}
