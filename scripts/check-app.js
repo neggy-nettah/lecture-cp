@@ -326,3 +326,5 @@ console.log("- Curriculum guards: OK");
 console.log("- Client credential/ownership guards: OK");
 console.log("- Replayable audio instructions: OK");
 console.log("- PWA manifest/service worker: OK");
+
+if(/super lectrice/i.test(html+app))fail("Gendered default reading copy has returned.");
