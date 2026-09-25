@@ -171,8 +171,8 @@ if(!app.includes("function gameEncode(forcedTarget=null,fromMission=false)")||!a
 if(!app.includes("function gameWordEncode(")||!app.includes("function wordEncodePool(")||!app.includes("function updateWordEncode(")||!app.includes('data-action="game-word-encode"')){
   fail("Dictated word encoding practice is missing.");
 }
-if(!app.includes('else if(currentView==="word-encode")gameWordEncode()')||!app.includes('"word-encode","bubbles"')){
-  fail("Word encoding view no longer restores through the main router.");
+if(!app.includes('"word-encode":gameWordEncode')||!app.includes('GAME_VIEWS=new Set([')||!app.includes('"word-encode"')){
+  fail("Word encoding view no longer restores through the centralized router.");
 }
 if(!app.includes("WORD_ENCODING_MIN_MISSIONS=4,WORD_ENCODING_MIN_MASTERY_POINTS=10")||!app.includes("function wordEncodingReadiness()")||!app.includes("if(!wordEncodingUnlocked()){activate(\"games\");return}")){
   fail("Word encoding is no longer protected by its readiness gate.");
@@ -210,8 +210,8 @@ if(!app.includes("SENTENCE_MIN_MISSIONS=8,SENTENCE_MIN_MASTERY_POINTS=12")||!app
 if(!app.includes("TEXT_COMPREHENSION_MIN_MISSIONS=12,TEXT_COMPREHENSION_MIN_MASTERY_POINTS=20")||!app.includes("function miniTextPool()")||!app.includes("function gameMiniText(")||!app.includes('data-action="game-mini-text"')){
   fail("Mini-text comprehension progression is missing.");
 }
-if(!app.includes('else if(currentView==="mini-text")gameMiniText()')||!app.includes('"mini-text"].includes(currentView)')){
-  fail("Mini-text view no longer restores through the main router.");
+if(!app.includes('"mini-text":gameMiniText')||!app.includes('GAME_VIEWS=new Set([')||!app.includes('"mini-text"')){
+  fail("Mini-text view no longer restores through the centralized router.");
 }
 if(app.includes('recordQuestionSuccess("sentence:"')||app.includes('recordQuestionError("sentence:"'))fail("Sentence ordering must not create unused mastery keys.");
 if(!app.includes("function validMasteryKey(")||!app.includes("validMasteryKey(k)&&v")){
@@ -244,6 +244,9 @@ if(!app.includes('if(a==="readaloud-done")')||!app.includes('if(a==="readaloud-m
 if(!app.includes('const UI_TEXT_SIZE_KEY="lectureCpLargeText"')||!app.includes("function storedLargeTextPreference(")||!app.includes("function applyTextSizePreference(")){
   fail("Safe local large-text preference is missing.");
 }
+if(!app.includes("function safeStorageGet(")||!app.includes("function safeStorageSet(")||app.includes('localStorage.getItem("lastChildId")')){
+  fail("Local storage access is not fully routed through resilient helpers.");
+}
 if(!html.includes('id="textSizeBtn"')||!css.includes(".large-text .titlebar h2")){
   fail("Large-text control or styles are missing.");
 }
@@ -255,8 +258,11 @@ const requiredViews=["home","sounds","syllables","words","games","world","collec
 for(const view of requiredViews){
   if(!html.includes('data-view="'+view+'"'))fail("Navigation view missing:",view);
 }
-for(const route of ["world","collection","parents"]){
-  if(!app.includes('currentView==="'+route+'"'))fail("Render route missing:",route);
+if(!app.includes("RESTORABLE_VIEWS=new Set(")||!app.includes("function normalizedView(")||!app.includes("const views={")){
+  fail("Centralized view registry is missing.");
+}
+for(const route of ["world:worldView","collection:collectionView","parents"]){
+  if(!app.includes(route))fail("Render route missing:",route);
 }
 
 const literalActions=[...new Set([...source.matchAll(/data-action="([a-z0-9-]+)"/gi)].map(m=>m[1]))];
