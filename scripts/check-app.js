@@ -192,6 +192,9 @@ if(!app.includes("function wordMasterySummary()")||!app.includes("Mots évalués
 if(!app.includes("Mots à renforcer")||!app.includes("wm.weakest")){
   fail("Parent dashboard no longer separates weak words from syllables.");
 }
+if(!app.includes('data-action="parent-word-review"')||!app.includes('gameWordEncode(word,true)')||!app.includes("fromParent=false")){
+  fail("Parent weak-word practice is no longer actionable.");
+}
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
