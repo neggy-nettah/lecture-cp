@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.41.0 — 2026-09-26
+
+- passage officiel en phase de stabilisation produit ; extension pédagogique temporairement gelée
+- famille `j` ajoutée en dernier après `d`, avec contenu régulier limité à `judo`, `joli` et phrases compatibles
+- routeur des écrans centralisé et anciennes valeurs `lastView` invalides ramenées proprement à l’accueil
+- accès `localStorage` centralisé et protégé ; l’app démarre même si le stockage navigateur est indisponible
+- tentative de synchronisation distante lors du passage de l’app en arrière-plan, sans réécriture locale inutile
+- `supabase-js` figé sur une version exacte au lieu d’un tag majeur flottant
+- CI étendue à WebKit en plus de Chromium pour les parcours principaux et les tailles mobiles
+- PWA : identité manifeste stable et nouvelle vérification de mise à jour lors du retour au premier plan
+- documentation RLS Supabase renforcée et requêtes de vérification en lecture seule ajoutées
+- nouveau document `STABILIZATION.md` servant de barrière avant la reprise du contenu
+- cache hors ligne et assets renouvelés pour la v0.41.0
+
 ## 0.40.0 — 2026-09-25
 
 - nouveau jeu libre `Le mini-texte` : deux phrases décodables puis une question orale explicite
