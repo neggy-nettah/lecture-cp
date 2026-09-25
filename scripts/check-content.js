@@ -39,6 +39,7 @@ if(cpRoadmap.findIndex(x=>x.id==="complex-graphemes")>cpRoadmap.findIndex(x=>x.i
 
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
 if(!Array.isArray(data.sets)||data.sets.length!==10)fail("Expected 10 syllable families.");
+if(!Array.isArray(data.familyGraphemes)||data.familyGraphemes.length!==data.sets.length)fail("Syllable family grapheme metadata is incomplete.");
 if(!Array.isArray(data.words)||data.words.length<35)fail("Word bank is unexpectedly small.");
 if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank is unexpectedly small.");
 
@@ -53,11 +54,11 @@ const syllables=data.sets.flat();
 const dupSyllables=duplicates(syllables);
 if(dupSyllables.length)fail("Duplicate syllables:",dupSyllables.join(", "));
 const familyVowels=["a","e","i","o","u","é"];
-for(const family of data.sets){
+for(const [index,family] of data.sets.entries()){
   if(family.length!==familyVowels.length)fail("Each syllable family must contain "+familyVowels.length+" syllables:",family.join(", "));
-  const initial=family[0]?.[0];
-  if(!initial||!family.every(s=>s[0]===initial))fail("Mixed initial letters inside a family:",family.join(", "));
-  if(!familyVowels.every(v=>family.includes(initial+v)))fail("Incomplete vowel pattern inside a family:",family.join(", "));
+  const grapheme=data.familyGraphemes[index];
+  if(!grapheme||!family.every(s=>s.startsWith(grapheme)))fail("Mixed family grapheme:",family.join(", "));
+  if(!familyVowels.every(v=>family.includes(grapheme+v)))fail("Incomplete vowel pattern inside a family:",family.join(", "));
 }
 
 const wordNames=data.words.map(x=>x.w);
