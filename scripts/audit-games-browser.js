@@ -3,7 +3,7 @@
 module.exports=async function auditGames(page){
  await page.setViewportSize({width:320,height:900});
  const result=await page.evaluate(()=>{
-  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,comprehension:0};
+  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,comprehension:0};
   speak=()=>{};tone=()=>{};confetti=()=>{};starFx=()=>{};
   const check=(ok,message)=>{if(!ok)throw Error('Exercise audit: '+message)};
   const buttons=action=>[...document.querySelectorAll(`[data-action="${action}"]`)];
@@ -23,6 +23,26 @@ module.exports=async function auditGames(page){
     for(const target of activeLearningSyllables()){
      gameListen(target);answer('listen-answer',target,true);counts.syllableQuestions++;
      gameBubbles(target);answer('bubble-answer',target);counts.syllableQuestions++;
+     gameEncode(target);
+     check(document.documentElement.scrollWidth<=innerWidth+1,'encoding mobile overflow');
+     const expected=[target[0],target.slice(1)],bank=buttons('encode-letter');
+     check(bank.some(b=>b.dataset.value===expected[0])&&bank.some(b=>b.dataset.value===expected[1]),'encoding missing target letters '+target);
+     const beforeCorrect=state.mastery[target]?.correct||0,beforeStars=state.stars;
+     bank.find(b=>b.dataset.value===expected[0]).click();bank.find(b=>b.dataset.value===expected[1]).click();
+     check(locked&&encodeMade.join('')===target,'encoding failed '+target);
+     check((state.mastery[target]?.correct||0)===beforeCorrect+1,'encoding mastery missing '+target);
+     const snapshot=JSON.stringify([state.stats,state.stars,state.mastery]);bank[0].click();check(JSON.stringify([state.stats,state.stars,state.mastery])===snapshot,'encoding duplicate reward');
+     check(state.stars===beforeStars+1,'encoding reward missing '+target);counts.encoding++;
+    }
+    const correctionTarget=activeLearningSyllables()[0];gameEncode(correctionTarget);
+    const expectedLetters=[correctionTarget[0],correctionTarget.slice(1)],encodeButtons=buttons('encode-letter'),wrongLetter=encodeButtons.find(b=>b.dataset.value!==expectedLetters[0]&&!"aeioué".includes(b.dataset.value));
+    if(wrongLetter){
+     const beforeMastery=state.mastery[correctionTarget]?.correct||0;
+     wrongLetter.click();encodeButtons.find(b=>b.dataset.value===expectedLetters[1]).click();
+     check(questionErrorRecorded&&state.reviewQueue.filter(x=>x===correctionTarget).length>=2,'encoding error not queued');
+     locked=false;encodeMade=[];encodeButtons.forEach(b=>b.disabled=false);
+     encodeButtons.find(b=>b.dataset.value===expectedLetters[0]).click();encodeButtons.find(b=>b.dataset.value===expectedLetters[1]).click();
+     check((state.mastery[correctionTarget]?.correct||0)===beforeMastery,'corrected encoding inflated mastery');
     }
     for(let i=0;i<tier;i++){
      activate('syllables');state.set=i;syllables();startSyllableQuiz();answer('syllable-answer',currentAnswer,true);counts.syllableQuestions++;
