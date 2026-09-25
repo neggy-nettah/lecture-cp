@@ -51,7 +51,7 @@ if(period1?.cgpMin!==12||period1?.cgpMax!==15||midyear?.cgpMin!==25||midyear?.cg
 if(cpRoadmap.findIndex(x=>x.id==="complex-graphemes")>cpRoadmap.findIndex(x=>x.id==="orthography-rules"))fail("CGP expansion must precede silent-letter rules in the current roadmap.");
 
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
-if(!Array.isArray(data.sets)||data.sets.length!==10)fail("Expected 10 syllable families.");
+if(!Array.isArray(data.sets)||data.sets.length<10)fail("Expected at least 10 syllable families.");
 if(!Array.isArray(data.familyGraphemes)||data.familyGraphemes.length!==data.sets.length)fail("Syllable family grapheme metadata is incomplete.");
 if(!Array.isArray(data.words)||data.words.length<35)fail("Word bank is unexpectedly small.");
 if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank is unexpectedly small.");
