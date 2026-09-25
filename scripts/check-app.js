@@ -72,6 +72,9 @@ const requiredFunctions=[
   "function missingSyllableWords(",
   "function gameMissing(",
   "function gameComprehension(",
+  "function gameEncode(",
+  "function encodeLetterPool(",
+  "function updateEncode(",
   "function phraseToolHelpHTML(",
   "function gameFamily(",
   "function instructionAudio(",
@@ -152,6 +155,12 @@ if(!app.includes('nextRandom(activeLearningSyllables(),currentAnswer,4)')||!app.
 }
 if(!app.includes('extraBase=activeLearningSyllables()')){
   fail("Build distractors can escape the unlocked curriculum.");
+}
+if(!app.includes('initials=[...new Set(activeLearningSyllables().map(s=>s[0]))]')||!app.includes('vowels=["a","e","i","o","u","é"]')){
+  fail("Encoding letter bank is no longer constrained to the taught CV curriculum.");
+}
+if(!app.includes('recordQuestionSuccess(currentAnswer,"encode:"+currentAnswer)')||!app.includes('recordQuestionError(currentAnswer)')){
+  fail("Encoding answers are no longer connected to verified mastery/review tracking.");
 }
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
