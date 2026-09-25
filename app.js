@@ -107,7 +107,7 @@ function normalizeState(raw){
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],encodeMade=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],encodeMade=[],readAloudSentence=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -312,6 +312,7 @@ function home(){
    <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Je répète <span class="beta-pill">BÊTA</span></b><small>Entraînement vocal seulement</small></button>
    <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Image-mot</b><small>Je relie mot et image</small></button>
    <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🧠":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Je remets les mots en ordre":"Se débloque après 8 missions"}</small></button>
+   <button class="level" data-action="game-readaloud" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🗣️":"🔒"}</div><b>Je lis à voix haute</b><small>${sentenceUnlocked()?"Je lis puis j’écoute le modèle":"Se débloque après 8 missions"}</small></button>
    <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Je lis puis je choisis l’image":"Se débloque après 8 missions"}</small></button>
  </div></details>`;
 }
@@ -691,7 +692,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","comprehension"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -711,6 +712,7 @@ function render(){
  else if(currentView==="pictures")gamePicture();
  else if(currentView==="build")gameBuild();
  else if(currentView==="order")gameOrder();
+ else if(currentView==="readaloud")gameReadAloud();
  else if(currentView==="comprehension")gameComprehension();
  else if(currentView==="parents")parents();
  else{currentView="home";state.lastView="home";save(false);home()}
@@ -917,6 +919,9 @@ document.addEventListener("click",e=>{
  if(a==="game-picture"){gamePicture();return}
  if(a==="game-build"){gameBuild();return}
  if(a==="game-order"){gameOrder();return}
+ if(a==="game-readaloud"){gameReadAloud();return}
+ if(a==="readaloud-done"){if(locked)return;locked=true;b.disabled=true;const model=$("#readaloudModel");if(model)model.hidden=false;$("#feedback").innerHTML='<div class="ok">👏 Bravo pour ta lecture ! Maintenant, tu peux écouter le modèle et comparer.</div>';practiceDone("Bravo d’avoir lu la phrase à voix haute !");model?.querySelector("button")?.focus({preventScroll:true});return}
+ if(a==="readaloud-model"){speak(readAloudSentence.join(" "),.76);return}
  if(a==="game-comprehension"){gameComprehension();return}
  if(a==="comprehension-answer"){
    if(locked)return;
