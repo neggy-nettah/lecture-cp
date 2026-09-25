@@ -222,8 +222,11 @@ function memoryFlip(btn,index){
 
 function gameMissing(forcedWord=null,fromMission=false){
  missionMode=fromMission;currentView="missing";state.lastView=fromMission?"mission":"missing";save(false);locked=false;resetQuestionTracking();
- const active=activeLearningSyllables(),activeSet=new Set(active),pool=missingSyllableWords(),word=forcedWord||pick(pool);
- missingWord=word;const hideable=word.parts.map((p,i)=>activeSet.has(p)?i:-1).filter(i=>i>=0);missingIndex=pick(hideable);currentAnswer=word.parts[missingIndex];
+ const active=activeLearningSyllables(),activeSet=new Set(active),pool=missingSyllableWords();
+ let word=forcedWord||pick(pool),hideable=word?.parts?.map((p,i)=>activeSet.has(p)?i:-1).filter(i=>i>=0)||[];
+ if(!hideable.length){word=pick(pool);hideable=word?.parts?.map((p,i)=>activeSet.has(p)?i:-1).filter(i=>i>=0)||[]}
+ if(!word||!hideable.length){if(fromMission)missionHub();else activate("games");return}
+ missingWord=word;missingIndex=pick(hideable);currentAnswer=word.parts[missingIndex];
  const opts=nextRandom(active,currentAnswer,4);
  const puzzle=word.parts.map((p,i)=>i===missingIndex?'<span class="missing-slot">?</span>':'<span>'+esc(p)+'</span>').join("·");
  stage.innerHTML=title("La syllabe manquante","Écoute le mot à compléter, puis retrouve le morceau qui manque.","Mot à compléter")+
