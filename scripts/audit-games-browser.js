@@ -17,7 +17,7 @@ module.exports=async function auditGames(page){
    const snapshot=JSON.stringify([state.stats,state.stars,state.mastery]);good.click();check(JSON.stringify([state.stats,state.stars,state.mastery])===snapshot,action+' duplicate reward');
   };
   try{
-   for(let tier=3;tier<=10;tier++){
+   for(let tier=3;tier<=DATA.sets.length;tier++){
     state=normalizeState({mastery:{[DATA.sets[tier-1][0]]:{attempts:1,correct:0}},missionHistory:Array.from({length:14},(_,i)=>({date:'2020-01-'+String(i+1).padStart(2,'0')}))});
     missionMode=false;check(unlockedFamilyCount()===tier,'curriculum fixture');counts.tiers++;
     for(const target of activeLearningSyllables()){
@@ -25,7 +25,7 @@ module.exports=async function auditGames(page){
      gameBubbles(target);answer('bubble-answer',target);counts.syllableQuestions++;
      gameEncode(target);
      check(document.documentElement.scrollWidth<=innerWidth+1,'encoding mobile overflow');
-     const expected=[target[0],target.slice(1)],bank=buttons('encode-letter');
+     const expected=syllableGraphemes(target),bank=buttons('encode-letter');
      check(bank.some(b=>b.dataset.value===expected[0])&&bank.some(b=>b.dataset.value===expected[1]),'encoding missing target letters '+target);
      const beforeCorrect=state.mastery[target]?.correct||0,beforeStars=state.stars;
      bank.find(b=>b.dataset.value===expected[0]).click();bank.find(b=>b.dataset.value===expected[1]).click();
