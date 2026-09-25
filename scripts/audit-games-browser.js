@@ -3,7 +3,7 @@
 module.exports=async function auditGames(page){
  await page.setViewportSize({width:320,height:900});
  const result=await page.evaluate(()=>{
-  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,readAloud:0,comprehension:0};
+  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,readAloud:0,comprehension:0,miniTexts:0};
   speak=()=>{};tone=()=>{};confetti=()=>{};starFx=()=>{};
   const check=(ok,message)=>{if(!ok)throw Error('Exercise audit: '+message)};
   const buttons=action=>[...document.querySelectorAll(`[data-action="${action}"]`)];
@@ -99,6 +99,12 @@ module.exports=async function auditGames(page){
     check(locked&&wordEncodeMade.join('')===word.w,'word encoding failed '+word.w);
     check((state.mastery['word:'+word.w]?.correct||0)===before+1,'word encoding mastery missing '+word.w);
     const snapshot=JSON.stringify([state.stats,state.stars,state.mastery]);buttons('word-encode-token')[0]?.click();check(JSON.stringify([state.stats,state.stars,state.mastery])===snapshot,'word encoding duplicate reward '+word.w);counts.wordEncoding++;
+   }
+   for(const item of miniTextPool()){
+    gameMiniText(item.id);check(currentMiniText?.id===item.id,'wrong mini-text target');
+    check(document.querySelectorAll('.mini-text-reading .readaloud-sentence').length===2,'mini-text must contain two sentences');
+    check(!stage.textContent.includes(item.question),'mini-text question leaked as readable text');
+    answer('mini-text-answer',item.answer,true);counts.miniTexts++;
    }
    state=normalizeState({});gamePicture();const independentTarget=currentAnswer;answer('picture-answer',independentTarget);
    check(state.mastery['word:'+independentTarget]?.correct===1,'independent picture answer lost mastery');
