@@ -212,9 +212,15 @@ python3 -m http.server 8765 --bind 127.0.0.1
 node scripts/browser-check.js
 ```
 
-Le test des voix Safari et de la synchronisation entre deux appareils reste manuel.
-Les écritures simultanées depuis plusieurs appareils restent basées sur l’horodatage
-le plus récent ; une fusion serveur des progrès reste une évolution à prévoir.
+Le test des voix Safari reste manuel sur matériel réel.
+
+Depuis la v0.33, le chargement d’un profil fusionne de façon conservatrice les progrès
+présents sur l’appareil et dans Supabase : les éléments monotones (étoiles, acquis,
+ateliers pratiqués, historique et collection) ne doivent plus régresser lorsqu’un
+iPhone et un Mac ont travaillé séparément. La mission du jour conserve l’avancement
+le plus élevé. Cette fusion réduit fortement les écrasements, mais elle ne remplace
+pas encore une résolution transactionnelle côté serveur si deux appareils écrivent
+strictement au même instant.
 
 
 ## Compte parent et récupération
