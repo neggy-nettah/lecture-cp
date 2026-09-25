@@ -36,6 +36,7 @@ const DATA={
   {g:"n",say:"nnnn",hint:"le son nnnn",emoji:"👃"},
   {g:"b",say:"be",hint:"le son b",emoji:"🎈"}
  ],
+ familyGraphemes:["m","l","s","r","f","v","p","t","n","b"],
  sets:[
   ["ma","me","mi","mo","mu","mé"],["la","le","li","lo","lu","lé"],["sa","se","si","so","su","sé"],
   ["ra","re","ri","ro","ru","ré"],["fa","fe","fi","fo","fu","fé"],["va","ve","vi","vo","vu","vé"],
