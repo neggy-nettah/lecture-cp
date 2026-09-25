@@ -11,7 +11,10 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 const UI_TEXT_SIZE_KEY="lectureCpLargeText";
-function applyTextSizePreference(enabled=localStorage.getItem(UI_TEXT_SIZE_KEY)==="1"){
+function storedLargeTextPreference(){
+ try{return localStorage.getItem(UI_TEXT_SIZE_KEY)==="1"}catch(error){return false}
+}
+function applyTextSizePreference(enabled=storedLargeTextPreference()){
  document.body.classList.toggle("large-text",!!enabled);
  const button=document.querySelector("#textSizeBtn");if(button&&typeof button.setAttribute==="function"){button.setAttribute("aria-pressed",enabled?"true":"false");button.textContent=enabled?"Aa−":"Aa+";button.title=enabled?"Revenir à la taille normale":"Agrandir les textes"}
  return !!enabled
