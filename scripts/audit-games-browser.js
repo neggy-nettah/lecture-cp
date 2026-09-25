@@ -3,7 +3,7 @@
 module.exports=async function auditGames(page){
  await page.setViewportSize({width:320,height:900});
  const result=await page.evaluate(()=>{
-  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,comprehension:0};
+  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,readAloud:0,comprehension:0};
   speak=()=>{};tone=()=>{};confetti=()=>{};starFx=()=>{};
   const check=(ok,message)=>{if(!ok)throw Error('Exercise audit: '+message)};
   const buttons=action=>[...document.querySelectorAll(`[data-action="${action}"]`)];
@@ -71,6 +71,17 @@ module.exports=async function auditGames(page){
      try{gameOrder()}finally{pick=originalPick}
      for(const part of sentence){const b=buttons('order-token').find(b=>!b.disabled&&b.dataset.value===part);check(!!b,'missing sentence token');b.click()}
      check(locked&&orderMade.join(' ')===sentence.join(' '),'unsolvable sentence');counts.sentences++;
+    }
+    for(const sentence of decodableSentencePool()){
+     const before=JSON.stringify([state.stats,state.stars,state.mastery,state.rewardLedger,state.reviewQueue]);
+     gameReadAloud(sentence);
+     check(readAloudSentence.join(' ')===sentence.join(' '),'wrong read-aloud sentence');
+     check(document.documentElement.scrollWidth<=innerWidth+1,'read-aloud mobile overflow');
+     const model=document.querySelector('#readaloudModel');check(!!model&&model.hidden,'read-aloud model visible before attempt');
+     document.querySelector('[data-action="readaloud-done"]').click();
+     check(!model.hidden,'read-aloud model stayed hidden after attempt');
+     check(JSON.stringify([state.stats,state.stars,state.mastery,state.rewardLedger,state.reviewQueue])===before,'read-aloud changed scored progress');
+     counts.readAloud++;
     }
     for(const target of new Set(comprehensionSentencePool().map(x=>x.word.w))){
      gameComprehension(target);check(currentAnswer===target,'wrong comprehension target');
