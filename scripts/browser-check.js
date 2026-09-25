@@ -170,6 +170,7 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>locked),true);
   assert.equal(await page.evaluate(()=>state.stats.correct),wordEncodeBefore+1);
   assert.equal(await page.evaluate(()=>state.wordPractice.silo),true);
+  assert.equal(await page.evaluate(()=>state.mastery['word:silo']?.correct),1);
   assert(await page.locator('#feedback').textContent().then(t=>t.includes('silo')));
   // Reading aloud is deliberate practice: the model stays hidden until the child finishes and no score/mastery changes.
   await page.setViewportSize({width:320,height:900});
