@@ -98,6 +98,12 @@ function syllableRemainder(syllable){
  const grapheme=familyGraphemeForSyllable(syllable);
  return grapheme&&String(syllable).startsWith(grapheme)?String(syllable).slice(grapheme.length):""
 }
+function syllableGraphemes(syllable){
+ const value=String(syllable||""),override=SYLLABLE_GRAPHEME_OVERRIDES[value];
+ if(Array.isArray(override)&&override.length>=2&&override.every(Boolean))return [...override];
+ const first=familyGraphemeForSyllable(value),rest=first&&value.startsWith(first)?value.slice(first.length):"";
+ return first&&rest?[first,rest]:value?[value]:[]
+}
 function knownFamilyFloor(){
  let floor=3;
  const practicedWords=new Set(Object.entries(state.wordPractice||{}).filter(([,v])=>!!v).map(([w])=>w));
@@ -130,8 +136,7 @@ function activeLearningSyllables(){
  return [...new Set([...unlocked,...known])]
 }
 function activeSoundGraphemes(){
- const consonants=DATA.familyGraphemes.slice(0,unlockedFamilyCount());
- return new Set(["a","e","i","o","u","é",...consonants])
+ return new Set(activeLearningSyllables().flatMap(syllableGraphemes))
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
 const WORD_ENCODING_MIN_MISSIONS=4,WORD_ENCODING_MIN_MASTERY_POINTS=10;
