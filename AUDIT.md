@@ -1,4 +1,4 @@
-# Audit des exercices — version 0.20.0
+# Audit de l’application — version 0.41.0
 
 ## Périmètre
 
@@ -26,8 +26,9 @@ La règle du s entre voyelles a été recoupée avec la fiche pédagogique de R�
 - `node scripts/check-content.js` : catalogue, assemblages, exclusions et images distinctes.
 - `node scripts/smoke-runtime.js` : démarrage, progression, contenu accessible et fonctions principales.
 - `node scripts/browser-check.js` : navigateur Chromium avec services de compte simulés ; comprend l’audit de tous les paliers et les parcours existants.
+- `node scripts/webkit-smoke.js` : smoke test WebKit des écrans principaux, mobile, reprise d’un jeu, mode texte agrandi et compte parent.
 - `scripts/audit-games-browser.js` : plus de 1 500 configurations de questions, avec réponses, erreurs, indices, doubles clics, assemblages et phrases ; audio neutralisé pendant ce contrôle de logique.
 
 ## Limites explicites
 
-Ces contrôles ne garantissent pas l’absence absolue de bugs. Ils ne valident ni la qualité de prononciation de la synthèse vocale, ni la reconnaissance du micro sur du matériel réel. Le test Safari macOS reste à faire sur un appareil réel. Le micro reste un entraînement bêta sans maîtrise ni récompense. La synchronisation réelle entre deux appareils et la réception des emails de récupération nécessitent encore des essais avec un vrai compte. Une relecture pédagogique humaine du contenu reste souhaitable avant commercialisation. Les mots-outils disposent désormais d’une aide audio ciblée ; les mots à e final muet sont différés jusqu’à l’enseignement explicite de cette règle.
+Ces contrôles ne garantissent pas l’absence absolue de bugs. Ils ne valident ni la qualité de prononciation de la synthèse vocale, ni la reconnaissance du micro sur du matériel réel. WebKit est désormais couvert automatiquement, mais le test de la voix Safari macOS reste à faire sur un vrai Mac. Le micro reste un entraînement bêta sans maîtrise ni récompense. La synchronisation réelle entre deux appareils et la réception des emails de récupération nécessitent encore des essais avec un vrai compte. Une relecture pédagogique humaine du contenu reste souhaitable avant commercialisation. Les mots-outils disposent désormais d’une aide audio ciblée ; les mots à e final muet sont différés jusqu’à l’enseignement explicite de cette règle.
