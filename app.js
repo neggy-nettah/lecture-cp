@@ -702,7 +702,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","word-encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
  if(currentView==="home")home();
  else if(currentView==="sounds")sounds();
  else if(currentView==="syllables")syllables();
@@ -714,6 +714,7 @@ function render(){
  else if(currentView==="mission-complete")missionComplete();
  else if(currentView==="listen")gameListen();
  else if(currentView==="encode")gameEncode();
+ else if(currentView==="word-encode")gameWordEncode();
  else if(currentView==="bubbles")gameBubbles();
  else if(currentView==="memory")gameMemory();
  else if(currentView==="family")gameFamily();
