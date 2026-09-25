@@ -194,7 +194,11 @@ function pickLearningWord(pool){
  const words=(pool||[]).filter(Boolean);if(!words.length)return null;
  const recent=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word)),weighted=[];
  for(const word of words){
-  const level=wordMasteryLevel(word.w),weight=Math.max(1,[5,4,2,1][level]-(recent.has(word.w)?1:0));
+  const m=state.mastery?.["word:"+word.w]||null,level=wordMasteryLevel(word.w);
+  const attempts=stateCount(m?.attempts),correct=Math.min(attempts,stateCount(m?.correct)),accuracy=attempts?correct/attempts:null;
+  const needsHelp=attempts>0&&(correct===0||accuracy<.6),stale=!!m?.lastSeen&&daysSinceDayKey(m.lastSeen)>=7;
+  let weight=[5,4,2,1][level]+(needsHelp?4:0)+(stale?2:0)-(recent.has(word.w)?1:0);
+  weight=Math.max(1,weight);
   for(let i=0;i<weight;i++)weighted.push(word)
  }
  return pick(weighted.length?weighted:words)
