@@ -172,6 +172,10 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>state.wordPractice.silo),true);
   assert.equal(await page.evaluate(()=>state.mastery['word:silo']?.correct),1);
   assert(await page.locator('#feedback').textContent().then(t=>t.includes('silo')));
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForTimeout(250);
+  assert.equal(await page.evaluate(()=>currentView),'word-encode');
+  assert.equal(await page.locator('#wordEncodeZone').isVisible(),true);
   // Reading aloud is deliberate practice: the model stays hidden until the child finishes and no score/mastery changes.
   await page.setViewportSize({width:320,height:900});
   await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameReadAloud()});
