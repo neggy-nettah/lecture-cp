@@ -7,7 +7,7 @@ const CP_OFFICIAL_MILESTONES=[
  {id:"midyear",label:"Milieu d’année",cgpMin:25,cgpMax:30,skills:["étendre le nombre de CGP décodées et encodées","prendre conscience des lettres finales muettes","mémoriser des mots fréquents et réguliers"]}
 ];
 const CGP_EXPANSION_PLAN=[
- {id:"stable-single",label:"Prochaines consonnes simples stables",graphemes:["j","z","k"],mode:"family",note:"Peuvent rejoindre le modèle consonne + voyelle après création d’un corpus décodable. La famille d est désormais active."},
+ {id:"stable-single",label:"Prochaines consonnes simples stables",graphemes:["z","k"],mode:"family",note:"Peuvent rejoindre le modèle consonne + voyelle après création d’un corpus décodable. Les familles d et j sont désormais actives."},
  {id:"consonant-digraph",label:"Digrammes consonantiques",graphemes:["ch"],mode:"family",note:"Le moteur sait désormais traiter un graphème initial de plusieurs lettres."},
  {id:"vowel-complex",label:"Graphèmes vocaliques complexes",graphemes:["ou","on","an","en","in","oi"],mode:"syllable-override",note:"Demandent une décomposition explicite des syllabes, par exemple lou = l + ou."},
  {id:"context-sensitive",label:"Graphèmes dépendants du contexte",graphemes:["c","g"],mode:"rule",note:"Ne pas les ajouter comme une famille uniforme : leur valeur dépend notamment de la voyelle suivante."}
@@ -47,13 +47,14 @@ const DATA={
   {g:"t",say:"te",hint:"le son t",emoji:"🐯"},
   {g:"n",say:"nnnn",hint:"le son nnnn",emoji:"👃"},
   {g:"b",say:"be",hint:"le son b",emoji:"🎈"},
-  {g:"d",say:"de",hint:"le son d",emoji:"🁢"}
+  {g:"d",say:"de",hint:"le son d",emoji:"🁢"},
+  {g:"j",say:"jjjj",hint:"le son jjjj",emoji:"🧃"}
  ],
- familyGraphemes:["m","l","s","r","f","v","p","t","n","b","d"],
+ familyGraphemes:["m","l","s","r","f","v","p","t","n","b","d","j"],
  sets:[
   ["ma","me","mi","mo","mu","mé"],["la","le","li","lo","lu","lé"],["sa","se","si","so","su","sé"],
   ["ra","re","ri","ro","ru","ré"],["fa","fe","fi","fo","fu","fé"],["va","ve","vi","vo","vu","vé"],
-  ["pa","pe","pi","po","pu","pé"],["ta","te","ti","to","tu","té"],["na","ne","ni","no","nu","né"],["ba","be","bi","bo","bu","bé"],["da","de","di","do","du","dé"]
+  ["pa","pe","pi","po","pu","pé"],["ta","te","ti","to","tu","té"],["na","ne","ni","no","nu","né"],["ba","be","bi","bo","bu","bé"],["da","de","di","do","du","dé"],["ja","je","ji","jo","ju","jé"]
  ],
  words:[
   {w:"maman",parts:["ma","man"],emoji:"👩"},{w:"papa",parts:["pa","pa"],emoji:"👨"},
@@ -85,7 +86,8 @@ const DATA={
   {w:"mila",parts:["mi","la"],emoji:"👧"},{w:"sami",parts:["sa","mi"],emoji:"👦"},
   {w:"safari",parts:["sa","fa","ri"],emoji:"🦁"},{w:"dodo",parts:["do","do"],emoji:"😴"},
   {w:"midi",parts:["mi","di"],emoji:"🕛"},{w:"radio",parts:["ra","di","o"],emoji:"📻"},
-  {w:"défi",parts:["dé","fi"],emoji:"🏁"},{w:"dino",parts:["di","no"],emoji:"🦖"}
+  {w:"défi",parts:["dé","fi"],emoji:"🏁"},{w:"dino",parts:["di","no"],emoji:"🦖"},
+  {w:"judo",parts:["ju","do"],emoji:"🥋"},{w:"joli",parts:["jo","li"],emoji:"✨"}
  ],
  sentences:[
    ["Papa","a","une","moto."],["Maman","a","une","valise."],["Lili","a","une","banane."],["Nina","a","une","jolie","robe."],
@@ -95,7 +97,8 @@ const DATA={
    ["Mila","a","un","vélo."],["Sami","a","un","polo."],["Lola","a","un","vélo."],
    ["Lili","a","un","lama."],["Sami","a","un","salami."],["Mila","a","un","sari."],
    ["Lola","a","un","lama."],["Papa","a","un","sari."],
-   ["Lili","a","un","domino."],["Mila","a","une","radio."],["Sami","a","un","dino."]
+   ["Lili","a","un","domino."],["Mila","a","une","radio."],["Sami","a","un","dino."],
+   ["Lili","a","un","joli","polo."],["Mila","a","un","joli","vélo."]
  ]
 };
 
