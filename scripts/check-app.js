@@ -159,8 +159,8 @@ if(!app.includes('nextRandom(activeLearningSyllables(),currentAnswer,4)')||!app.
 if(!app.includes('extraBase=activeLearningSyllables()')){
   fail("Build distractors can escape the unlocked curriculum.");
 }
-if(!app.includes('initials=[...new Set(activeLearningSyllables().map(s=>s[0]))]')||!app.includes('vowels=["a","e","i","o","u","é"]')){
-  fail("Encoding letter bank is no longer constrained to the taught CV curriculum.");
+if(!app.includes('activeLearningSyllables().map(familyGraphemeForSyllable).filter(Boolean)')||!app.includes('vowels=["a","e","i","o","u","é"]')||!app.includes("function familyGraphemeForSyllable(")||!app.includes("function syllableRemainder(")){
+  fail("Encoding bank is no longer based on explicit family grapheme metadata.");
 }
 if(!app.includes('recordQuestionSuccess(currentAnswer,"encode:"+currentAnswer)')||!app.includes('recordQuestionError(currentAnswer)')){
   fail("Encoding answers are no longer connected to verified mastery/review tracking.");
