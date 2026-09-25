@@ -178,6 +178,17 @@ window.supabase={createClient:()=>({
   // A new answer recorded while a fetch is pending must win against stale remote data.
   await page.evaluate(()=>{__mock.reads=[];void loadRemoteState();state.stars=23;save();__mock.reads[0].resolve({data:{lesson_state:{stars:22,updatedAt:200}},error:null})});
   await page.waitForTimeout(30);assert.equal(await page.evaluate(()=>state.stars),23);
+  // Progress learned independently on two devices must be merged instead of replacing one side wholesale.
+  await page.evaluate(()=>{
+   state=normalizeState({updatedAt:300,stars:10,done:{listen:true},mastery:{ma:{attempts:2,correct:1,lastSeen:localDayKey()}},missionHistory:[{date:'2026-09-20',attempts:2,correct:1,word:'moto'}]});
+   saveLocal();__mock.reads=[];__mock.writes=[];void loadRemoteState()
+  });
+  await page.evaluate(()=>__mock.reads[0].resolve({data:{lesson_state:{updatedAt:400,stars:12,done:{memory:true},mastery:{mi:{attempts:4,correct:4,lastSeen:localDayKey()}},missionHistory:[{date:'2026-09-21',attempts:1,correct:1,word:'lune'}]}},error:null}));
+  await page.waitForFunction(()=>state.stars===12&&state.done.listen&&state.done.memory&&state.mastery.ma&&state.mastery.mi);
+  assert.equal(await page.evaluate(()=>state.missionHistory.length),2);
+  await page.waitForFunction(()=>__mock.writes.length>0);
+  assert(await page.evaluate(()=>__mock.writes.some(x=>x.child_id==='B'&&x.lesson_state.done.listen&&x.lesson_state.done.memory&&x.lesson_state.mastery.ma&&x.lesson_state.mastery.mi)));
+
   // Queued saves must retain the outgoing profile's final snapshot.
   await page.evaluate(()=>{__mock.writes=[];__mock.holdWrites=true;state.stars=24;void saveRemoteNow();state.stars=25;void saveRemoteNow();enterChildProfile(children[0]);__mock.holdWrites=false;__mock.releaseWrite({error:null})});
   await page.waitForTimeout(30);
