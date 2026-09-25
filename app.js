@@ -187,6 +187,13 @@ function save(touch=true){
  if(!touch)return;
  clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)
 }
+function flushPendingProgress(){
+ saveLocal();
+ if(!sb||!session||!currentChild)return;
+ clearTimeout(saveTimer);void saveRemoteNow()
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushPendingProgress()});
+window.addEventListener("pagehide",flushPendingProgress);
 function cachedProfileState(child){
  try{return normalizeState(JSON.parse(safeStorageGet(childKey(child.id))||"null")||{name:child.nickname})}
  catch(e){return normalizeState({name:child.nickname})}
