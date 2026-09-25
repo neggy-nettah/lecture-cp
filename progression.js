@@ -179,6 +179,13 @@ function textComprehensionUnlockText(){
  if(s.remainingMissions>0)return "Encore "+s.remainingMissions+" mission(s)";
  return "Consolide encore les syllabes"
 }
+function learningMilestones(){
+ return [
+  {id:"word-encoding",icon:"✍️",label:"Écrire des mots entendus",ready:wordEncodingUnlocked(),detail:wordEncodingUnlockText()},
+  {id:"sentences",icon:"💬",label:"Lire et comprendre des phrases",ready:sentenceUnlocked(),detail:sentenceUnlockText()},
+  {id:"mini-text",icon:"📚",label:"Comprendre un mini-texte",ready:textComprehensionUnlocked(),detail:textComprehensionUnlockText()}
+ ]
+}
 function curriculumStatus(){
  const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints();
  if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
