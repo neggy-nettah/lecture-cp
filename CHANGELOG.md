@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.40.0 — 2026-09-25
+
+- nouveau jeu libre `Le mini-texte` : deux phrases décodables puis une question orale explicite
+- seuil provisoire : 12 missions terminées et 20 points de maîtrise avant l’accès aux mini-textes
+- le texte n’est jamais lu automatiquement avant la réponse ; l’audio sert à la consigne et à la question
+- corpus initial de 5 mini-textes, filtré selon les phrases et familles réellement décodables pour l’enfant
+- les questions utilisent des réponses présentes explicitement dans les deux phrases et ne modifient pas artificiellement la maîtrise des syllabes ou des mots
+- validation automatique du corpus de mini-textes, test mobile à 320 px et audit navigateur de tous les mini-textes disponibles
+- feuille de route CP mise à jour : la compréhension de textes courts est désormais amorcée en jeu libre
+- cache hors ligne et assets mis à jour pour la v0.40.0
+
 ## 0.39.0 — 2026-09-25
 
 - nouvelle famille `d` : `da / de / di / do / du / dé`, ajoutée en dernier pour préserver les anciens profils
