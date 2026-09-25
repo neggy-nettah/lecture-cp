@@ -177,8 +177,8 @@ if(!app.includes("WORD_ENCODING_MIN_MISSIONS=4,WORD_ENCODING_MIN_MASTERY_POINTS=
 if(!app.includes('wordEncodePool().filter')&&!app.includes('decodableMissionWords().filter(word=>word.parts.length>=2')){
   fail("Word encoding no longer uses the decodable curriculum.");
 }
-if(!app.includes('wordEncodeMade.join("")===currentAnswer.parts.join("")')||!app.includes('recordQuestionSuccess(null,key)')){
-  fail("Word encoding is no longer verified before reward.");
+if(!app.includes('wordEncodeMade.join("")===currentAnswer.parts.join("")')||!app.includes('recordQuestionSuccess("word:"+currentAnswer.w,key)')||!app.includes('recordQuestionError("word:"+currentAnswer.w)')){
+  fail("Word encoding is no longer verified as word-level mastery evidence.");
 }
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
