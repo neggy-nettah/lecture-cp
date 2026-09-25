@@ -10,6 +10,7 @@ function refreshPracticeScreen(draw,action){
 function sounds(){
  const pool=activeSoundData();if(state.sound>=pool.length)state.sound=0;const x=pool[state.sound%pool.length];
  stage.innerHTML=title("Les sons","Écoute le son, puis répète-le à voix haute.","Niveau 1")+
+ instructionAudio("Écoute le son, puis répète-le à voix haute.")+
  `<div class="card center">
    <div class="streak">Carte ${state.sound+1} / ${pool.length}</div>
    <div class="hero-emoji">${x.emoji}</div>
@@ -28,6 +29,7 @@ function syllables(){
  const max=Math.max(1,unlockedFamilyCount());if(state.set>=max)state.set=max-1;
  const set=DATA.sets[state.set%max],first=set[0][0];
  stage.innerHTML=title("Fabrique les syllabes","Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.","Niveau 2")+
+ instructionAudio("Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.")+
  `<div class="card center">
    <div class="big" style="font-size:56px"><span class="red">${first}</span> + <span class="blue">a</span> = <span class="purple">${first}a</span></div>
    <button class="btn primary" data-action="speak" data-text="${first+first+first+'a'}" data-rate=".55">🔊 Écouter : ${first}…a → ${first}a</button>
@@ -48,6 +50,7 @@ function startSyllableQuiz(){
 function words(){
  const pool=decodableMissionWords(),x=pool[state.word%pool.length];
  stage.innerHTML=title("Lis le mot","Lis chaque morceau puis colle-les.","Niveau 3")+
+ instructionAudio("Lis chaque morceau, assemble le mot, puis utilise l’audio seulement pour vérifier.")+
  `<div class="card center">
    <div class="emojis">${x.emoji}</div>
    <div class="word">${wordHTML(x.parts)}</div>
@@ -78,22 +81,26 @@ function gameListen(forcedTarget=null,fromMission=false,fromParent=false){
  missionMode=fromMission;currentView="listen";state.lastView=fromMission?"mission":fromParent?"parents":"listen";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
  const opts=nextRandom(activeLearningSyllables(),currentAnswer,4);
  stage.innerHTML=title("Écoute & trouve","Écoute sans regarder la réponse.","Jeu 1")+
+ instructionAudio("Écoute la syllabe, puis touche la carte qui correspond.")+
  `<div class="card center"><div class="hero-emoji">👂</div><button class="btn primary" data-action="${fromMission?"mission-repeat-answer":"repeat-answer"}">🔊 Écouter la syllabe</button>
  <div class="choices">${opts.map(x=>`<button class="choice" data-action="listen-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:fromParent?`<button class="btn gray" data-action="go" data-to="parents">← Retour au bilan</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-listen">Nouvelle question →</button>`}</div>`;
- if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
+ if(fromMission)playInstruction("Écoute la syllabe, puis touche la carte qui correspond.",()=>speak(currentAnswer,.60));
+ else screenTask(()=>speak(currentAnswer,.60),180)
 }
 
 function gameBubbles(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="bubbles";state.lastView=fromMission?"mission":"bubbles";save(false);currentAnswer=forcedTarget||pickLearningSyllable();locked=false;resetQuestionTracking();
  const opts=nextRandom(activeLearningSyllables(),currentAnswer,6);
  stage.innerHTML=title("Bulles express","Écoute bien et éclate la bonne bulle.","Jeu réaction")+
+ instructionAudio("Écoute la syllabe, puis éclate la bulle qui correspond.")+
  `<div class="card center"><div class="actions"><button class="btn yellow" data-action="${fromMission?"mission-bubble-repeat":"bubble-repeat"}">🔊 Écouter la syllabe</button></div>
  <div class="bubble-arena">${opts.map(x=>`<button class="bubble" data-action="bubble-answer" data-value="${x}">${colorSyl(x)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-bubbles">Nouvelles bulles →</button>`}</div>`;
- if(!fromMission)screenTask(()=>speak(currentAnswer,.60),180)
+ if(fromMission)playInstruction("Écoute la syllabe, puis éclate la bulle qui correspond.",()=>speak(currentAnswer,.60));
+ else screenTask(()=>speak(currentAnswer,.60),180)
 }
 function gameFamily(forcedFamily=null,fromMission=false){
  missionMode=fromMission;currentView="family";state.lastView=fromMission?"mission":"family";save(false);locked=false;resetQuestionTracking();
@@ -101,8 +108,10 @@ function gameFamily(forcedFamily=null,fromMission=false){
  const familyChoices=shuffle(family).slice(0,3),intruder=pick(others);currentAnswer=intruder;
  const initial=(family[0]||"")[0].toUpperCase(),opts=shuffle([...familyChoices,intruder]);
  stage.innerHTML=title("Trouve l’intrus","Trois syllabes commencent par "+initial+". Une seule n’est pas de la même famille.","Jeu visuel")+
+ instructionAudio("Trouve la syllabe qui ne commence pas comme les trois autres.")+
  '<div class="card center"><div class="hero-emoji">🔎</div><div class="tip">Touche la syllabe qui ne commence pas par <b>'+initial+'</b>.</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="family-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
- '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-family">Nouvel intrus →</button>')+'</div>'
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-family">Nouvel intrus →</button>')+'</div>';
+ if(fromMission)playInstruction("Trouve la syllabe qui ne commence pas comme les trois autres.")
 }
 function makeMemoryDeck(preferred=[],allowedPool=DATA.sets.flat()){
  const unique=[...new Set((preferred||[]).filter(Boolean))],rest=shuffle(allowedPool.filter(s=>!unique.includes(s))),pool=[...unique,...rest].slice(0,3);
@@ -138,11 +147,13 @@ function gameMemory(preferred=[],fromMission=false){
  }
  saveMemoryRound();save(false);
  stage.innerHTML=title("Memory des sons","Trouve les paires : un son et sa syllabe écrite.","Jeu mémoire")+
+ instructionAudio("Retourne deux cartes et associe chaque son à la syllabe écrite.")+
  `<div class="card center"><div class="tip">Retourne deux cartes. Les cartes 🔊 prononcent une syllabe : retrouve son écriture.</div>
  <div class="memory-grid" id="memoryGrid">${memoryDeck.map((x,i)=>`<button class="memory-card ${memoryMatchedPairs.has(x.pair)?"matched":""}" ${memoryMatchedPairs.has(x.pair)?"disabled":""} data-action="memory-card" data-index="${i}" aria-label="${memoryMatchedPairs.has(x.pair)?"Paire trouvée : "+esc(x.pair):"Carte "+(i+1)+" masquée"}">${memoryMatchedPairs.has(x.pair)?(x.type==="sound"?"🔊":colorSyl(x.label)):"?"}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-memory">Rejouer →</button>`}</div>`;
- if(memoryMatches===3)finishMemory()
+ if(memoryMatches===3)finishMemory();
+ else if(fromMission)playInstruction("Retourne deux cartes et associe chaque son à la syllabe écrite.")
 }
 function memoryFlip(btn,index){
  if(locked||btn.classList.contains("matched")||btn.classList.contains("open")||memoryOpen.length>=2)return;
@@ -171,8 +182,10 @@ function gameMissing(forcedWord=null,fromMission=false){
  const opts=nextRandom(active,currentAnswer,4);
  const puzzle=word.parts.map((p,i)=>i===missingIndex?'<span class="missing-slot">?</span>':'<span>'+esc(p)+'</span>').join("·");
  stage.innerHTML=title("La syllabe manquante","Écoute le mot à compléter, puis retrouve le morceau qui manque.","Mot à compléter")+
+ instructionAudio("Écoute le mot, puis touche la syllabe qui manque.")+
  '<div class="card center"><button class="btn primary" data-action="missing-listen">🔊 Écouter le mot à compléter</button><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
- '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-missing">Nouveau mot →</button>')+'</div>'
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-missing">Nouveau mot →</button>')+'</div>';
+ if(fromMission)playInstruction("Écoute le mot, puis touche la syllabe qui manque.",()=>speak(word.w,.70))
 }
 
 function pictureWordPool(){return decodableMissionWords().filter(w=>PICTURE_WORDS.includes(w.w))}
@@ -180,6 +193,7 @@ function gamePicture(){
  missionMode=false;currentView="pictures";state.lastView="pictures";save(false);const pool=pictureWordPool(),answer=pick(pool);currentAnswer=answer.w;locked=false;resetQuestionTracking();
  const opts=nextRandom(pool.map(x=>x.w),answer.w,4);
  stage.innerHTML=title("Quel est ce mot ?","Lis les mots et touche celui qui correspond à l'image.","Jeu 2")+
+ instructionAudio("Regarde l’image, lis les mots, puis touche le bon mot.")+
  `<div class="card center"><div class="emojis" style="font-size:90px">${answer.emoji}</div>
  <div class="choices">${opts.map(w=>`<button class="choice" data-action="picture-answer" data-value="${w}">${w}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn yellow" data-action="picture-hint">🔊 Indice audio</button></div>
@@ -191,12 +205,14 @@ function gameBuild(forcedAnswer=null,fromMission=false){
  const extraCount=Math.max(1,4-answer.parts.length),extraBase=activeLearningSyllables(),extraPool=extraBase.filter(s=>!answer.parts.includes(s)),extras=shuffle(extraPool).slice(0,extraCount);
  const opts=shuffle([...answer.parts,...extras]);
  stage.innerHTML=title("Construis le mot","Touche les syllabes dans le bon ordre.","Jeu 3")+
+ instructionAudio("Touche les syllabes dans le bon ordre pour construire le mot.")+
  `<div class="card center"><div class="emojis">${answer.emoji}</div><div style="font-size:16px;color:var(--muted)">Modèle : <b>${answer.w}</b> — assemble les morceaux.</div>
  <div class="order-zone" id="orderZone"><span class="empty">Les syllabes arrivent ici…</span></div>
  <div class="choices" id="buildChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:27px" data-action="build-token" data-value="${x}" data-id="${i}">${colorSyl(x)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="build-reset">↩ Recommencer</button><button class="btn yellow" data-action="speak" data-text="${answer.w}">🔊 Écouter le mot</button></div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar">${fromMission?`<button class="btn gray" data-action="mission-back">← Mission</button>`:`<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-build">Nouveau mot →</button>`}</div>`;
+ if(fromMission)playInstruction("Touche les syllabes dans le bon ordre pour construire le mot.")
 }
 function updateBuild(){
  const zone=$("#orderZone");zone.innerHTML=orderMade.length?orderMade.map(x=>`<span class="token">${x}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
@@ -213,8 +229,10 @@ function gameComprehension(forcedTarget=null,fromMission=false){
  const forcedPool=forcedTarget?pool.filter(x=>x.word.w===forcedTarget):[],item=pick(forcedPool.length?forcedPool:pool),sentence=item.sentence;currentAnswer=item.word.w;
  const available=pictureWordPool().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
  stage.innerHTML=title("Je comprends la phrase","Lis la phrase : que possède le personnage ? Les petits mots peuvent être lus avec un adulte.","Compréhension")+
+ instructionAudio("Lis la phrase, puis touche l’image qui répond à la question.")+
  '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
- '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>'
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>';
+ if(fromMission)playInstruction("Lis la phrase, puis touche l’image qui répond à la question.")
 }
 
 function gameOrder(){
@@ -222,6 +240,7 @@ function gameOrder(){
  const pool=decodableSentencePool();if(!pool.length){activate("games");return}
  missionMode=false;currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;resetQuestionTracking();const opts=shuffle(arr);
  stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Les petits mots comme « un » ou « une » sont lus avec un adulte au besoin.","Jeu 4")+
+ instructionAudio("Touche les mots dans le bon ordre pour reconstruire la phrase.")+
  `<div class="card center"><div class="hero-emoji">💬</div>
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
  <div class="choices" id="orderChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:21px" data-action="order-token" data-value="${esc(x)}" data-id="${i}">${esc(x)}</button>`).join("")}</div>
