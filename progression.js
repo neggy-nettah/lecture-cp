@@ -210,7 +210,7 @@ function pickLearningWord(pool){
  }
  return pick(weighted.length?weighted:words)
 }
-function learningCourseCompleted(){return completedMissionCount()>=14&&masterySummary().mastered>=40}
+function learningCourseCompleted(){const requiredMastered=Math.ceil(DATA.sets.flat().length*2/3);return unlockedFamilyCount()>=DATA.sets.length&&masterySummary().mastered>=requiredMastered}
 const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
 function phraseTokenParts(token){
  const clean=String(token||"").toLowerCase().replace(/[.!?,;:]/g,"");
