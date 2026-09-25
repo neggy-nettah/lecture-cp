@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.35.0 — 2026-09-25
+
+- nouveau mode libre « Je lis à voix haute », débloqué avec les phrases après 8 missions
+- l’enfant lit d’abord seul ; le modèle audio complet n’apparaît qu’après « J’ai fini de lire »
+- aucun micro, chronomètre, score, étoile ou modification de maîtrise dans cette activité
+- audit navigateur de toutes les phrases décodables en lecture à voix haute, avec contrôle mobile à 320 px
+- les mots à `e` final muet sont maintenant différés du décodage autonome jusqu’à l’enseignement explicite de cette règle
+- ajout de mots CV réguliers pour conserver un corpus fourni : `menu`, `poli`, `puni`, `revu`, `relu`, `pari`, `rami`, `vomi`
+- banque Mot & image resserrée pour ne plus contenir de cibles différées
+- documentation pédagogique et audit mis à jour pour distinguer le `e` prononcé d’une syllabe CV et le `e` muet final
+
 ## 0.34.0 — 2026-09-25
 
 - nouveau mini-jeu libre « J’écris la syllabe » : écouter une syllabe puis choisir les deux lettres dans le bon ordre
