@@ -54,6 +54,8 @@ module.exports=async function auditGames(page){
      for(const part of word.parts){const b=buttons('build-token').find(b=>!b.disabled&&b.dataset.value===part);check(!!b,'missing duplicate construction token');b.click()}
      check(locked&&orderMade.join('')===word.w,'word cannot be assembled '+word.w);
      check(!state.mastery['word:'+word.w],'copying model awarded reading mastery');counts.wordBuilds++;
+    }
+    for(const word of missingSyllableWords()){
      gameMissing(word);const target=currentAnswer;const before=state.mastery[target]?.correct||0;
      check(!!document.querySelector('[data-action="missing-listen"]'),'missing word has no unambiguous audio prompt');
      answer('missing-answer',target,true);check((state.mastery[target]?.correct||0)===before,'corrected missing syllable inflated mastery');counts.missingWords++;
