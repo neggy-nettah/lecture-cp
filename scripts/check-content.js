@@ -7,6 +7,7 @@ try{vm.runInContext(src,context,{timeout:1000})}
 catch(error){console.error("CONTENT VALIDATION FAILED: syntax/runtime",error);process.exit(1)}
 
 const data=vm.runInContext("DATA",context);
+const miniTexts=vm.runInContext("MINI_TEXTS",context);
 const cpRoadmap=vm.runInContext("CP_READING_ROADMAP",context);
 const cpMilestones=vm.runInContext("CP_OFFICIAL_MILESTONES",context);
 const cgpExpansionPlan=vm.runInContext("CGP_EXPANSION_PLAN",context);
@@ -55,6 +56,17 @@ if(!Array.isArray(data.sets)||data.sets.length<10)fail("Expected at least 10 syl
 if(!Array.isArray(data.familyGraphemes)||data.familyGraphemes.length!==data.sets.length)fail("Syllable family grapheme metadata is incomplete.");
 if(!Array.isArray(data.words)||data.words.length<35)fail("Word bank is unexpectedly small.");
 if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank is unexpectedly small.");
+
+if(!Array.isArray(miniTexts)||miniTexts.length<4)fail("Mini-text corpus is unexpectedly small.");
+const miniIds=duplicates(miniTexts.map(x=>x.id));if(miniIds.length)fail("Duplicate mini-text ids:",miniIds.join(", "));
+const sentenceKeys=new Set(data.sentences.map(sentence=>sentence.join("\u0000")));
+for(const item of miniTexts){
+  if(!item.id||!Array.isArray(item.sentences)||item.sentences.length!==2||!item.question||!item.answer||!Array.isArray(item.choices)||item.choices.length<2)fail("Malformed mini-text:",JSON.stringify(item));
+  if(item.sentences.some(sentence=>!sentenceKeys.has(sentence.join("\u0000"))))fail("Mini-text uses an unvalidated sentence:",item.id);
+  if(new Set(item.choices).size!==item.choices.length||!item.choices.includes(item.answer))fail("Ambiguous mini-text choices:",item.id);
+  const subjects=item.sentences.map(sentence=>String(sentence[0]||""));
+  if(item.choices.some(choice=>!subjects.includes(choice))||!subjects.includes(item.answer))fail("Mini-text answer is not grounded in its sentences:",item.id);
+}
 
 const soundKeys=data.sounds.map(x=>x.g);
 const dupSounds=duplicates(soundKeys);
