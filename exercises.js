@@ -76,7 +76,7 @@ function gamesMenu(){
  `<div class="levels">
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
   <button class="level" data-action="game-encode"><div class="ico">✍️</div><b>J’écris la syllabe</b><small>J’entends puis je choisis les lettres</small></button>
-  <button class="level" data-action="game-word-encode"><div class="ico">📝</div><b>J’écris le mot</b><small>J’écoute puis j’assemble les syllabes</small></button>
+  <button class="level" data-action="game-word-encode" ${wordEncodingUnlocked()?"":"disabled"}><div class="ico">${wordEncodingUnlocked()?"📝":"🔒"}</div><b>J’écris le mot</b><small>${wordEncodingUnlocked()?"J’écoute puis j’assemble les syllabes":wordEncodingUnlockText()}</small></button>
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
   <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
@@ -129,6 +129,7 @@ function wordEncodePool(){
  return decodableMissionWords().filter(word=>word.parts.length>=2&&word.parts.length<=4)
 }
 function gameWordEncode(forcedWord=null){
+ if(!wordEncodingUnlocked()){activate("games");return}
  missionMode=false;currentView="word-encode";state.lastView="word-encode";save(false);locked=false;resetQuestionTracking();
  const pool=wordEncodePool(),answer=forcedWord&&pool.some(w=>w.w===forcedWord.w)?forcedWord:pick(pool);
  if(!answer){activate("games");return}
