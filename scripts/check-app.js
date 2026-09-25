@@ -183,6 +183,9 @@ if(!app.includes('wordEncodePool().filter')&&!app.includes('decodableMissionWord
 if(!app.includes('wordEncodeMade.join("")===currentAnswer.parts.join("")')||!app.includes('recordQuestionSuccess("word:"+currentAnswer.w,key)')||!app.includes('recordQuestionError("word:"+currentAnswer.w)')){
   fail("Word encoding is no longer verified as word-level mastery evidence.");
 }
+if(!app.includes("function wordMasterySummary()")||!app.includes("Mots évalués")||!app.includes("wm.evaluated")){
+  fail("Parent dashboard no longer exposes word mastery.");
+}
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
