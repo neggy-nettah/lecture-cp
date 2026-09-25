@@ -159,7 +159,9 @@ Le jeu micro reste un entraînement BÊTA et ne doit pas décider de la maîtris
 
 L'audio utilise actuellement `speechSynthesis`.
 
-Point connu : comportement non fiable sur Safari macOS. Ne pas modifier à nouveau cette partie sans test dédié. Une future version plus robuste pourra utiliser de vrais fichiers audio pré-enregistrés ou un pipeline audio serveur.
+Depuis la v0.32, le moteur attend la disponibilité des voix, réagit à `voiceschanged`, assigne explicitement une voix française lorsqu'elle existe et évite les annulations inutiles avant lecture. `scripts/audio-engine-check.js` simule notamment une liste de voix vide au premier appel puis chargée plus tard.
+
+Point restant : Safari macOS doit encore être vérifié sur un appareil réel. Si la synthèse native reste instable malgré ces garde-fous, l'évolution la plus robuste sera d'utiliser de vrais fichiers audio pré-enregistrés ou un pipeline audio serveur.
 
 ## Règles à préserver
 
