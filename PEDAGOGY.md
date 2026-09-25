@@ -124,6 +124,25 @@ L'image sert à :
 
 Elle ne doit pas permettre de réussir un exercice censé mesurer le décodage sans avoir lu.
 
+## Feuille de route CP issue du programme 2025
+
+Le fichier `content.js` expose maintenant `CP_READING_ROADMAP`. Cette structure sert de contrat entre le programme officiel et les fonctionnalités : une activité nouvelle doit correspondre à une compétence de cette feuille de route.
+
+| Palier | Compétence travaillée | État dans l'app |
+| --- | --- | --- |
+| Correspondances simples | identifier les graphèmes simples, fusionner consonne + voyelle, lire des syllabes CV | en place |
+| Encodage simple | écrire une syllabe entendue avec les graphèmes connus | en place en jeu libre |
+| Mots réguliers | lire et construire des mots entièrement décodables | en place |
+| Phrases décodables | lire une phrase courte, remettre les mots en ordre, comprendre une information explicite | en place après déblocage |
+| Régularités orthographiques | lettres muettes fréquentes, notamment `e` final muet | à construire explicitement |
+| Graphèmes complexes | étendre progressivement les correspondances au-delà des CV simples | à construire |
+| Fluence et prosodie | lecture précise puis plus fluide, respect de la ponctuation et des groupes de sens | amorcé sans notation automatique |
+| Textes courts et compréhension | lire un texte court, répondre à des questions explicites, enrichir le vocabulaire | à construire |
+
+### Règle de progression
+
+Le nombre de missions ne suffit pas à lui seul à justifier l'introduction d'une nouvelle difficulté. Les missions et la maîtrise servent à régler le rythme **à l'intérieur d'un palier déjà enseigné**. Le passage à une règle orthographique ou à un graphème complexe doit être explicite dans le curriculum, documenté et accompagné de contenu adapté.
+
 ## Curriculum actuel
 
 Les familles sont actuellement débloquées progressivement à partir de la liste définie dans `DATA.sets`.
