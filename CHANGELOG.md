@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.36.0 — 2026-09-25
+
+- mode texte agrandi `Aa+` mémorisé localement sur chaque appareil, sans modifier les scores ni la progression
+- contrôle navigateur du mode agrandi sur mobile, persistance après rechargement et absence de débordement horizontal
+- feuille de route CP 2025 encodée dans `CP_READING_ROADMAP` pour relier chaque activité à une compétence pédagogique explicite
+- parcours structuré : correspondances simples → encodage → mots réguliers → phrases → régularités orthographiques → graphèmes complexes → fluence/prosodie → textes courts et compréhension
+- les difficultés futures (`e` final muet, graphèmes complexes, textes courts) sont marquées comme planifiées au lieu d’être débloquées uniquement par le nombre de missions
+- validation automatique de la structure de cette feuille de route
+
 ## 0.35.0 — 2026-09-25
 
 - nouveau mode libre « Je lis à voix haute », débloqué avec les phrases après 8 missions
