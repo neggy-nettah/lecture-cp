@@ -676,12 +676,13 @@ function resetDailyMission(){
  state.dailyMission=null;missionMode=false;currentView="home";save();render();alert("Nouvelle mission créée.")
 }
 function parents(){
- const ms=masterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
+ const ms=masterySummary(),wm=wordMasterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
  const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Aucune difficulté repérée dans les réponses enregistrées. Les syllabes non évaluées restent à découvrir.</span>`;
  stage.innerHTML=title("Coin parent","Suivi simple de la progression réelle.","Tableau de bord")+
  `<div class="parent-grid">
   <div class="parent-box"><h3>🎯 Réussite des tentatives</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${attempts?accuracy+" % ("+correct+"/"+attempts+")":"pas encore de réponse"}</small></p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée dans les exercices de l’app.</p></div>
+  <div class="parent-box"><h3>📝 Mots évalués</h3><p><b style="font-size:26px">${wm.evaluated} / ${wm.total}</b><br>${wm.mastered} mot(s) à ★★★ parmi les mots actuellement décodables.<br><small>${wm.needsReview} à reprendre • ${wm.learning} en apprentissage.</small></p></div>
   <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumNextText()}</p></div>
   <div class="parent-box"><h3>🔁 À reprendre</h3><p><b style="font-size:26px">${ms.needsReview}</b><br>Syllabes déjà évaluées, sans réussite autonome enregistrée.</p></div>
   <div class="parent-box"><h3>🔎 Pas encore évaluées</h3><p><b style="font-size:26px">${ms.unseen}</b><br>Aucune réponse évaluée pour ces syllabes. Ce n’est pas une difficulté constatée.</p></div>
