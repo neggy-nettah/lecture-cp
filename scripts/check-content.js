@@ -59,6 +59,9 @@ if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank 
 const soundKeys=data.sounds.map(x=>x.g);
 const dupSounds=duplicates(soundKeys);
 if(dupSounds.length)fail("Duplicate sound graphemes:",dupSounds.join(", "));
+for(const grapheme of data.familyGraphemes){
+  if(!soundKeys.includes(grapheme))fail("Missing sound entry for syllable-family grapheme:",grapheme);
+}
 for(const s of data.sounds){
   if(!s.g||!s.say||!s.hint||!s.emoji)fail("Malformed sound entry:",JSON.stringify(s));
 }
