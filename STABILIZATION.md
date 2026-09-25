@@ -16,7 +16,7 @@ Pouvoir faire utiliser l’application plusieurs jours sur iPhone, iPad/Mac et p
 - [x] cache PWA versionné et tests hors ligne
 - [x] dépendance Supabase JS figée sur une version exacte
 - [x] tests Chromium mobiles/desktop
-- [ ] smoke test WebKit intégré et vert dans la CI
+- [x] smoke test WebKit intégré et vert dans la CI
 - [ ] audit direct du projet Supabase : tables, RLS et advisors sécurité
 - [ ] vérification audio sur Safari macOS réel
 - [ ] plusieurs séances réelles avec Caly sans aide adulte pour relever les frictions UX
