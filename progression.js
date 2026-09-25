@@ -190,15 +190,17 @@ function wordMasterySummary(){
  }).slice(0,5);
  return {total:pool.length,evaluated:evaluated.length,mastered,learning,needsReview,weakest}
 }
+function wordLearningWeight(word,recent=new Set()){
+ const m=state.mastery?.["word:"+word.w]||null,level=wordMasteryLevel(word.w);
+ const attempts=stateCount(m?.attempts),correct=Math.min(attempts,stateCount(m?.correct)),accuracy=attempts?correct/attempts:null;
+ const needsHelp=attempts>0&&(correct===0||accuracy<.6),stale=!!m?.lastSeen&&daysSinceDayKey(m.lastSeen)>=7;
+ return Math.max(1,[5,4,2,1][level]+(needsHelp?4:0)+(stale?2:0)-(recent.has(word.w)?1:0))
+}
 function pickLearningWord(pool){
  const words=(pool||[]).filter(Boolean);if(!words.length)return null;
  const recent=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word)),weighted=[];
  for(const word of words){
-  const m=state.mastery?.["word:"+word.w]||null,level=wordMasteryLevel(word.w);
-  const attempts=stateCount(m?.attempts),correct=Math.min(attempts,stateCount(m?.correct)),accuracy=attempts?correct/attempts:null;
-  const needsHelp=attempts>0&&(correct===0||accuracy<.6),stale=!!m?.lastSeen&&daysSinceDayKey(m.lastSeen)>=7;
-  let weight=[5,4,2,1][level]+(needsHelp?4:0)+(stale?2:0)-(recent.has(word.w)?1:0);
-  weight=Math.max(1,weight);
+  const weight=wordLearningWeight(word,recent);
   for(let i=0;i<weight;i++)weighted.push(word)
  }
  return pick(weighted.length?weighted:words)
