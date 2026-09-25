@@ -255,6 +255,9 @@ if((app.match(/localStorage\.getItem\(/g)||[]).length!==1||(app.match(/localStor
 if(!html.includes('id="textSizeBtn"')||!css.includes(".large-text .titlebar h2")){
   fail("Large-text control or styles are missing.");
 }
+if(!html.includes('id="progressBarWrap" role="progressbar"')||!html.includes('id="syncStatus" role="status" aria-live="polite"')||!app.includes('setAttribute("aria-valuenow",String(pct))')){
+  fail("Progress or synchronization accessibility semantics are missing.");
+}
 if(!app.includes('memoryMissedPairs.has(a.card.pair)?null:a.card.pair')){
   fail("Memory mistakes can inflate syllable mastery again.");
 }
