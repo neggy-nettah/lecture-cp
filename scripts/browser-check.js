@@ -160,7 +160,7 @@ window.supabase={createClient:()=>({
   assert.deepEqual(await page.evaluate(()=>orderMade),['sa','la','mi']);
   // Dictated word encoding never exposes the written answer before the child assembles it.
   await page.setViewportSize({width:320,height:900});
-  await page.evaluate(()=>{state=normalizeState({});gameWordEncode(DATA.words.find(w=>w.w==='silo'))});
+  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:4},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','la'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameWordEncode(DATA.words.find(w=>w.w==='silo'))});
   assert.equal(await page.locator('#wordEncodeZone').isVisible(),true);
   assert.equal(await page.evaluate(()=>stage.innerHTML.includes('silo')),false);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'word encoding overflows at 320px');
