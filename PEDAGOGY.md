@@ -143,6 +143,10 @@ Le fichier `content.js` expose maintenant `CP_READING_ROADMAP`. Cette structure 
 
 Le nombre de missions ne suffit pas à lui seul à justifier l'introduction d'une nouvelle difficulté. Les missions et la maîtrise servent à régler le rythme **à l'intérieur d'un palier déjà enseigné**. Le passage à une règle orthographique ou à un graphème complexe doit être explicite dans le curriculum, documenté et accompagné de contenu adapté.
 
+Pour le passage aux phrases, l'application exige désormais **deux conditions** : au moins 8 missions terminées et 12 points de maîtrise sur les syllabes. Le simple fait d'avoir ouvert l'application plusieurs jours ne suffit donc plus à débloquer la lecture de phrases.
+
+L'encodage progresse lui aussi par paliers : d'abord une syllabe entendue à reconstruire avec des lettres, puis un mot régulier entièrement décodable à reconstruire avec ses syllabes. Dans ce deuxième exercice, le mot écrit n'est pas montré avant la réponse afin d'éviter une simple copie visuelle.
+
 ## Curriculum actuel
 
 Les familles sont actuellement débloquées progressivement à partir de la liste définie dans `DATA.sets`.
