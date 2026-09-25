@@ -336,7 +336,7 @@ function gameMiniText(forcedId=null){
  const forced=forcedId?pool.find(item=>item.id===forcedId):null,item=forced||pick(pool);
  currentMiniText=item;currentAnswer=item.answer;
  const opts=shuffle([...item.choices]),tokens=item.sentences.flat();
- stage.innerHTML=title("Le mini-texte","Lis les deux phrases seul, puis écoute la question.","Compréhension de texte")+
+ stage.innerHTML=title("Le mini-texte","Lis les deux phrases tranquillement, puis écoute la question.","Compréhension de texte")+
  instructionAudio("Lis les deux phrases tranquillement. Ensuite, écoute la question et touche la bonne réponse.")+
  `<div class="card center"><div class="hero-emoji">📚✨</div>
  <div class="mini-text-reading">${item.sentences.map(sentence=>`<div class="readaloud-sentence">${sentence.map(esc).join(" ")}</div>`).join("")}</div>
