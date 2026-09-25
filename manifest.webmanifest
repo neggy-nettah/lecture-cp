@@ -3,6 +3,7 @@
   "short_name": "Syllabes",
   "description": "Jeux courts de lecture syllabique pour le CP.",
   "lang": "fr-FR",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
