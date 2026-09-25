@@ -16,13 +16,16 @@ function buildDailyMission(){
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],comprehensionPool=sentenceUnlocked()?comprehensionSentencePool():[];
  const focusedComprehension=comprehensionPool.filter(item=>missionWordMatchesFocus(item.word,primary,review));
- const visualModes=["memory","family","missing",...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
+ const encodeReady=completedMissionCount()>=3&&masterySummary().learning+masterySummary().mastered>=6;
+ const visualModes=["memory","family","missing",...(encodeReady?["encode"]:[]),...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
  const missingCandidates=missingSyllableWords(),focusedMissing=missionFocusedWords(missingCandidates,primary,review),missingBase=focusedMissing.length?focusedMissing:missingCandidates,missingPool=missingBase.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingBase)||word;
  const comprehensionBase=focusedComprehension.length?focusedComprehension:comprehensionPool,comprehensionChoices=comprehensionBase.filter(x=>x.word.w!==word.w),comprehensionItem=pick(comprehensionChoices.length?comprehensionChoices:comprehensionBase);
  const visualStep=visualType==="memory"
   ?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}
   :visualType==="family"
    ?{type:"family",target:family[0][0],title:"J’observe",detail:"Trouve l’intrus de la famille "+family[0][0].toUpperCase()}
+   :visualType==="encode"
+    ?{type:"encode",target:review,title:"J’écris",detail:"Écoute puis écris la syllabe "+review.toUpperCase()}
    :visualType==="comprehension"&&comprehensionItem
     ?{type:"comprehension",target:comprehensionItem.word.w,title:"Je comprends",detail:"Lis la phrase et choisis la bonne image"}
     :{type:"missing",target:missingWord.w,title:"Je complète",detail:"Retrouve la syllabe manquante de "+missingWord.w.toUpperCase()};
@@ -37,7 +40,7 @@ function buildDailyMission(){
 }
 function validDailyMission(m){
  if(!m||!stateDay(m.date)||!DATA.sets.flat().includes(m.primary)||!DATA.sets.flat().includes(m.review)||!DATA.words.some(w=>w.w===m.word)||!Array.isArray(m.steps)||m.steps.length!==5)return false;
- const expected=[["discover"],["listen"],["bubbles"],["memory","family","missing","comprehension"],["build"]];
+ const expected=[["discover"],["listen"],["bubbles"],["memory","family","missing","encode","comprehension"],["build"]];
  return m.steps.every((s,i)=>{
   if(!s||!expected[i].includes(s.type))return false;
   if(s.type==="memory")return true;
@@ -91,6 +94,7 @@ function startMissionStep(){
  else if(s.type==="memory")gameMemory([m.primary,m.review],true);
  else if(s.type==="family"){const fam=DATA.sets.find(set=>set[0][0]===s.target)||DATA.sets[0];gameFamily(fam,true)}
  else if(s.type==="missing")gameMissing(DATA.words.find(w=>w.w===s.target)||null,true);
+ else if(s.type==="encode")gameEncode(s.target,true);
  else if(s.type==="comprehension")gameComprehension(s.target,true);
  else if(s.type==="build")gameBuild(DATA.words.find(w=>w.w===s.target)||null,true)
 }
