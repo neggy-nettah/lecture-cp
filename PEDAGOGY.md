@@ -160,7 +160,7 @@ L'ordre précis des nouvelles correspondances reste un **choix de conception de 
 - graphèmes vocaliques complexes à traiter avec une décomposition explicite des syllabes : `ou`, `on`, `an`, `en`, `in`, `oi` ;
 - `c` et `g` restent hors des familles uniformes car leur valeur dépend du contexte graphique.
 
-Aucun de ces graphèmes n'est encore activé pour l'enfant. Ils ne doivent entrer dans le curriculum qu'avec un corpus de mots vérifié, les aides audio correspondantes et les tests de décodabilité.
+En dehors de la famille `d`, déjà active, les graphèmes encore listés comme prévus ne sont pas exposés à l'enfant. Ils ne doivent entrer dans le curriculum qu'avec un corpus de mots vérifié, les aides audio correspondantes et les tests de décodabilité.
 
 ## Curriculum actuel
 
