@@ -155,7 +155,7 @@ Le jeu d'encodage de mots est actuellement déverrouillé à partir de 4 mission
 
 L'ordre précis des nouvelles correspondances reste un **choix de conception de l'application**, pas un ordre imposé par le programme officiel. Le projet conserve maintenant un `CGP_EXPANSION_PLAN` séparé des contenus actifs :
 
-- consonnes simples et relativement stables : `d`, `j`, `z`, `k` ;
+- la famille `d` est désormais active ; les prochaines consonnes simples prévues sont `j`, `z`, `k` ;
 - premier digramme consonantique prévu : `ch` ;
 - graphèmes vocaliques complexes à traiter avec une décomposition explicite des syllabes : `ou`, `on`, `an`, `en`, `in`, `oi` ;
 - `c` et `g` restent hors des familles uniformes car leur valeur dépend du contexte graphique.
@@ -168,6 +168,7 @@ Les familles sont actuellement débloquées progressivement à partir de la list
 
 Le moteur :
 
+- contient actuellement 11 familles (66 syllabes CV), la famille `d` ayant été ajoutée en dernier pour préserver la progression des anciens profils ;
 - commence avec 3 familles ;
 - ajoute une famille environ toutes les 2 missions terminées ;
 - conserve les syllabes déjà travaillées ;
@@ -203,7 +204,7 @@ Avant d'ajouter un mot ou une phrase, vérifier :
 Le script `scripts/check-content.js` vérifie à chaque push :
 
 - unicité des sons, syllabes, mots et phrases ;
-- structure des 10 familles de syllabes ;
+- structure de toutes les familles de syllabes déclarées ;
 - présence des champs nécessaires ;
 - quantité minimale de mots assemblables exactement ;
 - ponctuation des phrases ;
