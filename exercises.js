@@ -131,7 +131,7 @@ function wordEncodePool(){
 function gameWordEncode(forcedWord=null){
  if(!wordEncodingUnlocked()){activate("games");return}
  missionMode=false;currentView="word-encode";state.lastView="word-encode";save(false);locked=false;resetQuestionTracking();
- const pool=wordEncodePool(),answer=forcedWord&&pool.some(w=>w.w===forcedWord.w)?forcedWord:pick(pool);
+ const pool=wordEncodePool(),answer=forcedWord&&pool.some(w=>w.w===forcedWord.w)?forcedWord:pickLearningWord(pool);
  if(!answer){activate("games");return}
  currentAnswer=answer;wordEncodeMade=[];
  const extraCount=Math.max(1,5-answer.parts.length),extraBase=activeLearningSyllables().filter(s=>!answer.parts.includes(s)),extras=shuffle(extraBase).slice(0,extraCount);
@@ -154,12 +154,12 @@ function updateWordEncode(){
  const ok=wordEncodeMade.join("")===currentAnswer.parts.join("");
  const key="word-encode:"+currentAnswer.w;
  if(ok){
-  locked=true;recordQuestionSuccess(null,key);rewardVerified("Mot écrit !",key);
+  locked=true;recordQuestionSuccess("word:"+currentAnswer.w,key);rewardVerified("Mot écrit !",key);
   state.wordPractice=state.wordPractice||{};state.wordPractice[currentAnswer.w]=true;setDone("wordEncoding");
   confetti();speak(currentAnswer.w,.70);
   $("#feedback").innerHTML=`<div class="ok">🎉 Bravo : <b>${esc(currentAnswer.w)}</b> ${currentAnswer.emoji||""}</div>`
  }else{
-  locked=true;recordQuestionError();miss("Écoute encore le mot et recommence.");
+  locked=true;recordQuestionError("word:"+currentAnswer.w);miss("Écoute encore le mot et recommence.");
   $("#feedback").innerHTML='<div class="no">Presque ! Écoute encore le mot.</div>';
   screenTask(()=>{locked=false;wordEncodeMade=[];document.querySelectorAll("#wordEncodeChoices .choice").forEach(b=>b.disabled=false);updateWordEncode();speak(currentAnswer.w,.68)},850)
  }
