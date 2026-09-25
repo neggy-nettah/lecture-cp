@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.30.0 — 2026-09-25
+
+- consignes audio réécoutables ajoutées aux ateliers et mini-jeux principaux
+- lecture automatique de la consigne dans les étapes de mission, sans compter comme réussite ni maîtrise
+- exercices d’écoute : la consigne est lue avant la syllabe cible pour permettre un usage plus autonome
+- syllabe manquante : la consigne est lue avant le mot cible
+- présentation dédiée, lisible sur mobile, avec bouton « Réécouter la consigne »
+- aucun changement du calcul des étoiles, de la maîtrise ou des récompenses
+
 ## 0.29.0 — 2026-09-25
 
 - bilan parent distinguant syllabes jamais évaluées et syllabes à reprendre après une erreur
