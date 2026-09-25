@@ -100,7 +100,7 @@ const DATA={
 };
 
 const MINI_TEXTS=[
- {id:"velo-polo",sentences:[["Lili","a","un","vélo."],["Mila","a","un","polo."]],question:"Qui a le vélo ?",answer:"Lili",choices:["Lili","Mila"]},
+ {id:"velo-sari",sentences:[["Lili","a","un","vélo."],["Mila","a","un","sari."]],question:"Qui a le vélo ?",answer:"Lili",choices:["Lili","Mila"]},
  {id:"sari-salami",sentences:[["Sami","a","un","salami."],["Mila","a","un","sari."]],question:"Qui a le sari ?",answer:"Mila",choices:["Sami","Mila"]},
  {id:"lama-tutu",sentences:[["Lola","a","un","lama."],["Lili","a","un","tutu."]],question:"Qui a le lama ?",answer:"Lola",choices:["Lola","Lili"]},
  {id:"tuba-velo",sentences:[["Papi","a","un","tuba."],["Papa","a","un","vélo."]],question:"Qui a le tuba ?",answer:"Papi",choices:["Papi","Papa"]},
