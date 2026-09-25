@@ -7,6 +7,16 @@ function refreshPracticeScreen(draw,action){
  document.querySelector('[data-action="'+action+'"]')?.focus({preventScroll:true})
 }
 
+function phraseToolHelpHTML(sentence){
+ const tools=["a","un","une","le"],present=[];
+ for(const token of sentence||[]){
+  const clean=String(token).toLowerCase().replace(/[.!?,;:]/g,"");
+  if(tools.includes(clean)&&!present.includes(clean))present.push(clean)
+ }
+ if(!present.length)return "";
+ return '<div class="tool-word-help"><span>🧩 Petits mots :</span>'+present.map(word=>'<button class="tool-word-audio" data-action="speak" data-text="'+esc(word)+'" data-rate=".72" aria-label="Écouter le mot '+esc(word)+'">🔊 '+esc(word)+'</button>').join("")+'</div>'
+}
+
 function sounds(){
  const pool=activeSoundData();if(state.sound>=pool.length)state.sound=0;const x=pool[state.sound%pool.length];
  stage.innerHTML=title("Les sons","Écoute le son, puis répète-le à voix haute.","Niveau 1")+
@@ -228,9 +238,9 @@ function gameComprehension(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="comprehension";state.lastView=fromMission?"mission":"comprehension";save(false);locked=false;resetQuestionTracking();
  const forcedPool=forcedTarget?pool.filter(x=>x.word.w===forcedTarget):[],item=pick(forcedPool.length?forcedPool:pool),sentence=item.sentence;currentAnswer=item.word.w;
  const available=pictureWordPool().filter(w=>w.w!==item.word.w&&w.emoji!==item.word.emoji),distractors=shuffle(available).slice(0,3),opts=shuffle([item.word,...distractors]);
- stage.innerHTML=title("Je comprends la phrase","Lis la phrase : que possède le personnage ? Les petits mots peuvent être lus avec un adulte.","Compréhension")+
+ stage.innerHTML=title("Je comprends la phrase","Lis la phrase : que possède le personnage ? Tu peux écouter les petits mots si tu en as besoin.","Compréhension")+
  instructionAudio("Lis la phrase, puis touche l’image qui répond à la question.")+
- '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div><div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div>'+phraseToolHelpHTML(sentence)+'<div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>';
  if(fromMission)playInstruction("Lis la phrase, puis touche l’image qui répond à la question.")
 }
@@ -239,9 +249,10 @@ function gameOrder(){
  if(!sentenceUnlocked()){activate("games");return}
  const pool=decodableSentencePool();if(!pool.length){activate("games");return}
  missionMode=false;currentView="order";state.lastView="order";save(false);const arr=pick(pool);orderTarget=arr;orderMade=[];locked=false;resetQuestionTracking();const opts=shuffle(arr);
- stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Les petits mots comme « un » ou « une » sont lus avec un adulte au besoin.","Jeu 4")+
+ stage.innerHTML=title("Remets la phrase en ordre","Touche les mots dans l'ordre de la phrase. Tu peux écouter les petits mots si tu en as besoin.","Jeu 4")+
  instructionAudio("Touche les mots dans le bon ordre pour reconstruire la phrase.")+
  `<div class="card center"><div class="hero-emoji">💬</div>
+ ${phraseToolHelpHTML(arr)}
  <div class="order-zone" id="orderZone"><span class="empty">La phrase se construit ici…</span></div>
  <div class="choices" id="orderChoices">${opts.map((x,i)=>`<button class="choice" style="font-size:21px" data-action="order-token" data-value="${esc(x)}" data-id="${i}">${esc(x)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="order-reset">↩ Recommencer</button></div>
