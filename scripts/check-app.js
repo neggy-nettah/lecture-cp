@@ -165,6 +165,9 @@ if(!app.includes('initials=[...new Set(activeLearningSyllables().map(s=>s[0]))]'
 if(!app.includes('recordQuestionSuccess(currentAnswer,"encode:"+currentAnswer)')||!app.includes('recordQuestionError(currentAnswer)')){
   fail("Encoding answers are no longer connected to verified mastery/review tracking.");
 }
+if(!app.includes("function gameEncode(forcedTarget=null,fromMission=false)")||!app.includes('gameEncode(s.target,true)')){
+  fail("Mission encoding must preserve mission context.");
+}
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
