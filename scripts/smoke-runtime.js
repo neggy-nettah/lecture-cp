@@ -124,6 +124,7 @@ const probes=[
   'typeof gameReadAloud==="function"',
   'typeof gameEncode==="function"',
   'typeof gameWordEncode==="function"',
+  'typeof pickLearningWord==="function"&&typeof wordMasteryLevel==="function"',
   'typeof wordEncodePool==="function"',
   'typeof updateWordEncode==="function"',
   'typeof encodeLetterPool==="function"',
