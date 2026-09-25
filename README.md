@@ -176,8 +176,9 @@ Point restant : Safari macOS doit encore être vérifié sur un appareil réel. 
 
 ## Priorités suivantes
 
-- tester sur un vrai enfant le nouveau jeu d’encodage avant de décider s’il entre dans les missions quotidiennes
-- ajouter une pratique de lecture à voix haute et de prosodie sans notation automatique fragile
+- tester sur un vrai enfant le jeu d’encodage et la lecture à voix haute avant de les injecter dans les missions quotidiennes
+- ajouter une progression explicite pour les premières règles orthographiques, notamment le `e` final muet, avant de réintroduire les mots concernés
+- travailler progressivement la prosodie et la lecture expressive sans notation automatique fragile
 - remplacer progressivement les emojis de récompense par un univers graphique original
 - ajouter davantage de contenu pédagogique validé, puis introduire les graphèmes complexes avec une progression explicite
 - améliorer encore l’expérience tablette/mobile et les grands réglages de texte
