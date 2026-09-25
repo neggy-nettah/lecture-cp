@@ -59,7 +59,7 @@ function mergeProgressStates(localRaw,remoteRaw){
  const collectionIds=new Set(),collection=[];
  for(const item of [...(local.rewards?.collection||[]),...(remote.rewards?.collection||[])]){const known=COLLECTIBLES.find(x=>x.id===item?.id);if(known&&!collectionIds.has(known.id)){collection.push({...known});collectionIds.add(known.id)}}
  merged.rewards={towardPiece:Math.max(local.rewards?.towardPiece||0,remote.rewards?.towardPiece||0),pieces:Math.max(local.rewards?.pieces||0,remote.rewards?.pieces||0),puzzles:Math.max(local.rewards?.puzzles||0,remote.rewards?.puzzles||0),collection};
- merged.dailyMission=mergeDailyMission(local.dailyMission,remote.dailyMission,preferred);
+ merged.dailyMission=mergeDailyMission(local.dailyMission,remote.dailyMission,preferred.dailyMission);
  merged.stats={attempts:Math.max(local.stats?.attempts||0,remote.stats?.attempts||0),correct:Math.max(local.stats?.correct||0,remote.stats?.correct||0)};
  if(merged.stats.correct>merged.stats.attempts)merged.stats.correct=merged.stats.attempts;
  return normalizeState(merged)
