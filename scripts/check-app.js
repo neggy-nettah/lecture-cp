@@ -68,6 +68,8 @@ const requiredFunctions=[
   "function gameMissing(",
   "function gameComprehension(",
   "function gameFamily(",
+  "function instructionAudio(",
+  "function playInstruction(",
   "function worldView(",
   "function collectionView(",
   "function parents(",
@@ -100,8 +102,11 @@ if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Wo
 if(!app.includes('"controllerchange"')||!app.includes("reg.update()"))fail("Installed-app update notification/check is missing.");
 // Network fallback and offline HTML coherence are exercised by check-service-worker.js.
 
-if(!app.includes('function speakMission(text,rate=.60){speak(text,rate)}')){
-  fail("Audio engine changed. Review the known Safari macOS issue before merging.");
+if(!app.includes('function speakMission(text,rate=.60,cb){speak(text,rate,cb)}')){
+  fail("Mission audio wrapper changed unexpectedly.");
+}
+if((app.match(/instructionAudio\(/g)||[]).length<10||!app.includes('if(fromMission)playInstruction(')){
+  fail("Replayable spoken instructions are missing from the autonomous reading flow.");
 }
 
 if(/service[_-]?role/i.test(app)){
@@ -201,5 +206,5 @@ console.log("- Navigation/actions: OK");
 console.log("- Reading words:",words.length);
 console.log("- Curriculum guards: OK");
 console.log("- Client credential/ownership guards: OK");
-console.log("- Audio guard: unchanged");
+console.log("- Replayable audio instructions: OK");
 console.log("- PWA manifest/service worker: OK");
