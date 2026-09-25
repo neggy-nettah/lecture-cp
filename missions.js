@@ -58,12 +58,15 @@ function missionHub(){
  missionMode=false;currentView="mission";state.lastView="mission";save(false);
  const m=getDailyMission();
  stage.innerHTML=title("Mission du jour","Une petite séance variée, adaptée à ce qui mérite d’être revu.","8–12 min")+
+ instructionAudio("Voici ta mission. Appuie sur l’étape, puis écoute la consigne avant de jouer.")+
  '<div class="card">'+missionProgressHTML(m)+missionStepsHTML(m)+'</div><div class="actions" style="margin-top:14px"><button class="btn gray" data-action="go" data-to="home">← Accueil</button><button class="btn primary" data-action="mission-next">▶ Étape '+Math.min(m.index+1,5)+'</button></div>'
 }
 function missionDiscover(target){
  currentView="mission-discover";state.lastView="mission";currentAnswer=target;locked=false;
  stage.innerHTML=title("Je découvre","Écoute tranquillement, puis répète à voix haute.","Étape 1")+
- '<div class="card center"><div class="hero-emoji">👂✨</div><div class="big purple">'+colorSyl(target)+'</div><div class="actions"><button class="btn yellow" data-action="mission-discover-listen">🔊 Écouter la syllabe</button><button class="btn primary" data-action="mission-discover-done">👍 J’ai écouté et répété</button></div><div class="tip">Appuie sur 🔊 pour entendre la syllabe. Échauffement : pas d’étoile ici.</div></div>'
+ instructionAudio("Écoute la syllabe, puis répète-la à voix haute.")+
+ '<div class="card center"><div class="hero-emoji">👂✨</div><div class="big purple">'+colorSyl(target)+'</div><div class="actions"><button class="btn yellow" data-action="mission-discover-listen">🔊 Écouter la syllabe</button><button class="btn primary" data-action="mission-discover-done">👍 J’ai écouté et répété</button></div><div class="tip">Appuie sur 🔊 pour entendre la syllabe. Échauffement : pas d’étoile ici.</div></div>';
+ playInstruction("Écoute la syllabe, puis répète-la à voix haute.",()=>speakMission(target,.58))
 }
 function startMissionStep(){
  const m=getDailyMission();if(m.completed||m.index>=m.steps.length){missionComplete();return}
