@@ -210,8 +210,8 @@ if(!readAloudBlock||/recordAttempt\(|recordQuestionSuccess\(|recordQuestionError
 if(!app.includes('if(a==="readaloud-done")')||!app.includes('if(a==="readaloud-model")')){
   fail("Read-aloud completion/model actions are missing.");
 }
-if(!app.includes('const UI_TEXT_SIZE_KEY="lectureCpLargeText"')||!app.includes("function applyTextSizePreference(")){
-  fail("Local large-text preference is missing.");
+if(!app.includes('const UI_TEXT_SIZE_KEY="lectureCpLargeText"')||!app.includes("function storedLargeTextPreference(")||!app.includes("function applyTextSizePreference(")){
+  fail("Safe local large-text preference is missing.");
 }
 if(!html.includes('id="textSizeBtn"')||!css.includes(".large-text .titlebar h2")){
   fail("Large-text control or styles are missing.");
