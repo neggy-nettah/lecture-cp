@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.39.0 — 2026-09-25
+
+- nouvelle famille `d` : `da / de / di / do / du / dé`, ajoutée en dernier pour préserver les anciens profils
+- nouveau corpus décodable associé : `domino`, `dodo`, `midi`, `radio`, `défi`, `dino`, plus trois phrases courtes
+- curriculum porté à 17 sons, 11 familles et 66 syllabes CV
+- `J’écris le mot` devient adaptatif : les mots faibles et anciens reviennent davantage
+- suivi séparé des mots dans le coin parent, avec accès direct à un entraînement ciblé sur un mot faible
+- reprise correcte de l’écran d’encodage de mots après rechargement
+- moteur préparé aux graphèmes de plusieurs lettres et aux syllabes explicites comme `ch + a` ou `l + ou`, sans encore les exposer à l’enfant
+- plan d’extension des CGP distinguant consonnes stables, digrammes, graphèmes vocaliques complexes et cas contextuels comme `c` / `g`
+- fin de parcours calculée dynamiquement selon la taille réelle du curriculum
+- audit navigateur étendu à toutes les familles et à tous les mots du jeu d’encodage
+- cache hors ligne et assets mis à jour pour la v0.39.0
+
 ## 0.38.0 — 2026-09-25
 
 - l’encodage de mots reste verrouillé jusqu’à 4 missions terminées et 10 points de maîtrise
