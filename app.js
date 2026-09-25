@@ -42,6 +42,19 @@ function mergeDailyMission(a,b,preferred){
  if(ia!==ib)return ia>ib?ma:mb;
  return preferred===a?ma:mb
 }
+function mergeReviewQueues(a,b,preferred){
+ const allowed=new Set(DATA.sets.flat()),qa=(a||[]).filter(s=>allowed.has(s)),qb=(b||[]).filter(s=>allowed.has(s)),preferredQueue=preferred===a?qa:qb,otherQueue=preferred===a?qb:qa;
+ const counts=new Map();
+ for(const s of new Set([...qa,...qb]))counts.set(s,Math.max(qa.filter(x=>x===s).length,qb.filter(x=>x===s).length));
+ const recency=[];
+ for(const s of [...otherQueue,...preferredQueue]){const i=recency.indexOf(s);if(i>=0)recency.splice(i,1);recency.push(s)}
+ const out=[];for(const s of recency)for(let i=0;i<(counts.get(s)||0);i++)out.push(s);
+ return out.slice(-24)
+}
+function rewardProgressUnits(snapshot){
+ const r=snapshot?.rewards||{};
+ return Math.max(completedMissionCount(snapshot),stateCount(r.puzzles)*4+Math.min(3,stateCount(r.pieces)))
+}
 function mergeProgressStates(localRaw,remoteRaw){
  const local=normalizeState(localRaw),remote=normalizeState(remoteRaw),preferred=newerState(local,remote),other=preferred===local?remote:local;
  const merged=normalizeState({...other,...preferred});
@@ -54,11 +67,12 @@ function mergeProgressStates(localRaw,remoteRaw){
  for(const key of ["done","attemptLedger","rewardLedger","soundPractice","wordPractice"])merged[key]={...(local[key]||{}),...(remote[key]||{})};
  const masteryKeys=new Set([...Object.keys(local.mastery||{}),...Object.keys(remote.mastery||{})]);
  merged.mastery={};for(const key of masteryKeys)merged.mastery[key]=strongerMastery(local.mastery?.[key],remote.mastery?.[key]);
- const queue=[...(preferred.reviewQueue||[]),...(other.reviewQueue||[])].filter((x,i,a)=>DATA.sets.flat().includes(x)&&a.indexOf(x)===i);
- merged.reviewQueue=queue.slice(-24);
+ merged.reviewQueue=mergeReviewQueues(local.reviewQueue,remote.reviewQueue,preferred.reviewQueue);
  const collectionIds=new Set(),collection=[];
  for(const item of [...(local.rewards?.collection||[]),...(remote.rewards?.collection||[])]){const known=COLLECTIBLES.find(x=>x.id===item?.id);if(known&&!collectionIds.has(known.id)){collection.push({...known});collectionIds.add(known.id)}}
- merged.rewards={towardPiece:Math.max(local.rewards?.towardPiece||0,remote.rewards?.towardPiece||0),pieces:Math.max(local.rewards?.pieces||0,remote.rewards?.pieces||0),puzzles:Math.max(local.rewards?.puzzles||0,remote.rewards?.puzzles||0),collection};
+ const rewardUnits=Math.max(rewardProgressUnits(local),rewardProgressUnits(remote),merged.missionCount);
+ merged.rewards={towardPiece:0,pieces:rewardUnits%4,puzzles:Math.floor(rewardUnits/4),collection};
+ merged.stars=Math.max(merged.stars,Object.keys(merged.rewardLedger||{}).length);
  merged.dailyMission=mergeDailyMission(local.dailyMission,remote.dailyMission,preferred.dailyMission);
  merged.stats={attempts:Math.max(local.stats?.attempts||0,remote.stats?.attempts||0),correct:Math.max(local.stats?.correct||0,remote.stats?.correct||0)};
  if(merged.stats.correct>merged.stats.attempts)merged.stats.correct=merged.stats.attempts;
