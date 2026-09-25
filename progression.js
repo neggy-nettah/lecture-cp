@@ -180,6 +180,16 @@ function familyRoadmapHTML(){
 }
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function wordPracticeComplete(){const pool=decodableMissionWords(),practiced=state.wordPractice||{},target=Math.min(5,pool.length);return target>0&&pool.filter(w=>practiced[w.w]).length>=target}
+function wordMasteryLevel(word){return masteryLevel("word:"+String(word||""))}
+function pickLearningWord(pool){
+ const words=(pool||[]).filter(Boolean);if(!words.length)return null;
+ const recent=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word)),weighted=[];
+ for(const word of words){
+  const level=wordMasteryLevel(word.w),weight=Math.max(1,[5,4,2,1][level]-(recent.has(word.w)?1:0));
+  for(let i=0;i<weight;i++)weighted.push(word)
+ }
+ return pick(weighted.length?weighted:words)
+}
 function learningCourseCompleted(){return completedMissionCount()>=14&&masterySummary().mastered>=40}
 const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
 function phraseTokenParts(token){
