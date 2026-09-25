@@ -114,7 +114,7 @@ function normalizeState(raw){
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
 let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
-let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],encodeMade=[],readAloudSentence=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
+let currentView=state.lastView||"home",locked=false,currentAnswer=null,orderTarget=[],orderMade=[],encodeMade=[],wordEncodeMade=[],readAloudSentence=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
 let runtimeErrorShown=false;
@@ -887,6 +887,10 @@ document.addEventListener("click",e=>{
  if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();refreshPracticeScreen(words,a);practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-encode"){gameEncode();return}
+ if(a==="game-word-encode"){gameWordEncode();return}
+ if(a==="word-encode-listen"){if(currentAnswer?.w)speak(currentAnswer.w,.68);return}
+ if(a==="word-encode-token"){if(locked||b.disabled||!currentAnswer?.parts||wordEncodeMade.length>=currentAnswer.parts.length)return;b.disabled=true;wordEncodeMade.push(b.dataset.value);updateWordEncode();return}
+ if(a==="word-encode-reset"){if(locked)return;wordEncodeMade=[];document.querySelectorAll("#wordEncodeChoices .choice").forEach(x=>x.disabled=false);updateWordEncode();$("#feedback").innerHTML="";return}
  if(a==="encode-letter"){if(locked||b.disabled||encodeMade.length>=2)return;b.disabled=true;encodeMade.push(b.dataset.value);updateEncode();return}
  if(a==="encode-reset"){if(locked)return;encodeMade=[];document.querySelectorAll("#encodeBank .encode-letter").forEach(x=>x.disabled=false);updateEncode();$("#feedback").innerHTML="";return}
  if(a==="game-bubbles"){gameBubbles();return}
