@@ -72,6 +72,7 @@ const requiredFunctions=[
   "function missingSyllableWords(",
   "function gameMissing(",
   "function gameComprehension(",
+  "function phraseToolHelpHTML(",
   "function gameFamily(",
   "function instructionAudio(",
   "function playInstruction(",
@@ -168,6 +169,9 @@ if(!app.includes("missionFocusedWords(missingCandidates,primary,review)")||!app.
 }
 if(!app.includes('sentence=item.sentence;currentAnswer=item.word.w')){
   fail("Comprehension game is not assigning its answer to shared state.");
+}
+if(!app.includes("phraseToolHelpHTML(sentence)")||!app.includes("phraseToolHelpHTML(arr)")){
+  fail("Phrase exercises are missing autonomous audio help for tool words.");
 }
 if(!app.includes('memoryMissedPairs.has(a.card.pair)?null:a.card.pair')){
   fail("Memory mistakes can inflate syllable mastery again.");
