@@ -46,6 +46,8 @@ for(const id of ["stable-single","consonant-digraph","vowel-complex","context-se
 }
 const contextStage=cgpExpansionPlan.find(x=>x.id==="context-sensitive");
 if(!contextStage?.graphemes?.includes("c")||!contextStage?.graphemes?.includes("g")||contextStage.mode!=="rule")fail("Context-sensitive c/g handling is no longer protected.");
+const stableStage=cgpExpansionPlan.find(x=>x.id==="stable-single");
+if(!stableStage||stableStage.graphemes.some(g=>data.familyGraphemes?.includes(g)))fail("Active family grapheme still appears in the future stable-single plan.");
 if(!Array.isArray(cpMilestones)||cpMilestones.length<2)fail("Official CP milestones are missing.");
 const period1=cpMilestones.find(x=>x.id==="period-1"),midyear=cpMilestones.find(x=>x.id==="midyear");
 if(period1?.cgpMin!==12||period1?.cgpMax!==15||midyear?.cgpMin!==25||midyear?.cgpMax!==30)fail("Official CP CGP milestones changed unexpectedly.");
@@ -55,6 +57,11 @@ if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missin
 if(!Array.isArray(data.sets)||data.sets.length<10)fail("Expected at least 10 syllable families.");
 if(!Array.isArray(data.familyGraphemes)||data.familyGraphemes.length!==data.sets.length)fail("Syllable family grapheme metadata is incomplete.");
 if(!Array.isArray(data.words)||data.words.length<35)fail("Word bank is unexpectedly small.");
+for(const expected of [{w:"judo",parts:["ju","do"]},{w:"joli",parts:["jo","li"]}]){
+  const word=data.words.find(x=>x.w===expected.w);
+  if(!word||word.parts.join("|")!==expected.parts.join("|"))fail("Missing or malformed j-family word:",expected.w);
+}
+
 if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank is unexpectedly small.");
 
 if(!Array.isArray(miniTexts)||miniTexts.length<4)fail("Mini-text corpus is unexpectedly small.");
