@@ -112,7 +112,7 @@ for(const asset of ['styles.css?v='+version,'content.js?v='+version,...scriptFil
   if(!sw.includes(asset))fail("Service Worker shell is missing versioned asset:",asset);
 }
 if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Worker registration is missing.");
-if(!app.includes('"controllerchange"')||!app.includes("reg.update()"))fail("Installed-app update notification/check is missing.");
+if(!app.includes('"controllerchange"')||!app.includes("function checkForAppUpdate(")||!app.includes("serviceWorkerRegistration.update()")||!app.includes('document.addEventListener("visibilitychange"'))fail("Installed-app update notification/check is missing.");
 // Network fallback and offline HTML coherence are exercised by check-service-worker.js.
 
 if(!app.includes("function refreshSpeechVoices(")||!app.includes("function speakNow(")||!app.includes('addEventListener?.("voiceschanged",tryVoices)')){
