@@ -58,9 +58,10 @@ Principaux champs de l'état :
 
 ## Curriculum progressif
 
-Les missions ne tirent plus dans les 60 syllabes dès le premier jour.
+Les missions ne tirent plus dans toutes les syllabes du curriculum dès le premier jour.
 
 - départ : 3 familles de syllabes débloquées
+- curriculum actuel : 11 familles, soit 66 syllabes CV ; la famille D est ajoutée en dernier et n’apparaît qu’une fois débloquée
 - chaque famille contient désormais les six formes en `a / e / i / o / u / é` (ex. `ma / me / mi / mo / mu / mé`)
 - une nouvelle famille demande désormais à la fois assez de missions terminées et assez de consolidation réelle sur les syllabes déjà travaillées
 - la cadence maximale reste d'environ 1 nouvelle famille tous les 2 jours de mission, mais elle peut être retardée si la maîtrise n'est pas suffisante
