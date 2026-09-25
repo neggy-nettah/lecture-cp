@@ -37,6 +37,9 @@ window.supabase={createClient:()=>({
    }
   }
   await page.setViewportSize({width:390,height:844});
+  await page.evaluate(()=>activate('home'));
+  const shortTargets=await page.locator('button:visible').evaluateAll(buttons=>buttons.map(b=>({text:(b.textContent||'').trim().slice(0,40),height:b.getBoundingClientRect().height})).filter(x=>x.height<43.5));
+  assert.deepEqual(shortTargets,[],'visible home touch targets must be at least 44px high');
   await page.evaluate(()=>{state=normalizeState({});activate('home')});
   await page.locator('[data-action="mission-start"]').first().click();
   await page.locator('[data-action="mission-next"]').click();
