@@ -11,8 +11,14 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 const UI_TEXT_SIZE_KEY="lectureCpLargeText";
+function safeStorageGet(key){
+ try{return localStorage.getItem(key)}catch(error){console.error("Local storage read error",error);localSaveFailed=true;return null}
+}
+function safeStorageSet(key,value){
+ try{localStorage.setItem(key,value);return true}catch(error){console.error("Local storage write error",error);localSaveFailed=true;return false}
+}
 function storedLargeTextPreference(){
- try{return localStorage.getItem(UI_TEXT_SIZE_KEY)==="1"}catch(error){return false}
+ return safeStorageGet(UI_TEXT_SIZE_KEY)==="1"
 }
 function applyTextSizePreference(enabled=storedLargeTextPreference()){
  document.body.classList.toggle("large-text",!!enabled);
@@ -122,7 +128,7 @@ function normalizeState(raw){
 }
 function guestKey(){return "fabriqueSyllabesGuestV4"}
 function childKey(id){return "fabriqueSyllabesChild_"+id}
-let state;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
+let state;try{state=normalizeState(JSON.parse(safeStorageGet(guestKey())||"{}"))}catch(e){state=normalizeState({})}
 let currentView=state.lastView||"home",locked=false,currentAnswer=null,currentMiniText=null,orderTarget=[],orderMade=[],encodeMade=[],wordEncodeMade=[],readAloudSentence=[],memoryDeck=[],memoryOpen=[],memoryMatches=0,memoryMissedPairs=new Set(),memoryMatchedPairs=new Set(),missionMode=false,questionErrorRecorded=false,questionAssisted=false,missingWord=null,missingIndex=0;
 const $=s=>document.querySelector(s);
 const stage=$("#stage"),nav=$("#nav"),fx=$("#fx");
@@ -144,8 +150,8 @@ function updateConnectivityUI(){
 window.addEventListener("offline",updateConnectivityUI);
 window.addEventListener("online",()=>{if(sb&&session&&currentChild)loadRemoteState();else updateConnectivityUI()});
 function saveLocal(){
- try{localStorage.setItem(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state));localSaveFailed=false;return true}
- catch(e){console.error("Local save error",e);localSaveFailed=true;return false}
+ if(safeStorageSet(currentChild?childKey(currentChild.id):guestKey(),JSON.stringify(state))){localSaveFailed=false;return true}
+ return false
 }
 async function saveRemoteNow(){
  saveLocal();topUI();if(!sb||!session||!currentChild)return;
@@ -178,7 +184,7 @@ function save(touch=true){
  clearTimeout(saveTimer);saveTimer=setTimeout(saveRemoteNow,450)
 }
 function cachedProfileState(child){
- try{return normalizeState(JSON.parse(localStorage.getItem(childKey(child.id))||"null")||{name:child.nickname})}
+ try{return normalizeState(JSON.parse(safeStorageGet(childKey(child.id))||"null")||{name:child.nickname})}
  catch(e){return normalizeState({name:child.nickname})}
 }
 function enterChildProfile(child){
@@ -188,7 +194,7 @@ function enterChildProfile(child){
  if(currentChild&&currentChild!==child&&session&&!profileLoading)void saveRemoteNow();
  profileLoadSequence++;currentChild=child;state=cachedProfileState(child);state.name=child.nickname;
  missionMode=false;currentView=state.lastView||"home";
- try{localStorage.setItem("lastChildId",child.id)}catch(e){console.error("Profile preference save error",e)}
+ safeStorageSet("lastChildId",child.id)
  profileLoading=true;stage.innerHTML='<div class="card center" role="status"><h2>On retrouve ta progression…</h2><p>Encore un petit instant.</p></div>';topUI()
 }
 async function loadRemoteState(){
@@ -583,13 +589,13 @@ function stateMeaningful(snapshot=state){return (snapshot?.stars||0)>0||(snapsho
 function saveSnapshotBackup(snapshot=state){
  try{
   if(!stateMeaningful(snapshot)&&hasBackup())return true;
-  localStorage.setItem(backupKey(),JSON.stringify(snapshot));return true
+  return safeStorageSet(backupKey(),JSON.stringify(snapshot))
  }catch(e){console.error("Backup error",e);return false}
 }
 function saveBackup(){return saveSnapshotBackup(state)}
-function hasBackup(){try{return !!localStorage.getItem(backupKey())}catch(e){return false}}
+function hasBackup(){return !!safeStorageGet(backupKey())}
 function restoreBackup(){
- let raw=null;try{raw=localStorage.getItem(backupKey())}catch(e){}
+ let raw=safeStorageGet(backupKey())
  if(!raw){alert("Aucune sauvegarde locale à restaurer.");return}
  if(!confirm("Restaurer la dernière progression sauvegardée ?"))return;
  try{const restored=normalizeState(JSON.parse(raw));if(!saveSnapshotBackup(state)){alert("Impossible de préserver la progression actuelle. Exporte-la avant de réessayer.");return}state=restored;state.updatedAt=Date.now();missionMode=false;currentView="home";state.lastView="home";save();render();alert("Progression restaurée.")}
@@ -850,7 +856,7 @@ async function logout(){
   authMsg("Déconnexion…");clearTimeout(saveTimer);if(currentChild&&!profileLoading)await saveRemoteNow();
   const {error}=await sb.auth.signOut();if(error){if(isCurrent())authMsg(authErrorMessage(error),"error");return}
   profileLoadSequence++;profileLoading=false;passwordRecovery=false;session=null;currentChild=null;children=[];
-  try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
+  try{state=normalizeState(JSON.parse(safeStorageGet(guestKey())||"{}"))}catch(e){state=normalizeState({})}
   currentView=state.lastView||"home";closeAuth();render();topUI()
  })
 }
@@ -1007,7 +1013,7 @@ async function openParentAccount(){
 }
 $("#accountBtn").addEventListener("click",openParentAccount);
 $("#switchChildBtn").addEventListener("click",openParentAccount);
-$("#textSizeBtn").addEventListener("click",()=>{const enabled=!document.body.classList.contains("large-text");try{localStorage.setItem(UI_TEXT_SIZE_KEY,enabled?"1":"0")}catch(e){}applyTextSizePreference(enabled);stage.focus({preventScroll:true})});
+$("#textSizeBtn").addEventListener("click",()=>{const enabled=!document.body.classList.contains("large-text");safeStorageSet(UI_TEXT_SIZE_KEY,enabled?"1":"0")applyTextSizePreference(enabled);stage.focus({preventScroll:true})});
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")closeAuth()});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
 document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
@@ -1018,14 +1024,14 @@ function handleAuthStateChange(event,newSession){
  session=newSession;
  if(event==="PASSWORD_RECOVERY"){
   passwordRecovery=!!newSession;
-  if(previousOwner!==newSession?.user?.id){clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}}
+  if(previousOwner!==newSession?.user?.id){clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;try{state=normalizeState(JSON.parse(safeStorageGet(guestKey())||"{}"))}catch(e){state=normalizeState({})}}
   if(newSession)openPasswordRecovery();return
  }
  if(authBootstrapping)return;
  if(!newSession)passwordRecovery=false;
  if(previousOwner===newSession?.user?.id){topUI();return}
  clearTimeout(saveTimer);profileLoadSequence++;profileLoading=false;currentChild=null;children=[];missionMode=false;
- try{state=normalizeState(JSON.parse(localStorage.getItem(guestKey())||"{}"))}catch(e){state=normalizeState({})}
+ try{state=normalizeState(JSON.parse(safeStorageGet(guestKey())||"{}"))}catch(e){state=normalizeState({})}
  currentView=state.lastView||"home";render();topUI();
  if(!newSession)return;
  const ownerId=newSession.user.id;
@@ -1033,7 +1039,7 @@ function handleAuthStateChange(event,newSession){
 }
 async function restoreSessionProfile(ownerId){
  await loadChildren();if(session?.user?.id!==ownerId||passwordRecovery)return;
- const remembered=localStorage.getItem("lastChildId"),child=children.find(c=>c.id===remembered)||(children.length===1?children[0]:null);
+ const remembered=safeStorageGet("lastChildId"),child=children.find(c=>c.id===remembered)||(children.length===1?children[0]:null);
  if(child){enterChildProfile(child);await loadRemoteState()}else topUI()
 }
 async function bootstrap(){
