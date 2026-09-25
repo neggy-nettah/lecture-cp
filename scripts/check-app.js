@@ -201,6 +201,9 @@ if(!app.includes('const pool=decodableSentencePool()')){
 if(!app.includes('Math.min(missionCap,readinessCap)')||!app.includes('Math.max(knownFamilyFloor()')){
   fail("Family unlocks are no longer gated by both mission cadence and learning readiness.");
 }
+if(!app.includes("Math.ceil(DATA.sets.flat().length*2/3)")||!app.includes("unlockedFamilyCount()>=DATA.sets.length")){
+  fail("Course completion no longer expands with the curriculum.");
+}
 if(!app.includes("SENTENCE_MIN_MISSIONS=8,SENTENCE_MIN_MASTERY_POINTS=12")||!app.includes("function sentenceReadiness()")||!app.includes("missions>=SENTENCE_MIN_MISSIONS&&points>=SENTENCE_MIN_MASTERY_POINTS")){
   fail("Sentence activities are no longer gated by both practice cadence and demonstrated mastery.");
 }
