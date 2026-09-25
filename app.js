@@ -223,7 +223,7 @@ function setDone(k){state.done[k]=true;save()}
 function shuffle(a){const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-function colorSyl(s){return `<span class="red">${esc(s[0]||"")}</span><span class="blue">${esc(s.slice(1))}</span>`}
+function colorSyl(s){const text=String(s||""),grapheme=familyGraphemeForSyllable(text)||text[0]||"";return `<span class="red">${esc(grapheme)}</span><span class="blue">${esc(text.slice(grapheme.length))}</span>`}
 function wordHTML(parts){return parts.map((p,i)=>`<span>${esc(p)}</span>`).join("·")}
 
 let speechVoiceCache=[],speechRequestId=0;
