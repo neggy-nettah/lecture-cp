@@ -83,4 +83,4 @@ const SILENT_FINAL_E_WORDS=["lune","tomate","banane","pirate","valise","cabane",
 // Reserved until the corresponding pronunciation rules are explicitly taught.
 const DEFERRED_WORDS=[...SILENT_FINAL_E_WORDS,"miso"];
 // Only these illustrations are used as an answer clue (no names or approximate emojis).
-const PICTURE_WORDS=["papa","moto","lune","tomate","banane","pirate","bébé","navire","piano","vélo","papi","lama","polo","sari","tutu","mémé","télé"];
+const PICTURE_WORDS=["papa","moto","bébé","piano","vélo","papi","lama","polo","sari","tutu","mémé","télé"];
