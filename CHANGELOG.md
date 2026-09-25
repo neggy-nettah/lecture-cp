@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.31.0 — 2026-09-25
+
+- missions plus cohérentes : les étapes de mot, syllabe manquante et compréhension privilégient maintenant les syllabes ciblées ou à réviser
+- conservation d’un repli vers le contenu disponible lorsqu’aucun mot lié au focus n’existe
+- tests de non-régression ajoutés pour le ciblage adaptatif des mots et exercices
+- jeu micro bêta complété avec une consigne vocale réécoutable et une lecture guidée au démarrage
+- aucune modification des seuils de maîtrise, du rythme de déblocage ou des récompenses
+
 ## 0.30.0 — 2026-09-25
 
 - consignes audio réécoutables ajoutées aux ateliers et mini-jeux principaux
