@@ -108,6 +108,7 @@ const probes=[
   '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{mastery:{"word:moto":{attempts:4,correct:3}}}}));return s.mastery["word:moto"].correct===3})()',
   '(()=>{try{parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stats:{attempts:1,correct:3}}}));return false}catch(e){return true}})()',
   'typeof normalizeState==="function"',
+  '(()=>{const old=localStorage.getItem;try{localStorage.getItem=()=>{throw Error("blocked")};return storedLargeTextPreference()===false}finally{localStorage.getItem=old}})()',
   'typeof mergeProgressStates==="function"',
   'typeof mergeReviewQueues==="function"',
   'typeof rewardProgressUnits==="function"',
