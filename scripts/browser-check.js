@@ -199,8 +199,8 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.action),'readaloud-model');
   // Mini-text comprehension uses two decodable sentences and an oral question without reading the text for the child.
   await page.setViewportSize({width:320,height:900});
-  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:12},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la','li'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameMiniText('velo-polo')});
-  assert.equal(await page.evaluate(()=>currentMiniText.id),'velo-polo');
+  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:12},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la','li'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameMiniText('velo-sari')});
+  assert.equal(await page.evaluate(()=>currentMiniText.id),'velo-sari');
   assert.equal(await page.locator('.mini-text-reading .readaloud-sentence').count(),2);
   assert.equal(await page.evaluate(()=>stage.textContent.includes('Qui a le vélo ?')),false);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'mini-text overflows at 320px');
