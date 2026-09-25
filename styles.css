@@ -80,3 +80,6 @@ button:disabled{opacity:.65}.choice:disabled.correct{opacity:1}
  .brand .logo{flex:0 0 44px;width:44px;height:44px}.titlebar h2{font-size:24px}
  .card{padding:12px}.sound-grid{gap:6px}.actions .btn{max-width:100%}
 }
+.mastery-chip{min-width:0;color:var(--ink);overflow-wrap:anywhere}
+.mastery-chip:disabled{color:var(--muted);background:#f4f3f6}
+.mastery-chip .practice-link{color:#4037d6;font-weight:800}
