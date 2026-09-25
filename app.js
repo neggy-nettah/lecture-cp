@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.29.0";
+const APP_VERSION="0.30.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -159,7 +159,12 @@ function speak(text,rate=.72,cb){
  const u=new SpeechSynthesisUtterance(text);u.lang="fr-FR";u.rate=rate;u.pitch=1.06;u.volume=1;
  const v=voice();if(v)u.voice=v;if(cb)u.onend=cb;speechSynthesis.speak(u)
 }
-function speakMission(text,rate=.60){speak(text,rate)}
+function speakMission(text,rate=.60,cb){speak(text,rate,cb)}
+function instructionAudio(text){
+ const safe=esc(text);
+ return `<div class="instruction-audio"><span>🎧 ${safe}</span><button class="btn yellow instruction-replay" data-action="speak" data-text="${safe}" data-rate=".76" aria-label="Réécouter la consigne">🔊 Réécouter la consigne</button></div>`
+}
+function playInstruction(text,after){screenTask(()=>speakMission(text,.76,after),160)}
 function tone(kind="ok"){
  try{
   const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();
