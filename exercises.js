@@ -137,18 +137,18 @@ function gameWordEncode(forcedWord=null){
  const tokens=shuffle([...answer.parts,...extras].map((value,index)=>({value,index})));
  stage.innerHTML=title("J’écris le mot","Écoute le mot, puis assemble les syllabes dans le bon ordre.","Encodage d’un mot")+
  instructionAudio("Écoute le mot, puis touche les syllabes dans le bon ordre pour l’écrire.")+
- \`<div class="card center"><div class="hero-emoji">👂📝</div>
+ `<div class="card center"><div class="hero-emoji">👂📝</div>
  <button class="btn yellow" data-action="word-encode-listen">🔊 Écouter le mot</button>
  <div class="order-zone" id="wordEncodeZone"><span class="empty">Les syllabes arrivent ici…</span></div>
- <div class="choices" id="wordEncodeChoices">\${tokens.map(token=>\`<button class="choice" style="font-size:27px" data-action="word-encode-token" data-value="\${esc(token.value)}" data-id="\${token.index}">\${colorSyl(token.value)}</button>\`).join("")}</div>
+ <div class="choices" id="wordEncodeChoices">${tokens.map(token=>`<button class="choice" style="font-size:27px" data-action="word-encode-token" data-value="${esc(token.value)}" data-id="${token.index}">${colorSyl(token.value)}</button>`).join("")}</div>
  <div class="actions" style="margin-top:11px"><button class="btn gray" data-action="word-encode-reset">↩ Recommencer</button></div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-word-encode">Nouveau mot →</button></div>\`;
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-word-encode">Nouveau mot →</button></div>`;
  playInstruction("Écoute le mot, puis touche les syllabes dans le bon ordre pour l’écrire.",()=>speak(answer.w,.68))
 }
 function updateWordEncode(){
  const zone=$("#wordEncodeZone");if(!zone||!currentAnswer?.parts)return;
- zone.innerHTML=wordEncodeMade.length?wordEncodeMade.map(x=>\`<span class="token">\${esc(x)}</span>\`).join(""):\`<span class="empty">Les syllabes arrivent ici…</span>\`;
+ zone.innerHTML=wordEncodeMade.length?wordEncodeMade.map(x=>`<span class="token">${esc(x)}</span>`).join(""):`<span class="empty">Les syllabes arrivent ici…</span>`;
  if(wordEncodeMade.length<currentAnswer.parts.length)return;
  const ok=wordEncodeMade.join("")===currentAnswer.parts.join("");
  const key="word-encode:"+currentAnswer.w;
@@ -156,7 +156,7 @@ function updateWordEncode(){
   locked=true;recordQuestionSuccess(null,key);rewardVerified("Mot écrit !",key);
   state.wordPractice=state.wordPractice||{};state.wordPractice[currentAnswer.w]=true;setDone("wordEncoding");
   confetti();speak(currentAnswer.w,.70);
-  $("#feedback").innerHTML=\`<div class="ok">🎉 Bravo : <b>\${esc(currentAnswer.w)}</b> \${currentAnswer.emoji||""}</div>\`
+  $("#feedback").innerHTML=`<div class="ok">🎉 Bravo : <b>${esc(currentAnswer.w)}</b> ${currentAnswer.emoji||""}</div>`
  }else{
   locked=true;recordQuestionError();miss("Écoute encore le mot et recommence.");
   $("#feedback").innerHTML='<div class="no">Presque ! Écoute encore le mot.</div>';
