@@ -94,8 +94,8 @@ function encodeLetterPool(target){
  const consonants=shuffle(initials.filter(x=>x!==consonant)).slice(0,3),otherVowels=shuffle(vowels.filter(x=>x!==vowel)).slice(0,3);
  return shuffle([consonant,...consonants,vowel,...otherVowels])
 }
-function gameEncode(forcedTarget=null){
- missionMode=false;currentView="encode";state.lastView="encode";save(false);currentAnswer=forcedTarget||pickLearningSyllable();encodeMade=[];locked=false;resetQuestionTracking();
+function gameEncode(forcedTarget=null,fromMission=false){
+ missionMode=fromMission;currentView="encode";state.lastView=fromMission?"mission":"encode";save(false);currentAnswer=forcedTarget||pickLearningSyllable();encodeMade=[];locked=false;resetQuestionTracking();
  const letters=encodeLetterPool(currentAnswer);
  stage.innerHTML=title("J’écris la syllabe","Écoute, puis fabrique la syllabe avec deux lettres.","Encodage")+
  instructionAudio("Écoute la syllabe, puis touche les deux lettres dans le bon ordre.")+
