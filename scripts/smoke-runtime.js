@@ -118,6 +118,8 @@ const probes=[
   'typeof decodableSentencePool==="function"',
   'typeof comprehensionSentencePool==="function"',
   'typeof gameComprehension==="function"',
+  'typeof gameEncode==="function"',
+  'typeof encodeLetterPool==="function"',
   'typeof phraseToolHelpHTML==="function"',
   'typeof recentPerformance==="function"',
   'typeof recordQuestionError==="function"',
@@ -199,6 +201,9 @@ const probes=[
   '(state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la","li","lo"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),new Set(comprehensionSentencePool().map(x=>x.word.w)).size>=3)',
   '(state=normalizeState({set:9}),syllables(),state.set<unlockedFamilyCount())',
   '(state=normalizeState({}),buildDailyMission(),gameListen(state.dailyMission.primary,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
+  '(state=normalizeState({}),gameEncode("ma"),currentView==="encode"&&currentAnswer==="ma"&&stage.innerHTML.includes("data-value=\\\"m\\\"")&&stage.innerHTML.includes("data-value=\\\"a\\\""))',
+  '(()=>{state=normalizeState({});gameEncode("ma");encodeMade=["m","a"];updateEncode();const once=state.mastery.ma?.correct===1&&state.stars===1;gameEncode("ma");encodeMade=["m","a"];updateEncode();return once&&state.mastery.ma.correct===1&&state.stars===1})()',
+  '(()=>{state=normalizeState({});gameEncode("ma");encodeMade=["l","a"];updateEncode();return state.mastery.ma?.correct===0&&state.reviewQueue.filter(x=>x==="ma").length===2})()',
   '(state=normalizeState({}),buildDailyMission(),gameBubbles(state.dailyMission.review,true),[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
   '(state=normalizeState({}),buildDailyMission(),gameMemory([state.dailyMission.primary,state.dailyMission.review],true),memoryDeck.every(x=>activeLearningSyllables().includes(x.pair)))',
   '(state=normalizeState({}),gameMissing(),missingWord.parts.includes(currentAnswer)&&activeLearningSyllables().includes(currentAnswer)&&[...stage.innerHTML.matchAll(/data-value="([^"]+)"/g)].every(x=>activeLearningSyllables().includes(x[1])))',
@@ -231,6 +236,7 @@ const screenProbes=[
   'state=normalizeState({}),missionHub(),stage.innerHTML.length>50',
   'state=normalizeState({}),missionDiscover(getDailyMission().primary),stage.innerHTML.length>50',
   'state=normalizeState({}),gameListen(),stage.innerHTML.length>50',
+  'state=normalizeState({}),gameEncode(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBubbles(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameMemory(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameFamily(),stage.innerHTML.length>50',
@@ -290,6 +296,7 @@ console.log("- Tool-word audio help without answer leakage: OK");
 console.log("- Advanced missions can rotate comprehension into step 4: OK");
 console.log("- Syllable browser stays inside unlocked families");
 console.log("- Mission distractors stay inside unlocked curriculum");
+console.log("- Syllable encoding game: verified mastery, review on error and duplicate guard OK");
 console.log("- Missing-syllable game stays inside unlocked curriculum");
 console.log("- Mission words assemble exactly");
 console.log("- Five-step mission completion: OK");
