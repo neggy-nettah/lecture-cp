@@ -128,14 +128,16 @@ Elle ne doit pas permettre de réussir un exercice censé mesurer le décodage s
 
 Le fichier `content.js` expose maintenant `CP_READING_ROADMAP`. Cette structure sert de contrat entre le programme officiel et les fonctionnalités : une activité nouvelle doit correspondre à une compétence de cette feuille de route.
 
+Le programme officiel fixe aussi des repères utiles : **12 à 15 CGP** décodées et encodées en fin de période 1, puis **25 à 30 CGP** au milieu de l'année, moment où l'élève doit notamment avoir pris conscience de la présence de lettres finales muettes. Ces repères sont enregistrés dans `CP_OFFICIAL_MILESTONES` pour guider l'extension du contenu. Ils justifient de ne pas enseigner le `e` final muet trop tôt dans notre progression actuelle.
+
 | Palier | Compétence travaillée | État dans l'app |
 | --- | --- | --- |
 | Correspondances simples | identifier les graphèmes simples, fusionner consonne + voyelle, lire des syllabes CV | en place |
 | Encodage simple | écrire une syllabe entendue avec les graphèmes connus | en place en jeu libre |
 | Mots réguliers | lire et construire des mots entièrement décodables | en place |
 | Phrases décodables | lire une phrase courte, remettre les mots en ordre, comprendre une information explicite | en place après déblocage |
-| Régularités orthographiques | lettres muettes fréquentes, notamment `e` final muet | à construire explicitement |
-| Graphèmes complexes | étendre progressivement les correspondances au-delà des CV simples | à construire |
+| Extension des CGP | ajouter d’autres correspondances régulières puis les graphèmes complexes fréquents | à construire |
+| Régularités orthographiques | lettres finales muettes fréquentes, notamment `e` final muet | à construire explicitement |
 | Fluence et prosodie | lecture précise puis plus fluide, respect de la ponctuation et des groupes de sens | amorcé sans notation automatique |
 | Textes courts et compréhension | lire un texte court, répondre à des questions explicites, enrichir le vocabulaire | à construire |
 
