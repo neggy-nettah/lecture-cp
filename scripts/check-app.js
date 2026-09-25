@@ -46,6 +46,9 @@ if(!icon.includes("<svg")||!icon.includes('viewBox="0 0 512 512"'))fail("App ico
 const requiredFunctions=[
   "function migrateState(",
   "function normalizeState(",
+  "function mergeProgressStates(",
+  "function mergeMissionHistory(",
+  "function mergeDailyMission(",
   "function buildDailyMission(",
   "function missionWordMatchesFocus(",
   "function missionFocusedWords(",
@@ -198,8 +201,11 @@ if(!app.includes("sessionStats")||!app.includes("state.dailyMission.sessionStats
 if(!app.includes("STATE_SCHEMA_VERSION")||!app.includes("schemaVersion")){
   fail("Saved-state schema versioning is missing.");
 }
-if(!app.includes("updatedAt")||!app.includes("localTs>remoteTs")){
-  fail("Newest-state sync protection is missing.");
+if(!app.includes("updatedAt")||!app.includes("mergeProgressStates(local,remote)")){
+  fail("Cross-device sync merge protection is missing.");
+}
+if(!app.includes("Math.max(local.stars||0,remote.stars||0)")||!app.includes("mergeMissionHistory(local.missionHistory,remote.missionHistory)")){
+  fail("Monotonic progress fields are no longer merged across devices.");
 }
 if(!app.includes("window.supabase?.createClient")){
   fail("Supabase offline fallback is missing.");
