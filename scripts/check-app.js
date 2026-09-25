@@ -49,6 +49,8 @@ const requiredFunctions=[
   "function mergeProgressStates(",
   "function mergeMissionHistory(",
   "function mergeDailyMission(",
+  "function mergeReviewQueues(",
+  "function rewardProgressUnits(",
   "function buildDailyMission(",
   "function missionWordMatchesFocus(",
   "function missionFocusedWords(",
@@ -222,6 +224,12 @@ if(!app.includes("updatedAt")||!app.includes("mergeProgressStates(local,remote)"
 }
 if(!app.includes("Math.max(local.stars||0,remote.stars||0)")||!app.includes("mergeMissionHistory(local.missionHistory,remote.missionHistory)")){
   fail("Monotonic progress fields are no longer merged across devices.");
+}
+if(!app.includes("mergeReviewQueues(local.reviewQueue,remote.reviewQueue,preferred.reviewQueue)")){
+  fail("Cross-device merge no longer preserves review-queue weighting.");
+}
+if(!app.includes("rewardUnits%4")||!app.includes("Math.floor(rewardUnits/4)")){
+  fail("Puzzle progress is no longer reconciled as one monotonic reward counter.");
 }
 if(!app.includes("window.supabase?.createClient")){
   fail("Supabase offline fallback is missing.");
