@@ -8,6 +8,7 @@ catch(error){console.error("CONTENT VALIDATION FAILED: syntax/runtime",error);pr
 
 const data=vm.runInContext("DATA",context);
 const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
+const silentFinalEWords=vm.runInContext("SILENT_FINAL_E_WORDS",context);
 const pictureWords=vm.runInContext("PICTURE_WORDS",context);
 const pictures=data.words.filter(w=>pictureWords.includes(w.w));
 if(pictures.length!==pictureWords.length||new Set(pictures.map(w=>w.emoji)).size!==pictures.length)throw Error("Ambiguous or missing picture vocabulary");
@@ -56,12 +57,14 @@ if(exactWords.length<30)fail("Too few exactly assembled words:",String(exactWord
 const taughtParts=new Set([...syllables,"a","e","i","o","u","é"]);
 const fullyDecodable=data.words.filter(w=>w.parts.join("")===w.w&&w.parts.every(p=>taughtParts.has(p))&&!deferredWords.includes(w.w));
 if(fullyDecodable.length<40)fail("Too few fully decodable words with taught graphemes:",String(fullyDecodable.length));
-for(const expected of ["lune","tomate","banane","pirate","minute","navire"]){
-  if(!fullyDecodable.some(w=>w.w===expected))fail("Expected e-syllable word is not fully decodable:",expected);
+for(const expected of ["menu","poli","puni","revu","relu","pari","rami","vomi"]){
+  if(!fullyDecodable.some(w=>w.w===expected))fail("Expected regular CV word is not fully decodable:",expected);
 }
-for(const deferred of ["maman","domino","cabane","robot","tapis",...deferredWords]){
-  if(fullyDecodable.some(w=>w.w===deferred))fail("Word with untaught grapheme became decodable too early:",deferred);
+if(!silentFinalEWords.every(w=>deferredWords.includes(w)))fail("Silent-final-e vocabulary must stay deferred until the rule is taught.");
+for(const deferred of ["maman","domino","robot","tapis",...deferredWords]){
+  if(fullyDecodable.some(w=>w.w===deferred))fail("Word with an untaught rule became decodable too early:",deferred);
 }
+if(pictureWords.some(w=>deferredWords.includes(w)))fail("A deferred word remains in the picture-answer bank.");
 
 for(const sentence of data.sentences){
   if(!Array.isArray(sentence)||sentence.length<3)fail("Malformed sentence:",JSON.stringify(sentence));
