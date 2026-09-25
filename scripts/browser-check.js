@@ -158,6 +158,19 @@ window.supabase={createClient:()=>({
   await page.locator('[data-action="build-token"]:not(:disabled)').first().click();
   await page.locator('[data-action="build-reset"]').click();
   assert.deepEqual(await page.evaluate(()=>orderMade),['sa','la','mi']);
+  // Dictated word encoding never exposes the written answer before the child assembles it.
+  await page.setViewportSize({width:320,height:900});
+  await page.evaluate(()=>{state=normalizeState({});gameWordEncode(DATA.words.find(w=>w.w==='silo'))});
+  assert.equal(await page.locator('#wordEncodeZone').isVisible(),true);
+  assert.equal(await page.evaluate(()=>stage.innerHTML.includes('silo')),false);
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'word encoding overflows at 320px');
+  const wordEncodeBefore=await page.evaluate(()=>state.stats.correct);
+  await page.locator('[data-action="word-encode-token"][data-value="si"]').click();
+  await page.locator('[data-action="word-encode-token"][data-value="lo"]').click();
+  assert.equal(await page.evaluate(()=>locked),true);
+  assert.equal(await page.evaluate(()=>state.stats.correct),wordEncodeBefore+1);
+  assert.equal(await page.evaluate(()=>state.wordPractice.silo),true);
+  assert(await page.locator('#feedback').textContent().then(t=>t.includes('silo')));
   // Reading aloud is deliberate practice: the model stays hidden until the child finishes and no score/mastery changes.
   await page.setViewportSize({width:320,height:900});
   await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameReadAloud()});
