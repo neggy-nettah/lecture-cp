@@ -186,6 +186,9 @@ if(!app.includes('wordEncodeMade.join("")===currentAnswer.parts.join("")')||!app
 if(!app.includes("function wordMasterySummary()")||!app.includes("Mots évalués")||!app.includes("wm.evaluated")){
   fail("Parent dashboard no longer exposes word mastery.");
 }
+if(!app.includes("Mots à renforcer")||!app.includes("wm.weakest")){
+  fail("Parent dashboard no longer separates weak words from syllables.");
+}
 if(!app.includes('const pool=decodableSentencePool()')){
   fail("Phrase game no longer filters its sentence pool.");
 }
