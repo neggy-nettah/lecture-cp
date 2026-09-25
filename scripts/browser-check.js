@@ -324,8 +324,18 @@ window.supabase={createClient:()=>({
   await recoveryPage.goto(url);await recoveryPage.locator('#recoveryPassword').waitFor();
   assert.equal(await recoveryPage.evaluate(()=>passwordRecovery),true);
   await recoveryPage.close();
+  // The app must still boot in local-only degraded mode when browser storage is unavailable.
+  const storagePage=await page.context().newPage();
+  storagePage.on('pageerror',e=>errors.push(e.message));
+  await storagePage.addInitScript(()=>{Storage.prototype.getItem=function(){throw Error('blocked storage')};Storage.prototype.setItem=function(){throw Error('blocked storage')}});
+  await storagePage.route('https://cdn.jsdelivr.net/**',r=>r.fulfill({body:mockClient,contentType:'application/javascript'}));
+  await storagePage.goto(url);
+  await storagePage.locator('[data-action="mission-start"]').first().waitFor();
+  assert.equal(await storagePage.evaluate(()=>localSaveFailed),true);
+  assert(await storagePage.locator('#syncStatus').textContent().then(t=>t.includes('Sauvegarde locale indisponible')));
+  await storagePage.close();
   await page.screenshot({path:'/tmp/caly-mobile.png',fullPage:true});
   assert.deepEqual(errors,[]);
-  console.log('Browser checks OK: 32 responsive screens, mission resume/completion, single reward, delayed navigation, profile races, save queue, token refresh, password recovery, auth errors and duplicate submissions.');
+  console.log('Browser checks OK: responsive screens, mission resume/completion, storage degradation, profile races, save queue, token refresh, password recovery, auth errors and duplicate submissions.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
