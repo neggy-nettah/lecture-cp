@@ -125,6 +125,8 @@ const probes=[
   'typeof gameEncode==="function"',
   'typeof gameWordEncode==="function"',
   'typeof pickLearningWord==="function"&&typeof wordMasteryLevel==="function"',
+  'typeof wordLearningWeight==="function"',
+  '(()=>{state=normalizeState({mastery:{"word:silo":{attempts:2,correct:0,lastSeen:localDayKey()},"word:solo":{attempts:4,correct:4,lastSeen:localDayKey()}}});const weak=DATA.words.find(w=>w.w==="silo"),mastered=DATA.words.find(w=>w.w==="solo"),unseen=DATA.words.find(w=>w.w==="menu");return wordLearningWeight(weak)>wordLearningWeight(unseen)&&wordLearningWeight(unseen)>wordLearningWeight(mastered)})()',
   'typeof wordMasterySummary==="function"',
   '(()=>{state=normalizeState({mastery:{"word:silo":{attempts:4,correct:4,lastSeen:localDayKey()},"word:solo":{attempts:2,correct:1,lastSeen:localDayKey()}}});const s=wordMasterySummary();return s.evaluated>=2&&s.mastered>=1&&s.learning>=1})()',
   'typeof wordEncodePool==="function"',
