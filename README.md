@@ -184,15 +184,15 @@ Point restant : Safari macOS doit encore être vérifié sur un appareil réel. 
 
 ## Priorités suivantes
 
-- tester sur un vrai enfant l’encodage de mots, la lecture à voix haute et le mini-texte ; l’encodage de syllabes est déjà introduit progressivement dans les missions
-- ajouter une progression explicite pour les premières règles orthographiques, notamment le `e` final muet, avant de réintroduire les mots concernés
-- travailler progressivement la prosodie et la lecture expressive sans notation automatique fragile
-- remplacer progressivement les emojis de récompense par un univers graphique original
-- ajouter davantage de contenu pédagogique validé, puis introduire les graphèmes complexes avec une progression explicite
-- améliorer encore l’expérience tablette/mobile et les grands réglages de texte
-- vérifier le moteur audio sur Safari macOS réel malgré les garde-fous ajoutés en v0.32
-- passer à une résolution transactionnelle des écritures concurrentes côté serveur lorsque l’accès au projet Supabase est disponible
-- faire évoluer les tests automatiques avec chaque nouvelle fonctionnalité
+> Phase actuelle : **stabilisation produit**. L’extension pédagogique est temporairement gelée ; voir `STABILIZATION.md`.
+
+- finir les validations Chromium + WebKit et maintenir la reprise de toutes les vues
+- fiabiliser encore sauvegarde, synchronisation multi-appareils, PWA et mises à jour
+- auditer directement le projet Supabase (RLS, tables et advisors) dès qu’il est visible par le connecteur
+- vérifier le moteur audio sur Safari macOS réel
+- faire plusieurs séances réelles avec Caly pour repérer les frictions d’autonomie
+- préparer ensuite la confidentialité/données enfant et l’identité visuelle avant diffusion publique
+- reprendre seulement après cette phase l’extension du contenu (nouveaux graphèmes, règles orthographiques, etc.)
 
 ## Contrôle avant publication
 
