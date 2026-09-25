@@ -177,7 +177,7 @@ const probes=[
   'fullyDecodableWords().length>=40',
   '["menu","poli","puni","revu","relu","pari","rami","vomi"].every(w=>fullyDecodableWords().some(x=>x.w===w))',
   'SILENT_FINAL_E_WORDS.every(w=>!fullyDecodableWords().some(x=>x.w===w))',
-  '["maman","domino","robot","tapis","miso"].every(w=>!fullyDecodableWords().some(x=>x.w===w))',
+  '["maman","robot","tapis","miso"].every(w=>!fullyDecodableWords().some(x=>x.w===w))&&fullyDecodableWords().some(x=>x.w==="domino")',
   'DATA.sets.every((set,i)=>set.length===6&&["a","e","i","o","u","é"].every(v=>set.includes(DATA.familyGraphemes[i]+v)))',
   'familyGraphemeAt(0)==="m"&&familyGraphemeForSyllable("ma")==="m"&&syllableRemainder("ma")==="a"',
   'familyGraphemeForSet(["ma","me","mi","mo","mu","mé"])==="m"',
