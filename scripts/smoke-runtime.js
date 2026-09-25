@@ -108,6 +108,7 @@ const probes=[
   '(()=>{const s=parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{mastery:{"word:moto":{attempts:4,correct:3}}}}));return s.mastery["word:moto"].correct===3})()',
   '(()=>{try{parseProgressImport(JSON.stringify({app:"La Fabrique des Syllabes",state:{stats:{attempts:1,correct:3}}}));return false}catch(e){return true}})()',
   'typeof normalizeState==="function"',
+  'typeof mergeProgressStates==="function"',
   'typeof buildDailyMission==="function"',
   'typeof missionWordMatchesFocus==="function"',
   'typeof missionFocusedWords==="function"',
@@ -141,6 +142,10 @@ const probes=[
   '(state=normalizeState({soundPractice:{b:true}}),unlockedFamilyCount()===3)',
   '(state=normalizeState({wordPractice:{bobo:true}}),unlockedFamilyCount()===10)',
   '(state=normalizeState({}),activeLearningSyllables().length===18)',
+  '(()=>{const a={updatedAt:100,stars:8,done:{listen:true},mastery:{ma:{attempts:2,correct:1,lastSeen:"2026-09-20"}},missionHistory:[{date:"2026-09-20",attempts:2,correct:1,word:"moto"}]},b={updatedAt:200,stars:6,done:{memory:true},mastery:{mi:{attempts:4,correct:4,lastSeen:"2026-09-21"}},missionHistory:[{date:"2026-09-21",attempts:1,correct:1,word:"lune"}]};const m=mergeProgressStates(a,b);return m.stars===8&&m.done.listen&&m.done.memory&&m.mastery.ma.attempts===2&&m.mastery.mi.correct===4&&m.missionHistory.length===2})()',
+  '(()=>{const a={updatedAt:100,dailyMission:{date:localDayKey(),index:4,steps:[1,2,3,4,5]}},b={updatedAt:200,dailyMission:{date:localDayKey(),index:2,steps:[1,2,3,4,5]}};return mergeProgressStates(a,b).dailyMission.index===4})()',
+  '(()=>{const a={updatedAt:300,dailyMission:{date:localDayKey(),index:2,steps:[1,2,3,4,5],marker:"local"}},b={updatedAt:200,dailyMission:{date:localDayKey(),index:2,steps:[1,2,3,4,5],marker:"remote"}};return mergeProgressStates(a,b).dailyMission.marker==="local"})()',
+  '(()=>{const a={updatedAt:100,missionHistory:[{date:"2026-09-20",attempts:1,correct:0,word:"moto"}]},b={updatedAt:200,missionHistory:[{date:"2026-09-20",attempts:3,correct:2,word:"moto"}]};const m=mergeProgressStates(a,b);return m.missionHistory.length===1&&m.missionHistory[0].attempts===3&&m.missionHistory[0].correct===2})()',
   'fullyDecodableWords().length>=4',
   'fullyDecodableWords().every(w=>w.parts.join("")===w.w)',
   'fullyDecodableWords().length>=40',
@@ -265,6 +270,7 @@ console.log("- Memory mistakes do not inflate syllable mastery: OK");
 console.log("- Portable progress import validation: OK");
 console.log("- Service Worker unsupported-browser fallback: OK");
 console.log("- Mission/free-play attempt scoping: OK");
+console.log("- Cross-device monotonic progress merge: OK");
 console.log("- Mission performance excludes free-play answers: OK");
 console.log("- Initial curriculum unlock: 3 families");
 console.log("- Curriculum expands only when missions and mastery are both ready");
