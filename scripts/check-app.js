@@ -213,6 +213,7 @@ if(!app.includes("TEXT_COMPREHENSION_MIN_MISSIONS=12,TEXT_COMPREHENSION_MIN_MAST
 if(!app.includes('else if(currentView==="mini-text")gameMiniText()')||!app.includes('"mini-text"].includes(currentView)')){
   fail("Mini-text view no longer restores through the main router.");
 }
+if(app.includes('recordQuestionSuccess("sentence:"')||app.includes('recordQuestionError("sentence:"'))fail("Sentence ordering must not create unused mastery keys.");
 if(app.includes('!!state.soundPractice?.[initial]'))fail("Sound practice alone can unlock an entire legacy family.");
 if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fail("Legacy word practice no longer preserves previously worked families.");
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="encode"')||!app.includes('s.type==="comprehension"')||!app.includes('visualModes=["memory","family","missing"')||!app.includes('["encode"]')||!app.includes('["comprehension"]')){
