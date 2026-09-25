@@ -207,6 +207,12 @@ if(!app.includes("Math.ceil(DATA.sets.flat().length*2/3)")||!app.includes("unloc
 if(!app.includes("SENTENCE_MIN_MISSIONS=8,SENTENCE_MIN_MASTERY_POINTS=12")||!app.includes("function sentenceReadiness()")||!app.includes("missions>=SENTENCE_MIN_MISSIONS&&points>=SENTENCE_MIN_MASTERY_POINTS")){
   fail("Sentence activities are no longer gated by both practice cadence and demonstrated mastery.");
 }
+if(!app.includes("TEXT_COMPREHENSION_MIN_MISSIONS=12,TEXT_COMPREHENSION_MIN_MASTERY_POINTS=20")||!app.includes("function miniTextPool()")||!app.includes("function gameMiniText(")||!app.includes('data-action="game-mini-text"')){
+  fail("Mini-text comprehension progression is missing.");
+}
+if(!app.includes('else if(currentView==="mini-text")gameMiniText()')||!app.includes('"mini-text"].includes(currentView)')){
+  fail("Mini-text view no longer restores through the main router.");
+}
 if(app.includes('!!state.soundPractice?.[initial]'))fail("Sound practice alone can unlock an entire legacy family.");
 if(!app.includes('practicedWords.has(w.w)&&w.parts.some(p=>set.includes(p))'))fail("Legacy word practice no longer preserves previously worked families.");
 if(!app.includes('s.type==="missing"')||!app.includes('s.type==="encode"')||!app.includes('s.type==="comprehension"')||!app.includes('visualModes=["memory","family","missing"')||!app.includes('["encode"]')||!app.includes('["comprehension"]')){
