@@ -158,6 +158,18 @@ window.supabase={createClient:()=>({
   await page.locator('[data-action="build-token"]:not(:disabled)').first().click();
   await page.locator('[data-action="build-reset"]').click();
   assert.deepEqual(await page.evaluate(()=>orderMade),['sa','la','mi']);
+  // Reading aloud is deliberate practice: the model stays hidden until the child finishes and no score/mastery changes.
+  await page.setViewportSize({width:320,height:900});
+  await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')}))});gameReadAloud()});
+  assert.equal(await page.locator('#readaloudModel').isHidden(),true);
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'read-aloud overflows at 320px');
+  const readAloudBefore=await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger,reviewQueue:state.reviewQueue}));
+  await page.locator('[data-action="readaloud-done"]').click();
+  assert.equal(await page.locator('#readaloudModel').isVisible(),true);
+  assert.equal(await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger,reviewQueue:state.reviewQueue})),readAloudBefore);
+  assert.equal(await page.locator('[data-action="readaloud-done"]').isDisabled(),true);
+  assert.equal(await page.evaluate(()=>document.activeElement.dataset.action),'readaloud-model');
+  await page.setViewportSize({width:390,height:844});
   // The account dialog traps focus and closes back to its opener with Escape.
   await page.locator('#accountBtn').click();
   assert.equal(await page.evaluate(()=>document.activeElement.id),'loginEmail');
