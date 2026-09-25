@@ -283,6 +283,7 @@ const screenProbes=[
   'state=normalizeState({}),gamePicture(),stage.innerHTML.length>50',
   'state=normalizeState({}),gameBuild(),stage.innerHTML.length>50',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),gameOrder(),stage.innerHTML.length>50',
+  '(()=>{state=normalizeState({});missionMode=false;orderTarget=["Lili","a","un","vélo."];orderMade=[...orderTarget];locked=false;resetQuestionTracking();updateOrder();return state.stats.attempts===1&&state.stats.correct===1&&!Object.keys(state.mastery).some(k=>k.startsWith("sentence:"))})()',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),gameReadAloud(),stage.innerHTML.length>50&&readAloudSentence.length>=3&&stage.innerHTML.includes("readaloudModel")',
   'state=normalizeState({missionHistory:Array.from({length:8},(_,i)=>({date:"2026-09-"+String(i+1).padStart(2,"0")})),mastery:Object.fromEntries(["ma","mi","mo","mu","mé","la"].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))}),gameComprehension(),stage.innerHTML.length>50&&currentAnswer.length>0'
 ];
