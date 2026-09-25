@@ -11,6 +11,10 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 const UI_TEXT_SIZE_KEY="lectureCpLargeText";
+const GAME_VIEWS=new Set(["listen","encode","word-encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
+const MISSION_VIEWS=new Set(["mission","mission-discover","mission-complete"]);
+const RESTORABLE_VIEWS=new Set(["home","sounds","syllables","words","games","world","collection","parents","mission","mission-complete",...GAME_VIEWS]);
+function normalizedView(value){return typeof value==="string"&&RESTORABLE_VIEWS.has(value)?value:"home"}
 function safeStorageGet(key){
  try{return localStorage.getItem(key)}catch(error){console.error("Local storage read error",error);localSaveFailed=true;return null}
 }
@@ -106,7 +110,7 @@ function normalizeState(raw){
  const out={...DEFAULT_STATE,...raw,schemaVersion:STATE_SCHEMA_VERSION};
  for(const key of ["updatedAt","stars","streak","sound","set","word","gameWins"])out[key]=stateCount(raw[key]);
  out.name=typeof raw.name==="string"?raw.name:"";
- out.lastView=typeof raw.lastView==="string"?raw.lastView:"home";
+ out.lastView=normalizedView(raw.lastView);
  out.stats=stateStats(raw.stats);
  for(const key of ["done","attemptLedger","rewardLedger","soundPractice","wordPractice"])out[key]=stateFlags(raw[key]);
  out.mastery=Object.fromEntries(Object.entries(stateObject(raw.mastery)).filter(([k,v])=>validMasteryKey(k)&&v&&typeof v==="object"&&!Array.isArray(v)).map(([k,v])=>[k,{...stateStats(v),lastSeen:stateDay(v.lastSeen),lastCorrect:stateDay(v.lastCorrect)}]));
@@ -307,7 +311,7 @@ function toast(msg,type="ok"){
 }
 function title(t,p,pill){return `<div class="titlebar"><div><h2>${t}</h2><p>${p}</p></div>${pill?`<span class="pill">${pill}</span>`:""}</div>`}
 function mission(ico,b,txt){return `<div class="mission"><div class="mission-icon">${ico}</div><div><b>${b}</b><span>${txt}</span></div></div>`}
-function activate(v){stopPronunciationSession();currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render();stage.focus({preventScroll:true})}
+function activate(v){stopPronunciationSession();v=normalizedView(v);currentView=v;state.lastView=v;save(false);document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===v));render();stage.focus({preventScroll:true})}
 function nextRandom(arr,answer,n=4){let a=shuffle(arr.filter(x=>x!==answer)).slice(0,n-1);return shuffle([answer,...a])}
 
 function weeklyRhythmHTML(){
@@ -719,31 +723,16 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (["listen","encode","word-encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"].includes(currentView) && b.dataset.view==="games") || (["mission","mission-discover","mission-complete"].includes(currentView) && b.dataset.view==="home")));
- if(currentView==="home")home();
- else if(currentView==="sounds")sounds();
- else if(currentView==="syllables")syllables();
- else if(currentView==="words")words();
- else if(currentView==="games")gamesMenu();
- else if(currentView==="world")worldView();
- else if(currentView==="collection")collectionView();
- else if(currentView==="mission")missionHub();
- else if(currentView==="mission-complete")missionComplete();
- else if(currentView==="listen")gameListen();
- else if(currentView==="encode")gameEncode();
- else if(currentView==="word-encode")gameWordEncode();
- else if(currentView==="bubbles")gameBubbles();
- else if(currentView==="memory")gameMemory();
- else if(currentView==="family")gameFamily();
- else if(currentView==="missing")gameMissing();
- else if(currentView==="pronunciation")gamePronunciation();
- else if(currentView==="pictures")gamePicture();
- else if(currentView==="build")gameBuild();
- else if(currentView==="order")gameOrder();
- else if(currentView==="readaloud")gameReadAloud();
- else if(currentView==="comprehension")gameComprehension();
- else if(currentView==="mini-text")gameMiniText();
- else if(currentView==="parents")parents();
+ document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (GAME_VIEWS.has(currentView)&&b.dataset.view==="games") || (MISSION_VIEWS.has(currentView)&&b.dataset.view==="home")));
+ const views={
+  home,sounds,syllables,words,games:gamesMenu,world:worldView,collection:collectionView,parents,
+  mission:missionHub,"mission-complete":missionComplete,
+  listen:gameListen,encode:gameEncode,"word-encode":gameWordEncode,bubbles:gameBubbles,memory:gameMemory,
+  family:gameFamily,missing:gameMissing,pronunciation:gamePronunciation,pictures:gamePicture,build:gameBuild,
+  order:gameOrder,readaloud:gameReadAloud,comprehension:gameComprehension,"mini-text":gameMiniText
+ };
+ const view=views[currentView];
+ if(view)view();
  else{currentView="home";state.lastView="home";save(false);home()}
  topUI();window.scrollTo({top:0,behavior:"smooth"});
 }
