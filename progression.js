@@ -82,6 +82,19 @@ function dueReviewSyllables(){
  return activeLearningSyllables().filter(s=>reviewDueInfo(s).due).sort((a,b)=>reviewDueInfo(b).overdue-reviewDueInfo(a).overdue)
 }
 function curriculumMasteryPoints(){return DATA.sets.flat().reduce((sum,s)=>sum+masteryLevel(s),0)}
+function familyGraphemeAt(index){
+ return DATA.familyGraphemes?.[index]||((DATA.sets?.[index]?.[0]||"")[0]||"")
+}
+function familyGraphemeForSet(set){
+ const index=DATA.sets.indexOf(set);return index>=0?familyGraphemeAt(index):""
+}
+function familyGraphemeForSyllable(syllable){
+ const index=DATA.sets.findIndex(set=>set.includes(syllable));return index>=0?familyGraphemeAt(index):""
+}
+function syllableRemainder(syllable){
+ const grapheme=familyGraphemeForSyllable(syllable);
+ return grapheme&&String(syllable).startsWith(grapheme)?String(syllable).slice(grapheme.length):""
+}
 function knownFamilyFloor(){
  let floor=3;
  const practicedWords=new Set(Object.entries(state.wordPractice||{}).filter(([,v])=>!!v).map(([w])=>w));
@@ -114,7 +127,7 @@ function activeLearningSyllables(){
  return [...new Set([...unlocked,...known])]
 }
 function activeSoundGraphemes(){
- const consonants=DATA.sets.slice(0,unlockedFamilyCount()).map(set=>set[0][0]);
+ const consonants=DATA.familyGraphemes.slice(0,unlockedFamilyCount());
  return new Set(["a","e","i","o","u","é",...consonants])
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
@@ -149,7 +162,7 @@ function curriculumStatus(){
  const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints();
  if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
  const next=DATA.sets[count],missionThreshold=2*(count-2),pointThreshold=6*(count-2);
- return {count,complete:false,next,nextInitial:(next?.[0]||"")[0]?.toUpperCase()||"?",remainingMissions:Math.max(0,missionThreshold-missions),remainingPoints:Math.max(0,pointThreshold-points)}
+ return {count,complete:false,next,nextInitial:familyGraphemeAt(count).toUpperCase()||"?",remainingMissions:Math.max(0,missionThreshold-missions),remainingPoints:Math.max(0,pointThreshold-points)}
 }
 function curriculumNextText(){
  const s=curriculumStatus();if(s.complete)return "Toutes les familles sont ouvertes.";
@@ -160,7 +173,7 @@ function curriculumNextText(){
 }
 function familyRoadmapHTML(){
  const status=curriculumStatus(),count=status.count;
- return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=(set[0]||"")[0]?.toUpperCase()||"?",open=i<count,isNext=i===count,nextLabel=status.remainingMissions>0?"dans "+status.remainingMissions+" mission(s)":status.remainingPoints>0?"à consolider":"bientôt";return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:isNext?nextLabel:"à venir")+'</small></div>'}).join("")+'</div>'
+ return '<div class="family-roadmap">'+DATA.sets.map((set,i)=>{const initial=familyGraphemeAt(i).toUpperCase()||"?",open=i<count,isNext=i===count,nextLabel=status.remainingMissions>0?"dans "+status.remainingMissions+" mission(s)":status.remainingPoints>0?"à consolider":"bientôt";return '<div class="family-chip '+(open?"open":"locked")+'"><div>'+(open?initial:"🔒")+'</div><small>'+(open?"famille "+initial:isNext?nextLabel:"à venir")+'</small></div>'}).join("")+'</div>'
 }
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function wordPracticeComplete(){const pool=decodableMissionWords(),practiced=state.wordPractice||{},target=Math.min(5,pool.length);return target>0&&pool.filter(w=>practiced[w.w]).length>=target}
