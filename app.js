@@ -1002,7 +1002,7 @@ async function openParentAccount(){
 }
 $("#accountBtn").addEventListener("click",openParentAccount);
 $("#switchChildBtn").addEventListener("click",openParentAccount);
-$("#textSizeBtn").addEventListener("click",()=>{const enabled=!document.body.classList.contains("large-text");safeStorageSet(UI_TEXT_SIZE_KEY,enabled?"1":"0")applyTextSizePreference(enabled);stage.focus({preventScroll:true})});
+$("#textSizeBtn").addEventListener("click",()=>{const enabled=!document.body.classList.contains("large-text");safeStorageSet(UI_TEXT_SIZE_KEY,enabled?"1":"0");applyTextSizePreference(enabled);stage.focus({preventScroll:true})});
 $("#authModal").addEventListener("click",e=>{if(e.target.id==="authModal")closeAuth()});
 document.addEventListener("click",e=>{const tab=e.target.closest("[data-auth-tab]");if(!tab)return;document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));tab.classList.add("active");renderAuthForm(tab.dataset.authTab);authMsg("")});
 document.addEventListener("change",async e=>{if(e.target?.id!=="progressImportInput")return;const file=e.target.files?.[0]||null;e.target.value="";await importProgressFile(file)});
