@@ -84,9 +84,9 @@ function gamesMenu(){
   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
-  <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":"Se débloque après 8 missions"}</small></button>
-  <button class="level" data-action="game-readaloud" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🗣️":"🔒"}</div><b>Je lis à voix haute</b><small>${sentenceUnlocked()?"Je lis puis j’écoute le modèle":"Se débloque après 8 missions"}</small></button>
-  <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Lis la phrase et choisis l’image":"Se débloque après 8 missions"}</small></button>
+  <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":sentenceUnlockText()}</small></button>
+  <button class="level" data-action="game-readaloud" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🗣️":"🔒"}</div><b>Je lis à voix haute</b><small>${sentenceUnlocked()?"Je lis puis j’écoute le modèle":sentenceUnlockText()}</small></button>
+  <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Lis la phrase et choisis l’image":sentenceUnlockText()}</small></button>
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
