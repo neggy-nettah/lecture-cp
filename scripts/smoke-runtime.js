@@ -171,6 +171,7 @@ const probes=[
   '["maman","domino","robot","tapis","miso"].every(w=>!fullyDecodableWords().some(x=>x.w===w))',
   'DATA.sets.every((set,i)=>set.length===6&&["a","e","i","o","u","é"].every(v=>set.includes(DATA.familyGraphemes[i]+v)))',
   'familyGraphemeAt(0)==="m"&&familyGraphemeForSyllable("ma")==="m"&&syllableRemainder("ma")==="a"',
+  'familyGraphemeForSet(["ma","me","mi","mo","mu","mé"])==="m"',
   '(()=>{DATA.familyGraphemes.push("ch");DATA.sets.push(["cha","che","chi","cho","chu","ché"]);try{return familyGraphemeForSyllable("cha")==="ch"&&syllableRemainder("cha")==="a"}finally{DATA.sets.pop();DATA.familyGraphemes.pop()}})()',
   '(state=normalizeState({}),decodableMissionWords().length>=6)',
   '(state=normalizeState({}),decodableMissionWords().every(w=>w.parts.join("")===w.w))',
