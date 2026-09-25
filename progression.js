@@ -181,6 +181,15 @@ function familyRoadmapHTML(){
 function soundPracticeComplete(){const practiced=state.soundPractice||{};return activeSoundData().every(x=>!!practiced[x.g])}
 function wordPracticeComplete(){const pool=decodableMissionWords(),practiced=state.wordPractice||{},target=Math.min(5,pool.length);return target>0&&pool.filter(w=>practiced[w.w]).length>=target}
 function wordMasteryLevel(word){return masteryLevel("word:"+String(word||""))}
+function wordMasterySummary(){
+ const pool=decodableMissionWords(),rows=pool.map(word=>({word,key:"word:"+word.w,level:wordMasteryLevel(word.w),m:state.mastery?.["word:"+word.w]||{attempts:0,correct:0}}));
+ const evaluated=rows.filter(x=>x.m.attempts>0),mastered=rows.filter(x=>x.level===3).length,learning=rows.filter(x=>x.level===1||x.level===2).length,needsReview=rows.filter(x=>x.level===0&&x.m.attempts>0).length;
+ const weakest=[...evaluated].filter(x=>x.level<3).sort((a,b)=>{
+  const aa=(a.m.correct||0)/Math.max(1,a.m.attempts),ab=(b.m.correct||0)/Math.max(1,b.m.attempts);
+  return aa-ab||b.m.attempts-a.m.attempts
+ }).slice(0,5);
+ return {total:pool.length,evaluated:evaluated.length,mastered,learning,needsReview,weakest}
+}
 function pickLearningWord(pool){
  const words=(pool||[]).filter(Boolean);if(!words.length)return null;
  const recent=new Set((state.missionHistory||[]).slice(-3).map(x=>x.word)),weighted=[];
