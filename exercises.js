@@ -87,6 +87,7 @@ function gamesMenu(){
   <button class="level" data-action="game-order" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"💬":"🔒"}</div><b>La phrase</b><small>${sentenceUnlocked()?"Remets les mots dans l'ordre":sentenceUnlockText()}</small></button>
   <button class="level" data-action="game-readaloud" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"🗣️":"🔒"}</div><b>Je lis à voix haute</b><small>${sentenceUnlocked()?"Je lis puis j’écoute le modèle":sentenceUnlockText()}</small></button>
   <button class="level" data-action="game-comprehension" ${sentenceUnlocked()?"":"disabled"}><div class="ico">${sentenceUnlocked()?"📖":"🔒"}</div><b>Je comprends</b><small>${sentenceUnlocked()?"Lis la phrase et choisis l’image":sentenceUnlockText()}</small></button>
+  <button class="level" data-action="game-mini-text" ${textComprehensionUnlocked()?"":"disabled"}><div class="ico">${textComprehensionUnlocked()?"📚":"🔒"}</div><b>Le mini-texte</b><small>${textComprehensionUnlocked()?"Lis deux phrases puis réponds":textComprehensionUnlockText()}</small></button>
  </div>
  ${mission("⭐","Une bonne réponse vérifiée = une étoile","Les boutons d’entraînement ne donnent plus d’étoile tout seuls.")}`;
 }
@@ -326,6 +327,26 @@ function gameComprehension(forcedTarget=null,fromMission=false){
  '<div class="card center"><div class="word" style="font-size:clamp(28px,6vw,48px)">'+sentence.map(esc).join(" ")+'</div>'+phraseToolHelpHTML(sentence)+'<div class="choices">'+opts.map(w=>'<button class="choice picture" data-action="comprehension-answer" data-value="'+esc(w.w)+'"><span style="font-size:52px">'+w.emoji+'</span></button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-comprehension">Nouvelle phrase →</button>')+'</div>';
  if(fromMission)playInstruction("Lis la phrase, puis touche l’image qui répond à la question.")
+}
+
+function gameMiniText(forcedId=null){
+ if(!textComprehensionUnlocked()){activate("games");return}
+ const pool=miniTextPool();if(!pool.length){activate("games");return}
+ missionMode=false;currentView="mini-text";state.lastView="mini-text";save(false);locked=false;resetQuestionTracking();
+ const forced=forcedId?pool.find(item=>item.id===forcedId):null,item=forced||pick(pool);
+ currentMiniText=item;currentAnswer=item.answer;
+ const opts=shuffle([...item.choices]),tokens=item.sentences.flat();
+ stage.innerHTML=title("Le mini-texte","Lis les deux phrases seul, puis écoute la question.","Compréhension de texte")+
+ instructionAudio("Lis les deux phrases tranquillement. Ensuite, écoute la question et touche la bonne réponse.")+
+ `<div class="card center"><div class="hero-emoji">📚✨</div>
+ <div class="mini-text-reading">${item.sentences.map(sentence=>`<div class="readaloud-sentence">${sentence.map(esc).join(" ")}</div>`).join("")}</div>
+ ${phraseToolHelpHTML(tokens)}
+ <div class="tip">Le bouton audio lit seulement la question. Il ne lit pas le texte à ta place.</div>
+ <div class="actions" style="margin-top:12px"><button class="btn yellow" data-action="mini-text-question">🔊 Écouter la question</button></div>
+ <div class="choices">${opts.map(name=>`<button class="choice" data-action="mini-text-answer" data-value="${esc(name)}">${esc(name)}</button>`).join("")}</div>
+ <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-mini-text">Nouveau mini-texte →</button></div>`;
+ playInstruction("Lis les deux phrases tranquillement. Ensuite, écoute la question et touche la bonne réponse.",()=>speak(item.question,.78))
 }
 
 function gameReadAloud(forcedSentence=null){
