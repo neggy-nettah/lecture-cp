@@ -137,6 +137,7 @@ Une mission terminée :
 - Phrase en ordre
 - Je lis à voix haute — entraînement sans note
 - Je comprends — phrase vers image
+- Le mini-texte — deux phrases décodables puis une question audio
 - Écoute & répète — BÊTA
 
 Le jeu micro reste un entraînement BÊTA et ne doit pas décider de la maîtrise ou donner des récompenses.
@@ -183,7 +184,7 @@ Point restant : Safari macOS doit encore être vérifié sur un appareil réel. 
 
 ## Priorités suivantes
 
-- tester sur un vrai enfant l’encodage de mots et la lecture à voix haute ; l’encodage de syllabes est déjà introduit progressivement dans les missions
+- tester sur un vrai enfant l’encodage de mots, la lecture à voix haute et le mini-texte ; l’encodage de syllabes est déjà introduit progressivement dans les missions
 - ajouter une progression explicite pour les premières règles orthographiques, notamment le `e` final muet, avant de réintroduire les mots concernés
 - travailler progressivement la prosodie et la lecture expressive sans notation automatique fragile
 - remplacer progressivement les emojis de récompense par un univers graphique original
