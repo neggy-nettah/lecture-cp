@@ -74,6 +74,7 @@ const requiredFunctions=[
   "function missingSyllableWords(",
   "function gameMissing(",
   "function gameComprehension(",
+  "function gameReadAloud(",
   "function gameEncode(",
   "function encodeLetterPool(",
   "function updateEncode(",
@@ -186,6 +187,13 @@ if(!app.includes('sentence=item.sentence;currentAnswer=item.word.w')){
 }
 if(!app.includes("phraseToolHelpHTML(sentence)")||!app.includes("phraseToolHelpHTML(arr)")){
   fail("Phrase exercises are missing autonomous audio help for tool words.");
+}
+const readAloudBlock=app.match(/function gameReadAloud\([\s\S]*?\n}\n\nfunction gameOrder\(/)?.[0]||"";
+if(!readAloudBlock||/recordAttempt\(|recordQuestionSuccess\(|recordQuestionError\(|rewardVerified\(|setDone\(/.test(readAloudBlock)){
+  fail("Read-aloud practice must remain unscored and outside mastery tracking.");
+}
+if(!app.includes('if(a==="readaloud-done")')||!app.includes('if(a==="readaloud-model")')){
+  fail("Read-aloud completion/model actions are missing.");
 }
 if(!app.includes('memoryMissedPairs.has(a.card.pair)?null:a.card.pair')){
   fail("Memory mistakes can inflate syllable mastery again.");
