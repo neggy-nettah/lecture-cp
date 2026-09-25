@@ -196,33 +196,35 @@ Point restant : Safari macOS doit encore être vérifié sur un appareil réel. 
 
 ## Contrôle avant publication
 
-Avant de pousser `develop-caly` vers `main` :
+Avant de considérer une version comme stable :
 
-1. exécuter `node scripts/check-app.js`
-2. exécuter `node scripts/smoke-runtime.js`
-3. vérifier qu'une ancienne sauvegarde se charge
-4. vérifier qu'une mission peut être reprise
-5. vérifier qu'une mission ne récompense qu'une fois par jour
-6. vérifier mobile et desktop
-7. ne pas réintroduire le micro dans la progression pédagogique
-
+1. laisser le workflow GitHub `Validate app` terminer entièrement au vert ;
+2. vérifier syntaxe, invariants, contenu et migrations d’état ;
+3. vérifier les parcours navigateur Chromium **et** WebKit ;
+4. vérifier l’installation/reprise PWA et le mode hors ligne ;
+5. vérifier les erreurs réseau et navigations bloquées ;
+6. conserver la compatibilité des anciennes sauvegardes ;
+7. vérifier qu’une mission et une récompense restent idempotentes après rechargement ;
+8. ne pas réintroduire le micro comme preuve de maîtrise pédagogique ;
+9. incrémenter la version des assets et le cache du service worker pour une release fonctionnelle.
 
 ## Vérifications navigateur
 
-Le workflow GitHub exécute désormais aussi `scripts/browser-check.js` avec Chromium.
+La CI exécute `scripts/browser-check.js` sous Chromium et `scripts/webkit-smoke.js` sous WebKit.
 Les appels Supabase sont simulés : aucun compte ni aucune progression réelle n’est utilisé.
-Ce scénario vérifie la reprise et la fin des missions, les récompenses uniques,
-les changements de profil rapides, les sauvegardes en attente et 32 écrans/tailles.
+Les scénarios couvrent notamment la reprise des missions et jeux, les récompenses uniques,
+les profils, la sauvegarde dégradée, les tailles mobiles, les écritures en attente et les modales parent.
 
-Pour le lancer localement avec Playwright 1.58.2 et Chromium installés :
+Pour les lancer localement avec Playwright 1.58.2 et Chromium/WebKit installés :
 
 ```sh
 python3 -m http.server 8765 --bind 127.0.0.1
 # Dans un autre terminal :
 node scripts/browser-check.js
+CALY_TEST_URL=http://127.0.0.1:8765 node scripts/webkit-smoke.js
 ```
 
-Le test des voix Safari reste manuel sur matériel réel.
+WebKit réduit fortement le risque de régression Safari, mais la synthèse vocale Safari macOS reste à tester sur un vrai appareil.
 
 Depuis la v0.33, le chargement d’un profil fusionne de façon conservatrice les progrès
 présents sur l’appareil et dans Supabase : les éléments monotones (étoiles, acquis,
