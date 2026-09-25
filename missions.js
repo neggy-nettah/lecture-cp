@@ -23,13 +23,13 @@ function buildDailyMission(){
  const visualStep=visualType==="memory"
   ?{type:"memory",target:primary,title:"Je mémorise",detail:"Associe les sons aux syllabes"}
   :visualType==="family"
-   ?{type:"family",target:family[0][0],title:"J’observe",detail:"Trouve l’intrus de la famille "+family[0][0].toUpperCase()}
+   ?{type:"family",target:familyGraphemeForSet(family),title:"J’observe",detail:"Trouve l’intrus de la famille "+familyGraphemeForSet(family).toUpperCase()}
    :visualType==="encode"
     ?{type:"encode",target:review,title:"J’écris",detail:"Écoute puis écris la syllabe "+review.toUpperCase()}
    :visualType==="comprehension"&&comprehensionItem
     ?{type:"comprehension",target:comprehensionItem.word.w,title:"Je comprends",detail:"Lis la phrase et choisis la bonne image"}
     :{type:"missing",target:missingWord.w,title:"Je complète",detail:"Retrouve la syllabe manquante de "+missingWord.w.toUpperCase()};
- state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:family[0][0],startAttempts:null,startCorrect:null,sessionStats:{attempts:0,correct:0},steps:[
+ state.dailyMission={date:localDayKey(),index:0,completed:false,primary,review,word:word.w,familyFirst:familyGraphemeForSet(family),startAttempts:null,startCorrect:null,sessionStats:{attempts:0,correct:0},steps:[
   {type:"discover",target:primary,title:"Je découvre",detail:"Écoute et répète "+primary.toUpperCase()},
   {type:"listen",target:primary,title:"J’écoute",detail:"Retrouve "+primary.toUpperCase()+" parmi les cartes"},
   {type:"bubbles",target:review,title:"Je révise",detail:"Éclate la bonne bulle"},
@@ -44,7 +44,7 @@ function validDailyMission(m){
  return m.steps.every((s,i)=>{
   if(!s||!expected[i].includes(s.type))return false;
   if(s.type==="memory")return true;
-  if(s.type==="family")return DATA.sets.some(set=>set[0][0]===s.target);
+  if(s.type==="family")return DATA.sets.some((set,i)=>familyGraphemeAt(i)===s.target);
   return ["build","missing","comprehension"].includes(s.type)?DATA.words.some(w=>w.w===s.target):DATA.sets.flat().includes(s.target)
  })
 }
@@ -92,7 +92,7 @@ function startMissionStep(){
  else if(s.type==="listen")gameListen(s.target,true);
  else if(s.type==="bubbles")gameBubbles(s.target,true);
  else if(s.type==="memory")gameMemory([m.primary,m.review],true);
- else if(s.type==="family"){const fam=DATA.sets.find(set=>set[0][0]===s.target)||DATA.sets[0];gameFamily(fam,true)}
+ else if(s.type==="family"){const fam=DATA.sets.find((set,i)=>familyGraphemeAt(i)===s.target)||DATA.sets[0];gameFamily(fam,true)}
  else if(s.type==="missing")gameMissing(DATA.words.find(w=>w.w===s.target)||null,true);
  else if(s.type==="encode")gameEncode(s.target,true);
  else if(s.type==="comprehension")gameComprehension(s.target,true);
@@ -137,7 +137,7 @@ function recordCompletedMission(m){
   state.missionCount=completedMissionCount()+1;
   state.missionHistory.push(record);state.bestMissionStreak=bestMissionStreak();state.missionHistory=state.missionHistory.slice(-60);gain=advanceRewards();
   const afterFamilies=unlockedFamilyCount();
-  if(afterFamilies>beforeFamilies){const set=DATA.sets[afterFamilies-1];familyUnlock=set?set[0][0].toUpperCase():null}
+  if(afterFamilies>beforeFamilies){const set=DATA.sets[afterFamilies-1];familyUnlock=set?familyGraphemeAt(afterFamilies-1).toUpperCase():null}
   record.reward={pieces:state.rewards.pieces,itemId:gain.complete?gain.item.id:null};
   record.unlockedFamily=familyUnlock;
   save()
@@ -153,7 +153,7 @@ function missionComplete(){
  const item=COLLECTIBLES.find(x=>x.id===record?.reward?.itemId);
  const gain=completion.gain||(record?.reward?{complete:!!item,item}:null);
  const rewardPieces=Math.min(3,stateCount(record?.reward?.pieces??state.rewards?.pieces));
- const familyUnlock=DATA.sets.map(set=>set[0][0].toUpperCase()).includes(record?.unlockedFamily)?record.unlockedFamily:null;
+ const familyUnlock=DATA.sets.map((set,i)=>familyGraphemeAt(i).toUpperCase()).includes(record?.unlockedFamily)?record.unlockedFamily:null;
  save();confetti();
  const reward=gain?(gain.complete?'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">'+gain.item.emoji+'</div><h3 style="margin:5px">Nouveau trésor !</h3><b>'+gain.item.name+'</b><p style="color:var(--muted)">Le puzzle est terminé et ce personnage rejoint ta collection.</p><button class="btn yellow" data-action="go" data-to="collection">🎁 Voir ma collection</button></div>':'<div class="card center" style="background:#fff8d8;border-color:#efd06c"><div class="mission-celebrate">🧩</div><h3 style="margin:5px">Tu gagnes un morceau !</h3><b>'+rewardPieces+' / 4 morceaux</b><p style="color:var(--muted)">Encore '+Math.max(0,4-rewardPieces)+' mission(s) pour terminer le puzzle.</p></div>'):'<div class="tip">Cette mission a déjà donné sa récompense aujourd’hui.</div>';
  const unlock=familyUnlock?'<div class="card center" style="background:#f3f1ff;border-color:#c9c3ff"><div class="mission-celebrate">🔓</div><h3 style="margin:5px">Nouvelle famille !</h3><p>Tu peux maintenant travailler les syllabes de la famille <b style="font-size:24px">'+familyUnlock+'</b>.</p><button class="btn primary" data-action="go" data-to="syllables">🧩 Découvrir la famille</button></div>':"";
