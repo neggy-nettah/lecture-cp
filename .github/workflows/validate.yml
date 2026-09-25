@@ -38,7 +38,7 @@ jobs:
       - name: Install browser test tools
         run: |
           npm install --no-save --package-lock=false playwright@1.58.2
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Check mobile layouts, missions and profile isolation
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/caly-http.log 2>&1 &
@@ -49,6 +49,7 @@ jobs:
             sleep 1
           done
           node scripts/browser-check.js
+          CALY_TEST_URL=http://127.0.0.1:8765 node scripts/webkit-smoke.js
       - name: Check installed app offline
         run: |
           pwa_root=$(mktemp -d)
