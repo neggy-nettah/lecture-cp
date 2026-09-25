@@ -43,6 +43,10 @@ const DATA={
   {w:"météo",parts:["mé","té","o"],emoji:"🌦️"},{w:"numéro",parts:["nu","mé","ro"],emoji:"🔢"},
   {w:"mari",parts:["ma","ri"],emoji:"🤵"},{w:"panorama",parts:["pa","no","ra","ma"],emoji:"🏞️"},
   {w:"silo",parts:["si","lo"],emoji:"🌾"},{w:"solo",parts:["so","lo"],emoji:"🎤"},
+  {w:"menu",parts:["me","nu"],emoji:"🍽️"},{w:"poli",parts:["po","li"],emoji:"🙂"},
+  {w:"puni",parts:["pu","ni"],emoji:"😕"},{w:"revu",parts:["re","vu"],emoji:"👀"},
+  {w:"relu",parts:["re","lu"],emoji:"📖"},{w:"pari",parts:["pa","ri"],emoji:"🎲"},
+  {w:"rami",parts:["ra","mi"],emoji:"🃏"},{w:"vomi",parts:["vo","mi"],emoji:"🤢"},
   {w:"miso",parts:["mi","so"],emoji:"🍜"},{w:"sumo",parts:["su","mo"],emoji:"🤼"},
   {w:"salé",parts:["sa","lé"],emoji:"🧂"},{w:"lili",parts:["li","li"],emoji:"👧"},
   {w:"mimi",parts:["mi","mi"],emoji:"🐱"},{w:"lola",parts:["lo","la"],emoji:"👧"},
@@ -74,7 +78,9 @@ const WORLD_ZONES=[
  {id:"space",name:"Galaxie des lecteurs",emoji:"🚀",need:14,desc:"Une zone pour les lecteurs devenus très autonomes."}
 ];
 
+// Final silent e is an explicit reading rule; do not treat it as a spoken CV syllable.
+const SILENT_FINAL_E_WORDS=["lune","tomate","banane","pirate","valise","cabane","minute","navire"];
 // Reserved until the corresponding pronunciation rules are explicitly taught.
-const DEFERRED_WORDS=["valise","miso"];
+const DEFERRED_WORDS=[...SILENT_FINAL_E_WORDS,"miso"];
 // Only these illustrations are used as an answer clue (no names or approximate emojis).
 const PICTURE_WORDS=["papa","moto","lune","tomate","banane","pirate","bébé","navire","piano","vélo","papi","lama","polo","sari","tutu","mémé","télé"];
