@@ -176,12 +176,13 @@ Point restant : Safari macOS doit encore être vérifié sur un appareil réel. 
 
 ## Priorités suivantes
 
-- remplacer les emojis de récompense par un univers graphique original
-- ajouter davantage de contenu pédagogique validé
-- améliorer les missions adaptatives selon les erreurs récentes
-- améliorer l'expérience tablette/mobile
-- revoir l'audio macOS avec une solution plus fiable
-- renforcer l'idempotence côté serveur si l'application est ouverte au public
+- tester sur un vrai enfant le nouveau jeu d’encodage avant de décider s’il entre dans les missions quotidiennes
+- ajouter une pratique de lecture à voix haute et de prosodie sans notation automatique fragile
+- remplacer progressivement les emojis de récompense par un univers graphique original
+- ajouter davantage de contenu pédagogique validé, puis introduire les graphèmes complexes avec une progression explicite
+- améliorer encore l’expérience tablette/mobile et les grands réglages de texte
+- vérifier le moteur audio sur Safari macOS réel malgré les garde-fous ajoutés en v0.32
+- passer à une résolution transactionnelle des écritures concurrentes côté serveur lorsque l’accès au projet Supabase est disponible
 - faire évoluer les tests automatiques avec chaque nouvelle fonctionnalité
 
 ## Contrôle avant publication
