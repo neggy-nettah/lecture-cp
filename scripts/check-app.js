@@ -69,7 +69,11 @@ const requiredFunctions=[
   "function scopedChallengeKey(",
   "function curriculumMasteryPoints(",
   "function knownFamilyFloor(",
+  "function simpleCvReadiness(",
   "function activeLearningSyllables(",
+  "function silentEReadiness(",
+  "function silentEUnlocked(",
+  "function silentEWordPool(",
   "function dueReviewSyllables(",
   "function activeSoundData(",
   "function fullyDecodableWords(",
@@ -78,6 +82,7 @@ const requiredFunctions=[
   "function gameMemory(",
   "function missingSyllableWords(",
   "function gameMissing(",
+  "function gameSilentE(",
   "function gameComprehension(",
   "function gameReadAloud(",
   "function gameEncode(",
@@ -87,6 +92,7 @@ const requiredFunctions=[
   "function gameFamily(",
   "function instructionAudio(",
   "function playInstruction(",
+  "function silentEWordHTML(",
   "function worldView(",
   "function collectionView(",
   "function parents(",
@@ -118,6 +124,16 @@ for(const asset of ['styles.css?v='+version,'content.js?v='+version,...scriptFil
 if(!app.includes('navigator.serviceWorker.register("./sw.js")'))fail("Service Worker registration is missing.");
 if(!app.includes('"controllerchange"')||!app.includes("function checkForAppUpdate(")||!app.includes("serviceWorkerRegistration.update()")||!app.includes('document.addEventListener("visibilitychange"'))fail("Installed-app update notification/check is missing.");
 // Network fallback and offline HTML coherence are exercised by check-service-worker.js.
+
+if(!app.includes('"silent-e":gameSilentE')||!app.includes('data-action="game-silent-e"')||!app.includes('data-action="silent-e-answer"')){
+  fail("Silent-e discovery route/actions are missing.");
+}
+if(!css.includes("silent-letter.revealed")||!app.includes("SILENT_FINAL_E_WORDS.includes(text)")){
+  fail("Silent-letter visual distinction is missing.");
+}
+if(!app.includes("simpleCvReadiness()")||!app.includes("BASIC_CV_FAMILY_COUNT")){
+  fail("Advanced syllable families are no longer mastery-gated.");
+}
 
 if(!app.includes("function refreshSpeechVoices(")||!app.includes("function speakNow(")||!app.includes('addEventListener?.("voiceschanged",tryVoices)')){
   fail("Speech synthesis voice-loading safeguards are missing.");
