@@ -529,6 +529,14 @@ function parentReviewHTML(){
  const cards=suggestions.map(x=>`<div class="parent-box"><h3>${esc(x.s.toUpperCase())} <span aria-label="${masteryLevel(x.s)} étoiles sur 3">${masteryStars(x.s)}</span></h3><p>${x.reason}</p><button class="btn good" data-action="parent-review" data-target="${esc(x.s)}">Revoir ${esc(x.s.toUpperCase())}</button></div>`).join("");
  return `<div class="card"><h3>📌 Quoi travailler maintenant ?</h3><p>Une proposition à la fois suffit. Arrêtez si l’enfant se fatigue.</p>${suggestions.length?`<div class="parent-grid">${cards}</div>`:`<p>${Object.keys(state.mastery||{}).length?"Aucune révision prioritaire pour le moment. La mission du jour poursuit le parcours.":"Commencez par la mission du jour : les premières réponses permettront de proposer des révisions adaptées."}</p><button class="btn primary" data-action="go" data-to="home">Voir la mission du jour</button>`}<p style="color:var(--muted);font-size:13px">Ces exercices sont libres : ils ne remplacent pas une étape de la mission en cours.</p></div>`
 }
+function parentStructureReviewHTML(){
+ const configs=[{id:"vc",icon:"↩️",label:"VC",unlocked:vcStructureUnlocked()},{id:"cvc",icon:"🔤",label:"CVC",unlocked:cvcStructureUnlocked()}],active=configs.filter(x=>x.unlocked);
+ if(!active.length)return "";
+ const rows=active.flatMap(cfg=>structureReviewCandidates(cfg.id).slice(0,2).map(row=>({...row,...cfg}))).sort((a,b)=>a.priority-b.priority||b.due.overdue-a.due.overdue).slice(0,3);
+ const reasons={error:"À revoir après une erreur",due:"Révision espacée arrivée à échéance",learning:"Encore en apprentissage"};
+ const cards=rows.map(x=>'<div class="parent-box"><h3>'+x.icon+' '+esc(x.item.text.toUpperCase())+' '+masteryStars(x.key)+'</h3><p>'+esc(reasons[x.reason]||"À revoir")+'</p><button class="btn good" data-action="parent-structure-review" data-kind="'+esc(x.id)+'" data-target="'+esc(x.item.text)+'">Revoir '+esc(x.item.text.toUpperCase())+'</button></div>').join("");
+ return '<div class="card"><h3>🧠 Révisions VC / CVC</h3><p>Les erreurs et les révisions arrivées à échéance passent avant les nouvelles structures.</p>'+(cards?'<div class="parent-grid">'+cards+'</div>':'<p style="color:var(--muted)">Aucune structure prioritaire à revoir pour le moment.</p>')+'<p style="color:var(--muted);font-size:13px">Ces entraînements sont libres et ne modifient pas la mission du jour.</p></div>'
+}
 function parentSyllableGridHTML(){
  const active=new Set(activeLearningSyllables());
  return DATA.sets.flat().map(s=>{
@@ -736,6 +744,7 @@ function parents(){
  </div>
  <div class="card"><b>🪜 Prochains paliers</b><p style="color:var(--muted);font-size:13px">Ces paliers s’ouvrent selon les missions réalisées et la maîtrise réellement observée.</p><div class="parent-grid" style="margin-top:10px">${milestoneCards}</div></div>
  ${parentReviewHTML()}
+ ${parentStructureReviewHTML()}
  <div class="card"><b>🔎 À renforcer</b><p style="color:var(--muted);font-size:13px">Les syllabes les moins solides reviennent davantage dans les missions. <b>${dueCount}</b> syllabe(s) sont aussi prévues en révision espacée aujourd’hui.</p><div class="collection-row">${weak}</div></div>
  <div class="card"><b>📝 Mots à renforcer</b><p style="color:var(--muted);font-size:13px">Les mots évalués dans « J’écris le mot » sont suivis séparément des syllabes.</p><div class="collection-row">${weakWords}</div></div>
  <details class="card"><summary style="cursor:pointer;font-weight:900">🔤 Voir les ${DATA.sets.flat().length} syllabes en détail</summary><p>Choisissez une syllabe disponible pour un entraînement court, sans modifier la mission en cours.</p><div class="mastery-grid">${parentSyllableGridHTML()}</div></details>
@@ -946,6 +955,14 @@ document.addEventListener("click",e=>{
  if(a==="parent-review"||a==="parent-syllable-review"){
    const target=b.dataset.target;
    if(activeLearningSyllables().includes(target)){gameListen(target,false,true);topUI();stage.focus({preventScroll:true})}
+   return
+ }
+ if(a==="parent-structure-review"){
+   const kind=b.dataset.kind,target=b.dataset.target,pool=availableStructureItems(kind);
+   if(pool.some(item=>item.text===target)&&((kind==="vc"&&vcStructureUnlocked())||(kind==="cvc"&&cvcStructureUnlocked()))){
+    if(kind==="vc")gameVC(target,false,true);else gameCVC(target,false,true);
+    topUI();stage.focus({preventScroll:true})
+   }
    return
  }
  if(a==="parent-word-review"){
