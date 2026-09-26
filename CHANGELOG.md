@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.43.0 — 2026-09-26
+
+- progression CP étendue avec les familles `z`, `k` puis le digramme `ch`
+- déblocage du premier palier complexe conditionné par la maîtrise réelle des syllabes CV simples, et pas seulement par le nombre de missions
+- corpus régulier enrichi avec `zébu`, `zéro`, `kilo`, `kaki`, `kimono`, `chéri` et `chili`
+- encodage reformulé en « deux morceaux » pour rester exact lorsque le premier graphème est `ch`
+- nouveau palier guidé « Le e muet » : lettre finale affichée en gris après identification, sans gonfler artificiellement la maîtrise
+- nouveau badge « Détective du e muet » et badge d'accès au palier `ch`
+- collection portée à 12 découvertes et monde prolongé jusqu'à 40 missions
+- compagnon Léo prolongé jusqu'au niveau 8
+- récupération automatique des nouveaux collectibles correspondant aux puzzles déjà gagnés
+- audit navigateur étendu au palier `e` muet et aux nouvelles familles
+- documentation pédagogique mise à jour selon le programme de français du cycle 2 en vigueur
+
 ## 0.42.1 — 2026-09-26
 
 - import de progression durci contre les compteurs corrompus, non numériques ou non finis
