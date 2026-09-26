@@ -225,3 +225,14 @@ Le moteur utilise pour l'instant une règle simple et lisible :
 - ★★★ : révision après 7 jours.
 
 Les erreurs récentes dans `reviewQueue` restent prioritaires sur cette planification. Cette logique est volontairement simple et pourra être ajustée après observation réelle des usages.
+
+
+### Compréhension autonome
+
+Les mini-textes ne déclenchent plus automatiquement la question après la consigne. L’enfant lit d’abord les deux phrases à son rythme, puis demande lui-même l’audio de la question. Cela évite de transformer la lecture en course contre l’interface.
+
+Les questions alternent maintenant deux opérations simples :
+- retrouver **qui** possède un objet ;
+- retrouver **ce que** possède un personnage.
+
+Les réponses restent directement ancrées dans les deux phrases affichées et le texte n’est jamais lu à la place de l’enfant.
