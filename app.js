@@ -693,7 +693,9 @@ function parseProgressImport(text){
  imported.rewardLedger=Object.fromEntries(Object.entries(imported.rewardLedger||{}).filter(([,v])=>!!v).slice(-300));
  const rewardIds=new Set(COLLECTIBLES.map(x=>x.id)),seenRewards=new Set(),collection=[];
  (imported.rewards?.collection||[]).forEach(x=>{if(x&&rewardIds.has(x.id)&&!seenRewards.has(x.id)){collection.push(COLLECTIBLES.find(c=>c.id===x.id));seenRewards.add(x.id)}});
- imported.rewards={towardPiece:0,pieces:Math.min(3,stateCount(imported.rewards?.pieces)),puzzles:stateCount(imported.rewards?.puzzles),collection};
+ const importedPuzzles=stateCount(imported.rewards?.puzzles);
+ for(let i=0;i<Math.min(importedPuzzles,COLLECTIBLES.length);i++){const item=COLLECTIBLES[i];if(!seenRewards.has(item.id)){collection.push(item);seenRewards.add(item.id)}}
+ imported.rewards={towardPiece:0,pieces:Math.min(3,stateCount(imported.rewards?.pieces)),puzzles:importedPuzzles,collection};
  if(!validDailyMission(imported.dailyMission)||imported.dailyMission.date!==localDayKey())imported.dailyMission=null;
  return imported
 }
