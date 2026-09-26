@@ -22,7 +22,8 @@ function buildDailyMission(){
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],comprehensionPool=sentenceUnlocked()?comprehensionSentencePool():[];
  const focusedComprehension=comprehensionPool.filter(item=>missionWordMatchesFocus(item.word,primary,review));
  const encodeReady=completedMissionCount()>=3&&masterySummary().learning+masterySummary().mastered>=6,vcTarget=vcStructureUnlocked()?missionStructureTarget("vc"):null,cvcTarget=cvcStructureUnlocked()?missionStructureTarget("cvc"):null;
- const visualModes=["memory","family","missing",...(encodeReady?["encode"]:[]),...(vcTarget?["vc"]:[]),...(cvcTarget?["cvc"]:[]),...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
+ const vcNeed=!!vcTarget&&structureMasterySummary("vc").secure<4,cvcNeed=!!cvcTarget&&structureMasterySummary("cvc").secure<4,structurePriority=cvcNeed?"cvc":vcNeed?"vc":null;
+ const visualModes=["memory","family","missing",...(encodeReady?["encode"]:[]),...(vcTarget?["vc"]:[]),...(cvcTarget?["cvc"]:[]),...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],day=Number(localDayKey().slice(-2)),visualType=structurePriority&&day%2===0?structurePriority:visualModes[day%visualModes.length];
  const missingCandidates=missingSyllableWords(),focusedMissing=missionFocusedWords(missingCandidates,primary,review),missingBase=focusedMissing.length?focusedMissing:missingCandidates,missingPool=missingBase.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingBase)||word;
  const comprehensionBase=focusedComprehension.length?focusedComprehension:comprehensionPool,comprehensionChoices=comprehensionBase.filter(x=>x.word.w!==word.w),comprehensionItem=pick(comprehensionChoices.length?comprehensionChoices:comprehensionBase);
  const visualStep=visualType==="memory"
@@ -54,7 +55,7 @@ function validDailyMission(m){
   if(!s||!expected[i].includes(s.type))return false;
   if(s.type==="memory")return true;
   if(s.type==="family")return DATA.sets.some((set,i)=>familyGraphemeAt(i)===s.target);
-  if(["vc","cvc"].includes(s.type))return !!structureStage(s.type)?.items.some(item=>item.text===s.target);
+  if(["vc","cvc"].includes(s.type)){const unlocked=s.type==="vc"?vcStructureUnlocked():cvcStructureUnlocked();return unlocked&&availableStructureItems(s.type).some(item=>item.text===s.target)}
   return ["build","missing","comprehension"].includes(s.type)?DATA.words.some(w=>w.w===s.target):DATA.sets.flat().includes(s.target)
  })
 }
