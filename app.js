@@ -957,7 +957,7 @@ document.addEventListener("click",e=>{
  if(a==="family-answer"){
    if(locked)return;
    if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(null,"family:"+currentAnswer);rewardVerified("Intrus trouvé !","family:"+currentAnswer);setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
-   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Regarde bien le début des syllabes.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
    return
  }
  if(a==="game-silent-e"){gameSilentE();return}
