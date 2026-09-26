@@ -292,15 +292,15 @@ function gameSilentE(forcedWord=null){
  const choices=shuffle(["e","a","i"]);
  stage.innerHTML=title("Le e muet","Une lettre peut être écrite sans s’entendre à la fin du mot.","Nouveau palier")+
  instructionAudio("Écoute le mot. À la fin, le e est écrit mais il ne s’entend pas. Touche la lettre muette.")+
- \`<div class="card center silent-e-intro"><div class="hero-emoji">🤫🔤</div><p style="margin-top:0">Exemple : dans <b class="silent-example">\${silentEWordHTML("lune",true)}</b>, le <b>e</b> gris reste écrit mais on ne le prononce pas.</p></div>
+ `<div class="card center silent-e-intro"><div class="hero-emoji">🤫🔤</div><p style="margin-top:0">Exemple : dans <b class="silent-example">${silentEWordHTML("lune",true)}</b>, le <b>e</b> gris reste écrit mais on ne le prononce pas.</p></div>
  <div class="card center">
    <button class="btn yellow" data-action="silent-e-listen">🔊 Écouter le mot</button>
-   <div class="word" id="silentEWord">\${silentEWordHTML(word.w,false)}</div>
+   <div class="word" id="silentEWord">${silentEWordHTML(word.w,false)}</div>
    <p style="color:var(--muted)">Quelle lettre est muette à la fin ?</p>
-   <div class="choices">\${choices.map(letter=>\`<button class="choice" data-action="silent-e-answer" data-value="\${letter}">\${letter}</button>\`).join("")}</div>
+   <div class="choices">${choices.map(letter=>`<button class="choice" data-action="silent-e-answer" data-value="${letter}">${letter}</button>`).join("")}</div>
    <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
  </div>
- <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-silent-e">Nouveau mot →</button></div>\`;
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-silent-e">Nouveau mot →</button></div>`;
  playInstruction("Écoute le mot. Le e à la fin est écrit, mais il ne s’entend pas. Touche la lettre muette.",()=>speak(word.w,.70))
 }
 
