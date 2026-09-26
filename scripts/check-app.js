@@ -150,6 +150,9 @@ if(!app.includes("blendAudio=first.length>1")||!app.includes('DATA.sounds.find(x
 if(app.includes("=>speak(item.question,.78)")||!app.includes("Quand tu as fini, touche le bouton pour écouter la question")){
   fail("Mini-text question must wait for the child to request it.");
 }
+if(!app.includes('id="miniTextQuestion"')||!app.includes('if(q)q.hidden=false')){
+  fail("Mini-text question needs a visible fallback when requested.");
+}
 
 if(/service[_-]?role/i.test(app)){
   fail("Possible Supabase service-role credential found in client code.");
