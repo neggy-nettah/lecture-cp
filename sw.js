@@ -1,16 +1,16 @@
 "use strict";
-const CACHE_NAME="lecture-cp-shell-v0.41.0";
+const CACHE_NAME="lecture-cp-shell-v0.42.0";
 const BASE="/lecture-cp/";
 const SHELL=[
   BASE,
   BASE+"index.html",
-  BASE+"styles.css?v=0.41.0",
-  BASE+"content.js?v=0.41.0",
-  BASE+"progression.js?v=0.41.0",
-  BASE+"rewards.js?v=0.41.0",
-  BASE+"exercises.js?v=0.41.0",
-  BASE+"missions.js?v=0.41.0",
-  BASE+"app.js?v=0.41.0",
+  BASE+"styles.css?v=0.42.0",
+  BASE+"content.js?v=0.42.0",
+  BASE+"progression.js?v=0.42.0",
+  BASE+"rewards.js?v=0.42.0",
+  BASE+"exercises.js?v=0.42.0",
+  BASE+"missions.js?v=0.42.0",
+  BASE+"app.js?v=0.42.0",
   BASE+"manifest.webmanifest",
   BASE+"icon.svg"
 ];
