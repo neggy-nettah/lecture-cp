@@ -57,6 +57,7 @@ const requiredFunctions=[
   "function mergeReviewQueues(",
   "function rewardProgressUnits(",
   "function buildDailyMission(",
+  "function missionStructureTarget(",
   "function missionWordMatchesFocus(",
   "function missionFocusedWords(",
   "function getDailyMission(",
@@ -146,6 +147,9 @@ if(!app.includes("simpleCvReadiness()")||!app.includes("BASIC_CV_FAMILY_COUNT"))
 }
 if(!app.includes('"vc-structures":gameVC')||!app.includes('"cvc-structures":gameCVC')||!app.includes('data-action="structure-answer"')){
   fail("VC/CVC games are not fully routed.");
+}
+if(!app.includes('else if(s.type==="vc")gameVC(s.target,true)')||!app.includes('else if(s.type==="cvc")gameCVC(s.target,true)')||!app.includes('structurePriority&&day%2===0')){
+  fail("VC/CVC stages are not integrated into daily missions.");
 }
 if(!app.includes('key.startsWith("structure:")')||!app.includes("CVC_STRUCTURE_MIN_CV_SECURE")){
   fail("VC/CVC mastery persistence or gating is missing.");
