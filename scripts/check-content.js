@@ -80,16 +80,19 @@ for(const expected of [
 
 if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank is unexpectedly small.");
 
-if(!Array.isArray(miniTexts)||miniTexts.length<4)fail("Mini-text corpus is unexpectedly small.");
+if(!Array.isArray(miniTexts)||miniTexts.length<8)fail("Mini-text corpus is unexpectedly small.");
 const miniIds=duplicates(miniTexts.map(x=>x.id));if(miniIds.length)fail("Duplicate mini-text ids:",miniIds.join(", "));
-const sentenceKeys=new Set(data.sentences.map(sentence=>sentence.join("\u0000")));
+const sentenceKeys=new Set(data.sentences.map(sentence=>sentence.join("\u0000"))),wordSet=new Set(data.words.map(w=>w.w));
 for(const item of miniTexts){
-  if(!item.id||!Array.isArray(item.sentences)||item.sentences.length!==2||!item.question||!item.answer||!Array.isArray(item.choices)||item.choices.length<2)fail("Malformed mini-text:",JSON.stringify(item));
+  if(!item.id||!["subject","object"].includes(item.kind)||!Array.isArray(item.sentences)||item.sentences.length!==2||!item.question||!item.answer||!Array.isArray(item.choices)||item.choices.length<2)fail("Malformed mini-text:",JSON.stringify(item));
   if(item.sentences.some(sentence=>!sentenceKeys.has(sentence.join("\u0000"))))fail("Mini-text uses an unvalidated sentence:",item.id);
   if(new Set(item.choices).size!==item.choices.length||!item.choices.includes(item.answer))fail("Ambiguous mini-text choices:",item.id);
   const subjects=item.sentences.map(sentence=>String(sentence[0]||""));
-  if(item.choices.some(choice=>!subjects.includes(choice))||!subjects.includes(item.answer))fail("Mini-text answer is not grounded in its sentences:",item.id);
+  const objects=item.sentences.map(sentence=>[...sentence].reverse().map(token=>String(token).toLowerCase().replace(/[.!?,;:]/g,"")).find(token=>wordSet.has(token))||"");
+  const grounded=item.kind==="subject"?subjects:objects;
+  if(item.choices.some(choice=>!grounded.includes(choice))||!grounded.includes(item.answer))fail("Mini-text answer is not grounded in its sentences:",item.id);
 }
+if(!miniTexts.some(x=>x.kind==="subject")||!miniTexts.some(x=>x.kind==="object"))fail("Mini-text questions must cover both subject and object comprehension.");
 
 const soundKeys=data.sounds.map(x=>x.g);
 const dupSounds=duplicates(soundKeys);
