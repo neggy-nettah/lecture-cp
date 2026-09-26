@@ -135,11 +135,11 @@ function updateEncode(){
 function structureItemHTML(item){
  return (item?.parts||[]).map(part=>'<span class="'+("aioueé".includes(part)?"blue":"red")+'">'+esc(part)+'</span>').join("")
 }
-function gameStructure(id,forcedText=null,fromMission=false){
+function gameStructure(id,forcedText=null,fromMission=false,fromParent=false){
  const unlocked=id==="vc"?vcStructureUnlocked():cvcStructureUnlocked();
  if(!unlocked){activate("games");return}
  const pool=availableStructureItems(id);if(pool.length<2){activate("games");return}
- missionMode=fromMission;currentView=id+"-structures";state.lastView=fromMission?"mission":currentView;save(false);locked=false;resetQuestionTracking();
+ missionMode=fromMission;currentView=id+"-structures";state.lastView=fromMission?"mission":fromParent?"parents":currentView;save(false);locked=false;resetQuestionTracking();
  const item=forcedText&&pool.some(x=>x.text===forcedText)?pool.find(x=>x.text===forcedText):pick(pool);currentAnswer=item.text;
  const opts=nextRandom(pool.map(x=>x.text),currentAnswer,4),isVc=id==="vc";
  const explanation=isVc?"La voyelle peut venir avant la consonne.":"La syllabe peut avoir un son au début et un autre à la fin.";
@@ -151,11 +151,11 @@ function gameStructure(id,forcedText=null,fromMission=false){
  '<div class="choices">'+opts.map(text=>{const found=pool.find(x=>x.text===text);return '<button class="choice" data-action="structure-answer" data-value="'+esc(text)+'">'+structureItemHTML(found)+'</button>'}).join("")+'</div>'+
  '<div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : '+masteryStars(structureMasteryKey(currentAnswer))+'</div>'+
  '<div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
- '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="'+(isVc?"game-vc":"game-cvc")+'">Nouvelle syllabe →</button>')+'</div>';
+ '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':fromParent?'<button class="btn gray" data-action="go" data-to="parents">← Retour au bilan</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="'+(isVc?"game-vc":"game-cvc")+'">Nouvelle syllabe →</button>')+'</div>';
  playInstruction(isVc?"Écoute la syllabe inversée, puis touche son écriture.":"Écoute la syllabe à trois lettres, puis touche son écriture.",()=>speak(currentAnswer,.60))
 }
-function gameVC(forcedText=null,fromMission=false){gameStructure("vc",forcedText,fromMission)}
-function gameCVC(forcedText=null,fromMission=false){gameStructure("cvc",forcedText,fromMission)}
+function gameVC(forcedText=null,fromMission=false,fromParent=false){gameStructure("vc",forcedText,fromMission,fromParent)}
+function gameCVC(forcedText=null,fromMission=false,fromParent=false){gameStructure("cvc",forcedText,fromMission,fromParent)}
 
 function wordEncodePool(){
  return decodableMissionWords().filter(word=>word.parts.length>=2&&word.parts.length<=4)
