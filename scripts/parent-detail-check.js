@@ -28,6 +28,24 @@ module.exports=async function checkParentDetail(page){
  await page.locator('[data-action="parent-review"]').first().click();
  await page.reload();await page.waitForFunction(()=>currentView==='parents');
  assert.equal(await page.evaluate(()=>JSON.stringify(normalizeState(state).dailyMission)),mission);
+
+ // Parent-targeted VC/CVC reviews must not alter the daily mission.
+ await page.evaluate(()=>{
+  const cv=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat().slice(0,VC_STRUCTURE_MIN_SECURE),mastery=Object.fromEntries(cv.map(x=>[x,{attempts:2,correct:2,lastSeen:localDayKey()}]));
+  mastery[structureMasteryKey('il')]={attempts:1,correct:0,lastSeen:localDayKey()};
+  state=normalizeState({mastery});buildDailyMission();save();activate('parents');
+ });
+ const structureMission=await page.evaluate(()=>JSON.stringify(normalizeState(state).dailyMission));
+ assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Parent structure review overflows');
+ const structureButton=page.locator('[data-action="parent-structure-review"][data-kind="vc"][data-target="il"]');
+ assert.equal(await structureButton.count(),1,'Failed VC structure is not surfaced to parent');
+ await structureButton.click();
+ assert.equal(await page.evaluate(()=>currentAnswer),'il');assert.equal(await page.evaluate(()=>missionMode),false);
+ await page.locator('[data-action="structure-answer"][data-value="il"]').click();
+ assert.equal(await page.evaluate(()=>JSON.stringify(normalizeState(state).dailyMission)),structureMission);
+ await page.getByRole('button',{name:'← Retour au bilan'}).click();
+ assert.equal(await page.evaluate(()=>currentView),'parents');
+
  await page.evaluate(raw=>{state=normalizeState(JSON.parse(raw));missionMode=false;activate('home')},before);
- console.log('Parent detail OK: distinct learning states, 60 targets, locked families, keyboard practice, return and reload without mission changes');
+ console.log('Parent detail OK: CV and VC/CVC targeted practice, return/reload, and mission isolation');
 };
