@@ -117,6 +117,7 @@ module.exports=async function auditGames(page){
     check(JSON.stringify([state.stats,state.stars,state.mastery])===before,'silent-e discovery inflated scored mastery');
     counts.silentE++;
    }
+   const miniKinds=new Set(miniTextPool().map(item=>item.kind));check(miniKinds.has('subject')&&miniKinds.has('object'),'mini-text question variety missing');
    for(const item of miniTextPool()){
     gameMiniText(item.id);check(currentMiniText?.id===item.id,'wrong mini-text target');
     check(document.querySelectorAll('.mini-text-reading .readaloud-sentence').length===2,'mini-text must contain two sentences');
