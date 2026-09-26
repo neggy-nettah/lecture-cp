@@ -135,12 +135,12 @@ function updateEncode(){
 function structureItemHTML(item){
  return (item?.parts||[]).map(part=>'<span class="'+("aioueé".includes(part)?"blue":"red")+'">'+esc(part)+'</span>').join("")
 }
-function gameStructure(id){
+function gameStructure(id,forcedText=null){
  const unlocked=id==="vc"?vcStructureUnlocked():cvcStructureUnlocked();
  if(!unlocked){activate("games");return}
  const pool=availableStructureItems(id);if(pool.length<2){activate("games");return}
  missionMode=false;currentView=id+"-structures";state.lastView=currentView;save(false);locked=false;resetQuestionTracking();
- const item=pick(pool);currentAnswer=item.text;
+ const item=forcedText&&pool.some(x=>x.text===forcedText)?pool.find(x=>x.text===forcedText):pick(pool);currentAnswer=item.text;
  const opts=nextRandom(pool.map(x=>x.text),currentAnswer,4),isVc=id==="vc";
  const explanation=isVc?"La voyelle peut venir avant la consonne.":"La syllabe peut avoir un son au début et un autre à la fin.";
  const example=isVc?"i + l = il":"m + a + l = mal";
@@ -154,8 +154,8 @@ function gameStructure(id){
  '<div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="'+(isVc?"game-vc":"game-cvc")+'">Nouvelle syllabe →</button></div>';
  playInstruction(isVc?"Écoute la syllabe inversée, puis touche son écriture.":"Écoute la syllabe à trois lettres, puis touche son écriture.",()=>speak(currentAnswer,.60))
 }
-function gameVC(){gameStructure("vc")}
-function gameCVC(){gameStructure("cvc")}
+function gameVC(forcedText=null){gameStructure("vc",forcedText)}
+function gameCVC(forcedText=null){gameStructure("cvc",forcedText)}
 
 function wordEncodePool(){
  return decodableMissionWords().filter(word=>word.parts.length>=2&&word.parts.length<=4)
