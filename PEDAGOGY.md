@@ -229,7 +229,7 @@ Les erreurs récentes dans `reviewQueue` restent prioritaires sur cette planific
 
 ### Compréhension autonome
 
-Les mini-textes ne déclenchent plus automatiquement la question après la consigne. L’enfant lit d’abord les deux phrases à son rythme, puis demande lui-même l’audio de la question. Cela évite de transformer la lecture en course contre l’interface.
+Les mini-textes ne déclenchent plus automatiquement la question après la consigne. L’enfant lit d’abord les deux phrases à son rythme, puis demande lui-même la question. Au clic, elle est à la fois lue à voix haute et affichée : l’exercice reste donc compréhensible si l’audio échoue. Cela évite aussi de transformer la lecture en course contre l’interface.
 
 Les questions alternent maintenant deux opérations simples :
 - retrouver **qui** possède un objet ;
