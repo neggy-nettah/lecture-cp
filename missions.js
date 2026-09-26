@@ -10,6 +10,7 @@ function missionFocusedWords(words,primary,review){
 }
 function missionStructureTarget(id){
  const pool=availableStructureItems(id);if(!pool.length)return null;
+ const review=structureReviewCandidates(id);if(review.length)return review[0].item.text;
  const min=Math.min(...pool.map(item=>structureMasteryLevel(item.text))),weak=pool.filter(item=>structureMasteryLevel(item.text)===min);
  return pick(weak)?.text||null
 }
