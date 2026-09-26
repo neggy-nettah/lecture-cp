@@ -203,6 +203,17 @@ Deux badges récompensent ces étapes : **As des syllabes inversées** et **Bât
 
 Les seuils sont des réglages produit prudents et pourront évoluer après observation réelle avec des enfants.
 
+## Intégration VC/CVC dans les missions
+
+Une fois débloquées, les structures VC et CVC ne restent pas cantonnées aux mini-jeux. Elles peuvent apparaître à l’étape variée de la mission du jour.
+
+La sélection suit deux règles :
+
+- la mission choisit d’abord une syllabe de structure parmi les moins maîtrisées ;
+- tant qu’un palier nouvellement ouvert n’a pas encore 4 syllabes consolidées, il devient prioritaire un jour sur deux, afin d’éviter qu’il soit débloqué mais presque jamais travaillé.
+
+Une mission VC/CVC sauvegardée n’est considérée valide que si le palier est toujours disponible dans l’état courant. Si une ancienne sauvegarde ou un import ramène la progression avant ce palier, la mission est reconstruite proprement.
+
 ## Audio et prononciation
 
 La synthèse vocale actuelle est une aide de prototypage.

@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.45.0";
+const APP_VERSION="0.46.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -932,7 +932,7 @@ document.addEventListener("click",e=>{
  if(a==="structure-answer"){
    if(locked||typeof currentAnswer!=="string")return;
    const value=b.dataset.value,key=structureMasteryKey(currentAnswer),isVc=currentView==="vc-structures",kind=isVc?"vc":"cvc";
-   if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(key,kind+":"+currentAnswer);rewardVerified("Syllabe réussie !",kind+":"+currentAnswer);setDone(isVc?"vcStructures":"cvcStructures");$("#feedback").innerHTML='<div class="ok">🎉 Bravo : <b>'+esc(currentAnswer)+'</b></div>';speak(currentAnswer,.60);if(state.streak>0&&state.streak%5===0)confetti()}
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(key,kind+":"+currentAnswer);rewardVerified("Syllabe réussie !",kind+":"+currentAnswer);setDone(isVc?"vcStructures":"cvcStructures");$("#feedback").innerHTML='<div class="ok">🎉 Bravo : <b>'+esc(currentAnswer)+'</b></div>';speak(currentAnswer,.60);if(state.streak>0&&state.streak%5===0)confetti();completeMissionStep()}
    else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError(key);miss("Écoute encore la syllabe.");speak(currentAnswer,.60);setTimeout(()=>b.classList.remove("wrong","wiggle"),650)}
    return
  }
