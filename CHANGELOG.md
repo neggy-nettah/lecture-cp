@@ -9,6 +9,7 @@
 - maîtrise VC/CVC persistante dans les sauvegardes, imports et fusions multi-appareils
 - mauvaises réponses suivies d’une correction exclues de la maîtrise, comme dans les autres exercices
 - deux nouveaux badges liés à la maîtrise réelle : « As des syllabes inversées » et « Bâtisseur de syllabes »
+- bilan parent enrichi avec le nombre de syllabes VC/CVC réellement consolidées et le prochain verrou
 - fin de parcours lecture mise à jour pour exiger aussi une base VC/CVC
 - tests de contenu, runtime et navigateur étendus aux nouveaux paliers
 
