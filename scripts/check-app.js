@@ -144,6 +144,15 @@ if(!app.includes('function speakMission(text,rate=.60,cb){speak(text,rate,cb)}')
 if((app.match(/instructionAudio\(/g)||[]).length<10||!app.includes('if(fromMission)playInstruction(')){
   fail("Replayable spoken instructions are missing from the autonomous reading flow.");
 }
+if(!app.includes("blendAudio=first.length>1")||!app.includes('DATA.sounds.find(x=>x.g===first)?.say')){
+  fail("Multi-letter grapheme blend audio safeguard is missing.");
+}
+if(app.includes("=>speak(item.question,.78)")||!app.includes("Quand tu as fini, touche le bouton pour écouter la question")){
+  fail("Mini-text question must wait for the child to request it.");
+}
+if(!app.includes('id="miniTextQuestion"')||!app.includes('if(q)q.hidden=false')){
+  fail("Mini-text question needs a visible fallback when requested.");
+}
 
 if(/service[_-]?role/i.test(app)){
   fail("Possible Supabase service-role credential found in client code.");

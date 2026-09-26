@@ -113,11 +113,14 @@ const DATA={
 };
 
 const MINI_TEXTS=[
- {id:"velo-sari",sentences:[["Lili","a","un","vélo."],["Mila","a","un","sari."]],question:"Qui a le vélo ?",answer:"Lili",choices:["Lili","Mila"]},
- {id:"sari-salami",sentences:[["Sami","a","un","salami."],["Mila","a","un","sari."]],question:"Qui a le sari ?",answer:"Mila",choices:["Sami","Mila"]},
- {id:"lama-tutu",sentences:[["Lola","a","un","lama."],["Lili","a","un","tutu."]],question:"Qui a le lama ?",answer:"Lola",choices:["Lola","Lili"]},
- {id:"tuba-velo",sentences:[["Papi","a","un","tuba."],["Papa","a","un","vélo."]],question:"Qui a le tuba ?",answer:"Papi",choices:["Papi","Papa"]},
- {id:"domino-radio",sentences:[["Lili","a","un","domino."],["Mila","a","une","radio."]],question:"Qui a la radio ?",answer:"Mila",choices:["Lili","Mila"]}
+ {id:"velo-sari",kind:"subject",sentences:[["Lili","a","un","vélo."],["Mila","a","un","sari."]],question:"Qui a le vélo ?",answer:"Lili",choices:["Lili","Mila"]},
+ {id:"sari-salami",kind:"object",sentences:[["Sami","a","un","salami."],["Mila","a","un","sari."]],question:"Qu’est-ce que Mila a ?",answer:"sari",choices:["salami","sari"]},
+ {id:"lama-tutu",kind:"subject",sentences:[["Lola","a","un","lama."],["Lili","a","un","tutu."]],question:"Qui a le lama ?",answer:"Lola",choices:["Lola","Lili"]},
+ {id:"tuba-velo",kind:"object",sentences:[["Papi","a","un","tuba."],["Papa","a","un","vélo."]],question:"Qu’est-ce que Papa a ?",answer:"vélo",choices:["tuba","vélo"]},
+ {id:"domino-radio",kind:"object",sentences:[["Lili","a","un","domino."],["Mila","a","une","radio."]],question:"Qu’est-ce que Mila a ?",answer:"radio",choices:["domino","radio"]},
+ {id:"dino-domino",kind:"subject",sentences:[["Sami","a","un","dino."],["Lili","a","un","domino."]],question:"Qui a le dino ?",answer:"Sami",choices:["Sami","Lili"]},
+ {id:"polo-tuba",kind:"object",sentences:[["Papi","a","un","tuba."],["Nina","a","un","polo."]],question:"Qu’est-ce que Nina a ?",answer:"polo",choices:["tuba","polo"]},
+ {id:"joli-polo-velo",kind:"object",sentences:[["Lili","a","un","joli","polo."],["Mila","a","un","joli","vélo."]],question:"Qu’est-ce que Lili a ?",answer:"polo",choices:["polo","vélo"]}
 ];
 
 const COLLECTIBLES=[

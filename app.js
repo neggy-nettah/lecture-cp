@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.43.0";
+const APP_VERSION="0.44.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -989,7 +989,7 @@ document.addEventListener("click",e=>{
  if(a==="readaloud-model"){speak(readAloudSentence.join(" "),.76);return}
  if(a==="game-comprehension"){gameComprehension();return}
  if(a==="game-mini-text"){gameMiniText();return}
- if(a==="mini-text-question"){if(currentMiniText?.question)speak(currentMiniText.question,.78);return}
+ if(a==="mini-text-question"){if(currentMiniText?.question){const q=$("#miniTextQuestion");if(q)q.hidden=false;speak(currentMiniText.question,.78)}return}
  if(a==="comprehension-answer"){
    if(locked)return;
    const value=b.dataset.value,key="comprehension:"+currentAnswer;

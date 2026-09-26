@@ -37,12 +37,13 @@ function sounds(){
 }
 function syllables(){
  const max=Math.max(1,unlockedFamilyCount());if(state.set>=max)state.set=max-1;
- const set=DATA.sets[state.set%max],first=familyGraphemeAt(state.set%max);
+ const set=DATA.sets[state.set%max],first=familyGraphemeAt(state.set%max),blendTarget=first+"a";
+ const blendAudio=first.length>1?((DATA.sounds.find(x=>x.g===first)?.say||first)+" ... a ... "+blendTarget):(first+first+first+"a");
  stage.innerHTML=title("Fabrique les syllabes","Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.","Niveau 2")+
  instructionAudio("Écoute comment le premier son se colle à la voyelle, puis touche les syllabes pour t’entraîner.")+
  `<div class="card center">
    <div class="big" style="font-size:56px"><span class="red">${first}</span> + <span class="blue">a</span> = <span class="purple">${first}a</span></div>
-   <button class="btn primary" data-action="speak" data-text="${first+first+first+'a'}" data-rate=".55">🔊 Écouter : ${first}…a → ${first}a</button>
+   <button class="btn primary" data-action="speak" data-text="${esc(blendAudio)}" data-rate=".55">🔊 Écouter : ${first}…a → ${blendTarget}</button>
    <div style="margin-top:12px">${set.map(s=>`<button class="syllable" data-action="speak" data-text="${s}" data-rate=".62"><span>${colorSyl(s)}</span><small>${masteryStars(s)}</small></button>`).join("")}</div>
  </div>
  <div class="card"><b>🗺️ Mes familles de syllabes</b><p style="color:var(--muted);font-size:13px;margin:5px 0">Les nouvelles familles arrivent petit à petit avec les missions.</p>${familyRoadmapHTML()}</div>
@@ -75,7 +76,7 @@ function gamesMenu(){
  stage.innerHTML=title("Les mini-jeux","Des exercices très courts pour garder l'envie de lire.","À toi de jouer !")+
  `<div class="levels">
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
-  <button class="level" data-action="game-encode"><div class="ico">✍️</div><b>J’écris la syllabe</b><small>J’entends puis je choisis les lettres</small></button>
+  <button class="level" data-action="game-encode"><div class="ico">✍️</div><b>J’écris la syllabe</b><small>J’entends puis je choisis les bons morceaux</small></button>
   <button class="level" data-action="game-word-encode" ${wordEncodingUnlocked()?"":"disabled"}><div class="ico">${wordEncodingUnlocked()?"📝":"🔒"}</div><b>J’écris le mot</b><small>${wordEncodingUnlocked()?"J’écoute puis j’assemble les syllabes":wordEncodingUnlockText()}</small></button>
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
@@ -363,12 +364,13 @@ function gameMiniText(forcedId=null){
  `<div class="card center"><div class="hero-emoji">📚✨</div>
  <div class="mini-text-reading">${item.sentences.map(sentence=>`<div class="readaloud-sentence">${sentence.map(esc).join(" ")}</div>`).join("")}</div>
  ${phraseToolHelpHTML(tokens)}
- <div class="tip">Le bouton audio lit seulement la question. Il ne lit pas le texte à ta place.</div>
+ <div class="tip"><b>1.</b> Lis les deux phrases. <b>2.</b> Quand tu as fini, touche 🔊 pour entendre la question. <b>3.</b> Choisis la bonne réponse.</div>
  <div class="actions" style="margin-top:12px"><button class="btn yellow" data-action="mini-text-question">🔊 Écouter la question</button></div>
+ <div id="miniTextQuestion" class="tip" hidden><b>Question :</b> ${esc(item.question)}</div>
  <div class="choices">${opts.map(name=>`<button class="choice" data-action="mini-text-answer" data-value="${esc(name)}">${esc(name)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-mini-text">Nouveau mini-texte →</button></div>`;
- playInstruction("Lis les deux phrases tranquillement. Ensuite, écoute la question et touche la bonne réponse.",()=>speak(item.question,.78))
+ playInstruction("Lis les deux phrases tranquillement. Quand tu as fini, touche le bouton pour écouter la question, puis choisis la bonne réponse.")
 }
 
 function gameReadAloud(forcedSentence=null){

@@ -117,10 +117,12 @@ module.exports=async function auditGames(page){
     check(JSON.stringify([state.stats,state.stars,state.mastery])===before,'silent-e discovery inflated scored mastery');
     counts.silentE++;
    }
+   const miniKinds=new Set(miniTextPool().map(item=>item.kind));check(miniKinds.has('subject')&&miniKinds.has('object'),'mini-text question variety missing');
    for(const item of miniTextPool()){
     gameMiniText(item.id);check(currentMiniText?.id===item.id,'wrong mini-text target');
     check(document.querySelectorAll('.mini-text-reading .readaloud-sentence').length===2,'mini-text must contain two sentences');
-    check(!stage.textContent.includes(item.question),'mini-text question leaked as readable text');
+    const question=document.querySelector('#miniTextQuestion');check(!!question&&question.hidden,'mini-text question visible before request');
+    document.querySelector('[data-action="mini-text-question"]').click();check(!question.hidden&&question.textContent.includes(item.question),'mini-text question fallback did not appear');
     answer('mini-text-answer',item.answer,true);counts.miniTexts++;
    }
    state=normalizeState({});gamePicture();const independentTarget=currentAnswer;answer('picture-answer',independentTarget);
