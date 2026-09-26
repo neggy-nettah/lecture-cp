@@ -729,7 +729,7 @@ function parents(){
  <div class="card"><b>💾 Sauvegarde automatique</b><p style="color:var(--muted);font-size:13px">En mode invité, la progression reste sur cet appareil. Avec un compte parent et un profil enfant, elle est aussi synchronisée en ligne. Une copie locale est conservée avant toute remise à zéro.</p><div class="actions">${hasBackup()?'<button class="btn good" data-action="restore-backup">↩ Restaurer la dernière sauvegarde</button>':''}<button class="btn gray" data-action="reset">Réinitialiser toute la progression</button></div></div>`;
 }
 function render(){
- document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView || (GAME_VIEWS.has(currentView)&&b.dataset.view==="games") || (MISSION_VIEWS.has(currentView)&&b.dataset.view==="home")));
+ document.querySelectorAll(".nav-btn").forEach(b=>{const active=b.dataset.view===currentView||(GAME_VIEWS.has(currentView)&&b.dataset.view==="games")||(MISSION_VIEWS.has(currentView)&&b.dataset.view==="home");b.classList.toggle("active",active);b.setAttribute("aria-current",active?"page":"false")});
  const views={
   home,sounds,syllables,words,games:gamesMenu,world:worldView,collection:collectionView,parents,
   mission:missionHub,"mission-complete":missionComplete,
