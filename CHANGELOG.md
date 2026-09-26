@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.42.0 — 2026-09-26
+
+- durcissement navigateur avec Content Security Policy limitée au CDN JS et au projet Supabase configuré
+- dépendance Supabase JS déjà figée sur une version exacte et fonctionnement local testé lorsque son CDN est indisponible
+- confidentialité documentée dans `PRIVACY.md` avec inventaire des données et blocages avant lancement
+- diagnostic technique testé pour ne pas exposer email ni identifiants parent/enfant
+- création de profil limitée au CP réellement supporté ; GS et CE1 affichés comme à venir
+- formulaire enfant encourage un pseudo ou prénom sans nom complet
+- interface par défaut rendue neutre pour convenir à plusieurs enfants
+- cibles tactiles portées à 44 px minimum et auditées sur les écrans principaux
+- audit navigateur de base : IDs dupliqués, boutons sans nom et champs visibles sans label
+- progression exposée comme `progressbar`, synchronisation comme statut accessible et navigation active via `aria-current`
+- gel pédagogique désormais imposé par la CI : 12 familles actives et aucun graphème complexe nouveau pendant la stabilisation
+- smoke WebKit rendu tolérant au cycle de navigation/service worker et validé
+- cache hors ligne et assets renouvelés pour la v0.42.0
+
 ## 0.41.0 — 2026-09-26
 
 - passage officiel en phase de stabilisation produit ; extension pédagogique temporairement gelée
