@@ -666,8 +666,8 @@ function parseProgressImport(text){
  const validSyllables=new Set(DATA.sets.flat()),validMastery=new Set([...validSyllables,...DATA.words.map(w=>"word:"+w.w)]),cleanMastery={};
  Object.entries(imported.mastery||{}).forEach(([k,v])=>{
   if(!validMastery.has(k)||!v||typeof v!=="object")return;
-  const attempts=Math.max(0,Math.floor(Number(v.attempts||0))),correct=Math.min(attempts,Math.max(0,Math.floor(Number(v.correct||0))));
-  cleanMastery[k]={attempts,correct,lastSeen:v.lastSeen||null,lastCorrect:v.lastCorrect||null}
+  const attempts=stateCount(v.attempts),correct=Math.min(attempts,stateCount(v.correct));
+  cleanMastery[k]={attempts,correct,lastSeen:stateDay(v.lastSeen),lastCorrect:stateDay(v.lastCorrect)}
  });
  imported.mastery=cleanMastery;
  imported.reviewQueue=(imported.reviewQueue||[]).filter(s=>validSyllables.has(s)).slice(-50);
@@ -678,7 +678,7 @@ function parseProgressImport(text){
  imported.rewardLedger=Object.fromEntries(Object.entries(imported.rewardLedger||{}).filter(([,v])=>!!v).slice(-300));
  const rewardIds=new Set(COLLECTIBLES.map(x=>x.id)),seenRewards=new Set(),collection=[];
  (imported.rewards?.collection||[]).forEach(x=>{if(x&&rewardIds.has(x.id)&&!seenRewards.has(x.id)){collection.push(COLLECTIBLES.find(c=>c.id===x.id));seenRewards.add(x.id)}});
- imported.rewards={towardPiece:0,pieces:Math.min(3,Math.max(0,Math.floor(Number(imported.rewards?.pieces||0)))),puzzles:Math.max(0,Math.floor(Number(imported.rewards?.puzzles||0))),collection};
+ imported.rewards={towardPiece:0,pieces:Math.min(3,stateCount(imported.rewards?.pieces)),puzzles:stateCount(imported.rewards?.puzzles),collection};
  if(!validDailyMission(imported.dailyMission)||imported.dailyMission.date!==localDayKey())imported.dailyMission=null;
  return imported
 }
