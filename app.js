@@ -562,7 +562,7 @@ function missionsLast7Days(){
  return missionDates().filter(date=>date>=key).length
 }
 function badgeData(){
- const missions=completedMissionCount(),ms=masterySummary(),stars=state.stars||0,streak=bestMissionStreak();
+ const missions=completedMissionCount(),ms=masterySummary(),stars=state.stars||0,streak=bestMissionStreak(),vc=structureMasterySummary("vc"),cvc=structureMasterySummary("cvc");
  return [
   {emoji:"🌟",name:"Première étoile",desc:"Gagner une étoile",ok:stars>=1},
   {emoji:"🏁",name:"Première mission",desc:"Terminer une mission",ok:missions>=1},
@@ -572,7 +572,9 @@ function badgeData(){
   {emoji:"💫",name:"50 étoiles",desc:"Gagner 50 étoiles",ok:stars>=50},
   {emoji:"🗺️",name:"Grande aventure",desc:"Terminer 10 missions",ok:missions>=10},
   {emoji:"👑",name:"As de la lecture",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30},
-  {emoji:"🔤",name:"Explorateur du CH",desc:"Atteindre la première famille à trois lettres",ok:unlockedFamilyCount()>=DATA.sets.length},
+  {emoji:"↩️",name:"As des syllabes inversées",desc:"Consolider 4 syllabes VC",ok:vc.secure>=4},
+  {emoji:"🧱",name:"Bâtisseur de syllabes",desc:"Consolider 4 syllabes CVC",ok:cvc.secure>=4},
+  {emoji:"🔤",name:"Explorateur du CH",desc:"Atteindre la famille CH",ok:unlockedFamilyCount()>=DATA.sets.length},
   {emoji:"🤫",name:"Détective du e muet",desc:"Découvrir le e final muet",ok:!!state.done?.silentE},
   {emoji:"🌙",name:"Voyage au long cours",desc:"Terminer 20 missions",ok:missions>=20},
   {emoji:"🏆",name:"Grand lecteur",desc:"Terminer 40 missions",ok:missions>=40}
