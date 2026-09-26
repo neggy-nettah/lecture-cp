@@ -153,6 +153,15 @@ function structureMasterySummary(id){
  const items=structureStage(id)?.items||[],levels=items.map(item=>structureMasteryLevel(item.text));
  return {total:items.length,started:levels.filter(x=>x>0).length,secure:levels.filter(x=>x>=2).length,mastered:levels.filter(x=>x>=3).length}
 }
+function structureReviewCandidates(id){
+ return availableStructureItems(id).map(item=>{
+  const key=structureMasteryKey(item.text),m=state.mastery?.[key]||{attempts:0,correct:0},level=masteryLevel(key),due=reviewDueInfo(key);
+  if((m.attempts||0)>0&&level===0)return {item,key,m,level,due,priority:0,reason:"error"};
+  if(due.due)return {item,key,m,level,due,priority:1,reason:"due"};
+  if((m.attempts||0)>0&&level<3)return {item,key,m,level,due,priority:2,reason:"learning"};
+  return null
+ }).filter(Boolean).sort((a,b)=>a.priority-b.priority||b.due.overdue-a.due.overdue||a.level-b.level||a.item.text.localeCompare(b.item.text))
+}
 function availableStructureItems(id){
  const stage=structureStage(id),allowed=activeSoundGraphemes();if(!stage)return [];
  return stage.items.filter(item=>item.parts.every(part=>"aioueé".includes(part)||allowed.has(part)))
