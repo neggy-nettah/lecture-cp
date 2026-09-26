@@ -19,7 +19,7 @@ Pouvoir faire utiliser l’application plusieurs jours sur iPhone, iPad/Mac et p
 - [x] smoke test WebKit intégré et vert dans la CI
 - [ ] audit direct du projet Supabase : tables, RLS et advisors sécurité
 - [ ] vérification audio sur Safari macOS réel
-- [ ] plusieurs séances réelles avec Caly sans aide adulte pour relever les frictions UX
+- [ ] plusieurs séances réelles avec Caly sans aide adulte pour relever les frictions UX (`DEVICE_TEST.md`)
 - [ ] revue finale confidentialité/données enfant avant diffusion publique
 - [ ] revue finale design/identité avant commercialisation
 
