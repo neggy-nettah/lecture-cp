@@ -81,6 +81,7 @@ function gamesMenu(){
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
   <button class="level" data-action="game-family"><div class="ico">🔎</div><b>Trouve l’intrus</b><small>Repère la syllabe qui n’est pas de la même famille</small></button>
   <button class="level" data-action="game-missing"><div class="ico">🕵️</div><b>Syllabe manquante</b><small>Complète le mot avec la bonne syllabe</small></button>
+  <button class="level" data-action="game-silent-e" ${silentEUnlocked()?"":"disabled"}><div class="ico">${silentEUnlocked()?"🤫":"🔒"}</div><b>Le e muet</b><small>${silentEUnlocked()?"Je repère la lettre écrite qu’on n’entend pas":silentEUnlockText()}</small></button>
   <button class="level" data-action="game-pronunciation"><div class="ico">🎤</div><b>Écoute & répète <span class="beta-pill">BÊTA</span></b><small>Entraînement seulement • pas d’étoile</small></button>
   <button class="level" data-action="game-picture"><div class="ico">🖼️</div><b>Mot & image</b><small>Quel mot correspond à l'image ?</small></button>
   <button class="level" data-action="game-build"><div class="ico">🧱</div><b>Construis le mot</b><small>Remets les syllabes dans l'ordre</small></button>
@@ -101,8 +102,8 @@ function encodeLetterPool(target){
 function gameEncode(forcedTarget=null,fromMission=false){
  missionMode=fromMission;currentView="encode";state.lastView=fromMission?"mission":"encode";save(false);currentAnswer=forcedTarget||pickLearningSyllable();encodeMade=[];locked=false;resetQuestionTracking();
  const letters=encodeLetterPool(currentAnswer);
- stage.innerHTML=title("J’écris la syllabe","Écoute, puis fabrique la syllabe avec deux lettres.","Encodage")+
- instructionAudio("Écoute la syllabe, puis touche les deux lettres dans le bon ordre.")+
+ stage.innerHTML=title("J’écris la syllabe","Écoute, puis fabrique la syllabe avec deux morceaux.","Encodage")+
+ instructionAudio("Écoute la syllabe, puis touche les deux morceaux dans le bon ordre. Un morceau peut contenir deux lettres, comme ch.")+
  `<div class="card center"><div class="hero-emoji">✍️🔤</div>
  <button class="btn yellow" data-action="speak" data-text="${esc(currentAnswer)}" data-rate=".60">🔊 Écouter la syllabe</button>
  <div class="encode-zone" id="encodeZone"><span>?</span><span>?</span></div>
@@ -110,7 +111,7 @@ function gameEncode(forcedTarget=null,fromMission=false){
  <div class="actions" style="margin-top:12px"><button class="btn gray" data-action="encode-reset">↩ Recommencer</button></div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-encode">Nouvelle syllabe →</button></div>`;
- playInstruction("Écoute la syllabe, puis touche les deux lettres dans le bon ordre.",()=>speak(currentAnswer,.60))
+ playInstruction("Écoute la syllabe, puis touche les deux morceaux dans le bon ordre.",()=>speak(currentAnswer,.60))
 }
 function updateEncode(){
  const zone=$("#encodeZone");if(!zone)return;
@@ -280,6 +281,27 @@ function gameMissing(forcedWord=null,fromMission=false){
  '<div class="card center"><button class="btn primary" data-action="missing-listen">🔊 Écouter le mot à compléter</button><div class="word">'+puzzle+'</div><div class="choices">'+opts.map(x=>'<button class="choice" data-action="missing-answer" data-value="'+x+'">'+colorSyl(x)+'</button>').join("")+'</div><div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
  '<div class="nextbar">'+(fromMission?'<button class="btn gray" data-action="mission-back">← Mission</button>':'<button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-missing">Nouveau mot →</button>')+'</div>';
  if(fromMission)playInstruction("Écoute le mot, puis touche la syllabe qui manque.",()=>speak(word.w,.70))
+}
+
+function gameSilentE(forcedWord=null){
+ if(!silentEUnlocked()){activate("games");return}
+ missionMode=false;currentView="silent-e";state.lastView="silent-e";save(false);locked=false;resetQuestionTracking();
+ const pool=silentEWordPool(),word=forcedWord&&pool.some(w=>w.w===forcedWord.w)?forcedWord:pick(pool);
+ if(!word){activate("games");return}
+ currentAnswer=word;
+ const choices=shuffle(["e","a","i"]);
+ stage.innerHTML=title("Le e muet","Une lettre peut être écrite sans s’entendre à la fin du mot.","Nouveau palier")+
+ instructionAudio("Écoute le mot. À la fin, le e est écrit mais il ne s’entend pas. Touche la lettre muette.")+
+ \`<div class="card center silent-e-intro"><div class="hero-emoji">🤫🔤</div><p style="margin-top:0">Exemple : dans <b class="silent-example">\${silentEWordHTML("lune",true)}</b>, le <b>e</b> gris reste écrit mais on ne le prononce pas.</p></div>
+ <div class="card center">
+   <button class="btn yellow" data-action="silent-e-listen">🔊 Écouter le mot</button>
+   <div class="word" id="silentEWord">\${silentEWordHTML(word.w,false)}</div>
+   <p style="color:var(--muted)">Quelle lettre est muette à la fin ?</p>
+   <div class="choices">\${choices.map(letter=>\`<button class="choice" data-action="silent-e-answer" data-value="\${letter}">\${letter}</button>\`).join("")}</div>
+   <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+ </div>
+ <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-silent-e">Nouveau mot →</button></div>\`;
+ playInstruction("Écoute le mot. Le e à la fin est écrit, mais il ne s’entend pas. Touche la lettre muette.",()=>speak(word.w,.70))
 }
 
 function pictureWordPool(){return decodableMissionWords().filter(w=>PICTURE_WORDS.includes(w.w))}
