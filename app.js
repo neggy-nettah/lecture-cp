@@ -11,7 +11,7 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 const UI_TEXT_SIZE_KEY="lectureCpLargeText";
-const GAME_VIEWS=new Set(["listen","encode","word-encode","bubbles","memory","family","missing","silent-e","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
+const GAME_VIEWS=new Set(["listen","encode","vc-structures","cvc-structures","word-encode","bubbles","memory","family","missing","silent-e","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
 const MISSION_VIEWS=new Set(["mission","mission-discover","mission-complete"]);
 const RESTORABLE_VIEWS=new Set(["home","sounds","syllables","words","games","world","collection","parents","mission","mission-complete",...GAME_VIEWS]);
 function normalizedView(value){return typeof value==="string"&&RESTORABLE_VIEWS.has(value)?value:"home"}
@@ -102,6 +102,7 @@ function mergeProgressStates(localRaw,remoteRaw){
 function validMasteryKey(key){
  if(typeof key!=="string")return false;
  if(DATA.sets.flat().includes(key))return true;
+ if(key.startsWith("structure:")){const value=key.slice(10);return SYLLABLE_STRUCTURE_PLAN.some(stage=>stage.items.some(item=>item.text===value))}
  if(!key.startsWith("word:"))return false;
  const word=key.slice(5);return DATA.words.some(item=>item.w===word)
 }
@@ -750,7 +751,7 @@ function render(){
  const views={
   home,sounds,syllables,words,games:gamesMenu,world:worldView,collection:collectionView,parents,
   mission:missionHub,"mission-complete":missionComplete,
-  listen:gameListen,encode:gameEncode,"word-encode":gameWordEncode,bubbles:gameBubbles,memory:gameMemory,
+  listen:gameListen,encode:gameEncode,"vc-structures":gameVC,"cvc-structures":gameCVC,"word-encode":gameWordEncode,bubbles:gameBubbles,memory:gameMemory,
   family:gameFamily,missing:gameMissing,"silent-e":gameSilentE,pronunciation:gamePronunciation,pictures:gamePicture,build:gameBuild,
   order:gameOrder,readaloud:gameReadAloud,comprehension:gameComprehension,"mini-text":gameMiniText
  };
@@ -921,6 +922,16 @@ document.addEventListener("click",e=>{
  if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();refreshPracticeScreen(words,a);practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-encode"){gameEncode();return}
+ if(a==="game-vc"){gameVC();return}
+ if(a==="game-cvc"){gameCVC();return}
+ if(a==="structure-repeat"){if(typeof currentAnswer==="string")speak(currentAnswer,.60);return}
+ if(a==="structure-answer"){
+   if(locked||typeof currentAnswer!=="string")return;
+   const value=b.dataset.value,key=structureMasteryKey(currentAnswer),isVc=currentView==="vc-structures",kind=isVc?"vc":"cvc";
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(key,kind+":"+currentAnswer);rewardVerified("Syllabe réussie !",kind+":"+currentAnswer);setDone(isVc?"vcStructures":"cvcStructures");$("#feedback").innerHTML='<div class="ok">🎉 Bravo : <b>'+esc(currentAnswer)+'</b></div>';speak(currentAnswer,.60);if(state.streak>0&&state.streak%5===0)confetti()}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError(key);miss("Écoute encore la syllabe.");speak(currentAnswer,.60);setTimeout(()=>b.classList.remove("wrong","wiggle"),650)}
+   return
+ }
  if(a==="game-word-encode"){gameWordEncode();return}
  if(a==="word-encode-listen"){if(currentAnswer?.w)speak(currentAnswer.w,.68);return}
  if(a==="word-encode-token"){if(locked||b.disabled||!currentAnswer?.parts||wordEncodeMade.length>=currentAnswer.parts.length)return;b.disabled=true;wordEncodeMade.push(b.dataset.value);updateWordEncode();return}
