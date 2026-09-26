@@ -8,6 +8,11 @@ function missionWordMatchesFocus(word,primary,review){
 function missionFocusedWords(words,primary,review){
  return (words||[]).filter(word=>missionWordMatchesFocus(word,primary,review))
 }
+function missionStructureTarget(id){
+ const pool=availableStructureItems(id);if(!pool.length)return null;
+ const min=Math.min(...pool.map(item=>structureMasteryLevel(item.text))),weak=pool.filter(item=>structureMasteryLevel(item.text)===min);
+ return pick(weak)?.text||null
+}
 
 function buildDailyMission(){
  const primary=pickLearningSyllable(),review=pickReviewSyllable(primary),decodable=decodableMissionWords();
@@ -16,8 +21,8 @@ function buildDailyMission(){
  const pool=freshRelated.length?freshRelated:related.length?related:freshAll.length?freshAll:decodable.length?decodable:DATA.words,word=pick(pool);
  const family=DATA.sets.find(set=>set.includes(primary))||DATA.sets[0],comprehensionPool=sentenceUnlocked()?comprehensionSentencePool():[];
  const focusedComprehension=comprehensionPool.filter(item=>missionWordMatchesFocus(item.word,primary,review));
- const encodeReady=completedMissionCount()>=3&&masterySummary().learning+masterySummary().mastered>=6;
- const visualModes=["memory","family","missing",...(encodeReady?["encode"]:[]),...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
+ const encodeReady=completedMissionCount()>=3&&masterySummary().learning+masterySummary().mastered>=6,vcTarget=vcStructureUnlocked()?missionStructureTarget("vc"):null,cvcTarget=cvcStructureUnlocked()?missionStructureTarget("cvc"):null;
+ const visualModes=["memory","family","missing",...(encodeReady?["encode"]:[]),...(vcTarget?["vc"]:[]),...(cvcTarget?["cvc"]:[]),...((focusedComprehension.length||comprehensionPool.length)?["comprehension"]:[])],visualType=visualModes[Number(localDayKey().slice(-2))%visualModes.length];
  const missingCandidates=missingSyllableWords(),focusedMissing=missionFocusedWords(missingCandidates,primary,review),missingBase=focusedMissing.length?focusedMissing:missingCandidates,missingPool=missingBase.filter(w=>w.w!==word.w),missingWord=pick(missingPool.length?missingPool:missingBase)||word;
  const comprehensionBase=focusedComprehension.length?focusedComprehension:comprehensionPool,comprehensionChoices=comprehensionBase.filter(x=>x.word.w!==word.w),comprehensionItem=pick(comprehensionChoices.length?comprehensionChoices:comprehensionBase);
  const visualStep=visualType==="memory"
@@ -26,6 +31,10 @@ function buildDailyMission(){
    ?{type:"family",target:familyGraphemeForSet(family),title:"J’observe",detail:"Trouve l’intrus de la famille "+familyGraphemeForSet(family).toUpperCase()}
    :visualType==="encode"
     ?{type:"encode",target:review,title:"J’écris",detail:"Écoute puis écris la syllabe "+review.toUpperCase()}
+   :visualType==="vc"&&vcTarget
+    ?{type:"vc",target:vcTarget,title:"Je change l’ordre",detail:"Lis la syllabe inversée "+vcTarget.toUpperCase()}
+   :visualType==="cvc"&&cvcTarget
+    ?{type:"cvc",target:cvcTarget,title:"Je lis 3 lettres",detail:"Lis la syllabe "+cvcTarget.toUpperCase()}
    :visualType==="comprehension"&&comprehensionItem
     ?{type:"comprehension",target:comprehensionItem.word.w,title:"Je comprends",detail:"Lis la phrase et choisis la bonne image"}
     :{type:"missing",target:missingWord.w,title:"Je complète",detail:"Retrouve la syllabe manquante de "+missingWord.w.toUpperCase()};
@@ -40,11 +49,12 @@ function buildDailyMission(){
 }
 function validDailyMission(m){
  if(!m||!stateDay(m.date)||!DATA.sets.flat().includes(m.primary)||!DATA.sets.flat().includes(m.review)||!DATA.words.some(w=>w.w===m.word)||!Array.isArray(m.steps)||m.steps.length!==5)return false;
- const expected=[["discover"],["listen"],["bubbles"],["memory","family","missing","encode","comprehension"],["build"]];
+ const expected=[["discover"],["listen"],["bubbles"],["memory","family","missing","encode","vc","cvc","comprehension"],["build"]];
  return m.steps.every((s,i)=>{
   if(!s||!expected[i].includes(s.type))return false;
   if(s.type==="memory")return true;
   if(s.type==="family")return DATA.sets.some((set,i)=>familyGraphemeAt(i)===s.target);
+  if(["vc","cvc"].includes(s.type))return !!structureStage(s.type)?.items.some(item=>item.text===s.target);
   return ["build","missing","comprehension"].includes(s.type)?DATA.words.some(w=>w.w===s.target):DATA.sets.flat().includes(s.target)
  })
 }
@@ -95,6 +105,8 @@ function startMissionStep(){
  else if(s.type==="family"){const fam=DATA.sets.find((set,i)=>familyGraphemeAt(i)===s.target)||DATA.sets[0];gameFamily(fam,true)}
  else if(s.type==="missing")gameMissing(DATA.words.find(w=>w.w===s.target)||null,true);
  else if(s.type==="encode")gameEncode(s.target,true);
+ else if(s.type==="vc")gameVC(s.target,true);
+ else if(s.type==="cvc")gameCVC(s.target,true);
  else if(s.type==="comprehension")gameComprehension(s.target,true);
  else if(s.type==="build")gameBuild(DATA.words.find(w=>w.w===s.target)||null,true)
 }
