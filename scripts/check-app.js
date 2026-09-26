@@ -73,6 +73,7 @@ const requiredFunctions=[
   "function activeLearningSyllables(",
   "function structureStage(",
   "function structureMasteryKey(",
+  "function structureMasterySummary(",
   "function vcStructureReadiness(",
   "function vcStructureUnlocked(",
   "function cvcStructureReadiness(",
