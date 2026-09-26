@@ -182,6 +182,27 @@ Le moteur :
 
 Le corpus comprend maintenant des mots réguliers associés aux nouveaux paliers, par exemple `zébu`, `zéro`, `kilo`, `kaki`, `kimono`, `chéri` et `chili`.
 
+## Structures de syllabes VC et CVC
+
+La progression ne repose plus uniquement sur des familles de type consonne + voyelle (`ma`, `li`, `so`…). Deux paliers séparés sont maintenant prévus :
+
+- **VC** : voyelle + consonne, par exemple `il`, `or`, `al` ;
+- **CVC** : consonne + voyelle + consonne, par exemple `mal`, `mur`, `fil`, `sol`.
+
+Ces structures sont volontairement séparées des familles CV classiques afin que l’enfant comprenne que l’ordre et la position des graphèmes changent la syllabe, au lieu de simplement apprendre une liste plus longue.
+
+Le déblocage est fondé sur des preuves de maîtrise :
+
+- VC apparaît après environ 18 syllabes CV consolidées ;
+- CVC apparaît après environ 30 syllabes CV consolidées et au moins 4 syllabes VC au niveau de maîtrise 2 ;
+- une correction après erreur donne de l’encouragement mais ne gonfle pas artificiellement la maîtrise ;
+- les réussites VC/CVC sont sauvegardées et synchronisées comme les autres maîtrises ;
+- la fin du parcours lecture exige désormais aussi une base consolidée en VC et CVC.
+
+Deux badges récompensent ces étapes : **As des syllabes inversées** et **Bâtisseur de syllabes**.
+
+Les seuils sont des réglages produit prudents et pourront évoluer après observation réelle avec des enfants.
+
 ## Audio et prononciation
 
 La synthèse vocale actuelle est une aide de prototypage.
