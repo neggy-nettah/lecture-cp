@@ -16,6 +16,7 @@ const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
 const silentFinalEWords=vm.runInContext("SILENT_FINAL_E_WORDS",context);
 const silentEPracticeWords=vm.runInContext("SILENT_E_PRACTICE_WORDS",context);
 const basicCvFamilyCount=vm.runInContext("BASIC_CV_FAMILY_COUNT",context);
+const structurePlan=vm.runInContext("SYLLABLE_STRUCTURE_PLAN",context);
 const pictureWords=vm.runInContext("PICTURE_WORDS",context);
 const pictures=data.words.filter(w=>pictureWords.includes(w.w));
 if(pictures.length!==pictureWords.length||new Set(pictures.map(w=>w.emoji)).size!==pictures.length)throw Error("Ambiguous or missing picture vocabulary");
@@ -30,7 +31,7 @@ function duplicates(arr){return [...new Set(arr.filter((x,i,a)=>a.indexOf(x)!==i
 
 if(!Array.isArray(cpRoadmap)||cpRoadmap.length<8)fail("CP reading roadmap is incomplete.");
 const roadmapIds=new Set(cpRoadmap.map(x=>x.id));
-for(const id of ["cg-basic","encode-basic","words-basic","sentences-basic","orthography-rules","complex-graphemes","fluency-prosody","texts-comprehension"]){
+for(const id of ["cg-basic","encode-basic","words-basic","sentences-basic","syllable-structures","orthography-rules","complex-graphemes","fluency-prosody","texts-comprehension"]){
   if(!roadmapIds.has(id))fail("Missing CP roadmap stage:",id);
 }
 for(const stage of cpRoadmap){
@@ -56,6 +57,16 @@ const period1=cpMilestones.find(x=>x.id==="period-1"),midyear=cpMilestones.find(
 if(period1?.cgpMin!==12||period1?.cgpMax!==15||midyear?.cgpMin!==25||midyear?.cgpMax!==30)fail("Official CP CGP milestones changed unexpectedly.");
 if(cpRoadmap.findIndex(x=>x.id==="complex-graphemes")>cpRoadmap.findIndex(x=>x.id==="orthography-rules"))fail("CGP expansion must precede silent-letter rules in the current roadmap.");
 
+if(!Array.isArray(structurePlan)||structurePlan.length!==2)fail("VC/CVC structure plan is incomplete.");
+const vcStage=structurePlan.find(x=>x.id==="vc"),cvcStage=structurePlan.find(x=>x.id==="cvc");
+if(vcStage?.pattern!=="VC"||cvcStage?.pattern!=="CVC"||vcStage.items.length<4||cvcStage.items.length<4)fail("VC/CVC stages are malformed.");
+const structureTexts=structurePlan.flatMap(stage=>stage.items.map(item=>item.text));
+if(duplicates(structureTexts).length)fail("Duplicate VC/CVC syllables:",duplicates(structureTexts).join(", "));
+for(const stage of structurePlan)for(const item of stage.items){
+ if(!item.text||!Array.isArray(item.parts)||item.parts.join("")!==item.text)fail("Malformed structure item:",JSON.stringify(item));
+ if(stage.pattern==="VC"&&item.parts.length!==2)fail("VC item does not have 2 graphemes:",item.text);
+ if(stage.pattern==="CVC"&&item.parts.length!==3)fail("CVC item does not have 3 graphemes:",item.text);
+}
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
 if(!Array.isArray(data.sets)||data.sets.length<10)fail("Expected at least 10 syllable families.");
 const EXPECTED_FAMILIES=["m","l","s","r","f","v","p","t","n","b","d","j","z","k","ch"];

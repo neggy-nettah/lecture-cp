@@ -146,6 +146,38 @@ function activeSoundGraphemes(){
  return new Set(activeLearningSyllables().flatMap(syllableGraphemes))
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
+function structureStage(id){return SYLLABLE_STRUCTURE_PLAN.find(stage=>stage.id===id)||null}
+function structureMasteryKey(text){return "structure:"+String(text||"")}
+function structureMasteryLevel(text){return masteryLevel(structureMasteryKey(text))}
+function structureMasterySummary(id){
+ const items=structureStage(id)?.items||[],levels=items.map(item=>structureMasteryLevel(item.text));
+ return {total:items.length,started:levels.filter(x=>x>0).length,secure:levels.filter(x=>x>=2).length,mastered:levels.filter(x=>x>=3).length}
+}
+function availableStructureItems(id){
+ const stage=structureStage(id),allowed=activeSoundGraphemes();if(!stage)return [];
+ return stage.items.filter(item=>item.parts.every(part=>"aioueé".includes(part)||allowed.has(part)))
+}
+const VC_STRUCTURE_MIN_SECURE=18,CVC_STRUCTURE_MIN_CV_SECURE=30,CVC_STRUCTURE_MIN_VC_SECURE=4;
+function vcStructureReadiness(){
+ const simple=simpleCvReadiness(),pool=availableStructureItems("vc");
+ return {ready:simple.secure>=VC_STRUCTURE_MIN_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:VC_STRUCTURE_MIN_SECURE,pool}
+}
+function vcStructureUnlocked(){return vcStructureReadiness().ready}
+function vcStructureUnlockText(){
+ const s=vcStructureReadiness();if(s.ready)return "Syllabes inversées disponibles";
+ return "Consolide encore les syllabes simples ("+Math.min(s.secureCv,s.targetCv)+" / "+s.targetCv+")"
+}
+function cvcStructureReadiness(){
+ const simple=simpleCvReadiness(),vc=structureMasterySummary("vc"),pool=availableStructureItems("cvc");
+ return {ready:simple.secure>=CVC_STRUCTURE_MIN_CV_SECURE&&vc.secure>=CVC_STRUCTURE_MIN_VC_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:CVC_STRUCTURE_MIN_CV_SECURE,secureVc:vc.secure,targetVc:CVC_STRUCTURE_MIN_VC_SECURE,pool}
+}
+function cvcStructureUnlocked(){return cvcStructureReadiness().ready}
+function cvcStructureUnlockText(){
+ const s=cvcStructureReadiness();
+ if(s.secureCv<s.targetCv)return "Consolide encore les syllabes CV ("+Math.min(s.secureCv,s.targetCv)+" / "+s.targetCv+")";
+ if(s.secureVc<s.targetVc)return "Maîtrise encore "+(s.targetVc-s.secureVc)+" syllabe(s) inversée(s)";
+ return s.ready?"Syllabes à 3 lettres disponibles":"Encore un peu de pratique"
+}
 const WORD_ENCODING_MIN_MISSIONS=4,WORD_ENCODING_MIN_MASTERY_POINTS=10;
 function wordEncodingReadiness(){
  const missions=completedMissionCount(),points=curriculumMasteryPoints();
@@ -206,6 +238,8 @@ function silentEWordPool(){
 function learningMilestones(){
  return [
   {id:"word-encoding",icon:"✍️",label:"Écrire des mots entendus",ready:wordEncodingUnlocked(),detail:wordEncodingUnlockText()},
+  {id:"vc-structures",icon:"↩️",label:"Lire des syllabes inversées (VC)",ready:vcStructureUnlocked(),detail:vcStructureUnlockText()},
+  {id:"cvc-structures",icon:"🔤",label:"Lire des syllabes à 3 lettres (CVC)",ready:cvcStructureUnlocked(),detail:cvcStructureUnlockText()},
   {id:"sentences",icon:"💬",label:"Lire et comprendre des phrases",ready:sentenceUnlocked(),detail:sentenceUnlockText()},
   {id:"mini-text",icon:"📚",label:"Comprendre un mini-texte",ready:textComprehensionUnlocked(),detail:textComprehensionUnlockText()},
   {id:"silent-e",icon:"🤫",label:"Découvrir le e muet",ready:silentEUnlocked(),detail:silentEUnlockText()}
@@ -256,7 +290,7 @@ function pickLearningWord(pool){
  }
  return pick(weighted.length?weighted:words)
 }
-function learningCourseCompleted(){const requiredMastered=Math.ceil(DATA.sets.flat().length*2/3);return unlockedFamilyCount()>=DATA.sets.length&&masterySummary().mastered>=requiredMastered}
+function learningCourseCompleted(){const requiredMastered=Math.ceil(DATA.sets.flat().length*2/3),vc=structureMasterySummary("vc"),cvc=structureMasterySummary("cvc");return unlockedFamilyCount()>=DATA.sets.length&&masterySummary().mastered>=requiredMastered&&vc.secure>=4&&cvc.secure>=4}
 const PHRASE_NAME_PARTS={papa:["pa","pa"],lili:["li","li"],nina:["ni","na"],papi:["pa","pi"],"mémé":["mé","mé"]};
 function phraseTokenParts(token){
  const clean=String(token||"").toLowerCase().replace(/[.!?,;:]/g,"");

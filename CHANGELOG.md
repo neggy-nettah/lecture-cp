@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.45.0 — 2026-09-26
+
+- nouveau palier **VC** « Syllabes inversées » avec exemples comme `il`, `or`, `al`
+- nouveau palier **CVC** « Syllabes 3 lettres » avec exemples comme `mal`, `mur`, `fil`, `sol`
+- déblocage VC après consolidation d’un premier ensemble de syllabes CV
+- déblocage CVC après consolidation supplémentaire des CV et de plusieurs VC
+- maîtrise VC/CVC persistante dans les sauvegardes, imports et fusions multi-appareils
+- mauvaises réponses suivies d’une correction exclues de la maîtrise, comme dans les autres exercices
+- deux nouveaux badges liés à la maîtrise réelle : « As des syllabes inversées » et « Bâtisseur de syllabes »
+- bilan parent enrichi avec le nombre de syllabes VC/CVC réellement consolidées et le prochain verrou
+- fin de parcours lecture mise à jour pour exiger aussi une base VC/CVC
+- tests de contenu, runtime et navigateur étendus aux nouveaux paliers
+
 ## 0.44.0 — 2026-09-26
 
 - mini-textes portés à 8 situations et questions variées entre « qui ? » et « quoi ? »

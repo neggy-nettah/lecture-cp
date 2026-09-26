@@ -18,6 +18,7 @@ const CP_READING_ROADMAP=[
  {id:"encode-basic",label:"Encoder avec les correspondances connues",skills:["écrire une syllabe entendue","assembler les graphèmes connus"],app:["encoding"]},
  {id:"words-basic",label:"Lire et écrire des mots réguliers",skills:["fusionner plusieurs syllabes","lire des mots entièrement décodables","encoder un mot régulier entendu"],app:["words","build","missing","pictures","word-encoding"]},
  {id:"sentences-basic",label:"Lire et comprendre des phrases décodables",skills:["lire une phrase courte","identifier une information explicite","remettre une phrase en ordre"],app:["order","comprehension","readaloud"]},
+ {id:"syllable-structures",label:"Faire varier la structure des syllabes",skills:["lire des syllabes voyelle-consonne (VC)","lire des syllabes consonne-voyelle-consonne (CVC)","ne pas deviner seulement à partir du début du mot"],app:["vc-structures","cvc-structures"]},
  {id:"complex-graphemes",label:"Étendre les correspondances graphème-phonème",skills:["ajouter des CGP régulières fréquentes","introduire progressivement des graphèmes complexes fréquents","étendre le corpus décodable"],app:["sounds","syllables","encoding","words"]},
  {id:"orthography-rules",label:"Premières régularités orthographiques",skills:["repérer des lettres finales muettes fréquentes","traiter explicitement le e final muet"],app:["silent-e"]},
  {id:"fluency-prosody",label:"Fluence et prosodie",skills:["lire avec précision","respecter les groupes de sens et la ponctuation"],app:["readaloud"],planned:true},
@@ -31,6 +32,16 @@ const SYLLABLE_GRAPHEME_OVERRIDES={
  "cha":["ch","a"],"che":["ch","e"],"chi":["ch","i"],"cho":["ch","o"],"chu":["ch","u"],"ché":["ch","é"]
 };
 const BASIC_CV_FAMILY_COUNT=14;
+const SYLLABLE_STRUCTURE_PLAN=[
+ {id:"vc",label:"Voyelle + consonne",pattern:"VC",items:[
+  {text:"al",parts:["a","l"]},{text:"il",parts:["i","l"]},{text:"ol",parts:["o","l"]},{text:"ul",parts:["u","l"]},
+  {text:"ar",parts:["a","r"]},{text:"ir",parts:["i","r"]},{text:"or",parts:["o","r"]},{text:"ur",parts:["u","r"]}
+ ]},
+ {id:"cvc",label:"Consonne + voyelle + consonne",pattern:"CVC",items:[
+  {text:"mal",parts:["m","a","l"]},{text:"mur",parts:["m","u","r"]},{text:"fil",parts:["f","i","l"]},{text:"sol",parts:["s","o","l"]},
+  {text:"sur",parts:["s","u","r"]},{text:"vol",parts:["v","o","l"]},{text:"tir",parts:["t","i","r"]},{text:"dur",parts:["d","u","r"]}
+ ]}
+];
 
 const DATA={
  sounds:[

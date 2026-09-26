@@ -3,7 +3,7 @@
 module.exports=async function auditGames(page){
  await page.setViewportSize({width:320,height:900});
  const result=await page.evaluate(()=>{
-  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,families:0,wordBuilds:0,missingWords:0,silentE:0,pictures:0,sentences:0,readAloud:0,comprehension:0,miniTexts:0};
+  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,vc:0,cvc:0,families:0,wordBuilds:0,missingWords:0,silentE:0,pictures:0,sentences:0,readAloud:0,comprehension:0,miniTexts:0};
   speak=()=>{};tone=()=>{};confetti=()=>{};starFx=()=>{};
   const check=(ok,message)=>{if(!ok)throw Error('Exercise audit: '+message)};
   const buttons=action=>[...document.querySelectorAll(`[data-action="${action}"]`)];
@@ -105,6 +105,25 @@ module.exports=async function auditGames(page){
     check((state.mastery['word:'+word.w]?.correct||0)===before+1,'word encoding mastery missing '+word.w);
     const snapshot=JSON.stringify([state.stats,state.stars,state.mastery]);buttons('word-encode-token')[0]?.click();check(JSON.stringify([state.stats,state.stars,state.mastery])===snapshot,'word encoding duplicate reward '+word.w);counts.wordEncoding++;
    }
+   check(vcStructureUnlocked(),'VC fixture is not ready');
+   const firstVc=availableStructureItems('vc')[0],vcUnlockBase=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat().slice(0,VC_STRUCTURE_MIN_SECURE);
+   state=normalizeState({mastery:Object.fromEntries(vcUnlockBase.map(x=>[x,{attempts:2,correct:2,lastSeen:localDayKey()}]))});
+   gameVC(firstVc.text);const vcWrong=buttons('structure-answer').find(b=>b.dataset.value!==firstVc.text),vcGood=buttons('structure-answer').find(b=>b.dataset.value===firstVc.text);
+   check(!!vcWrong&&!!vcGood,'VC answer choices missing');vcWrong.click();vcGood.click();
+   check((state.mastery[structureMasteryKey(firstVc.text)]?.correct||0)===0,'corrected VC answer inflated mastery');
+   state=normalizeState({mastery:Object.fromEntries(DATA.sets.flat().map(x=>[x,{attempts:4,correct:4,lastSeen:localDayKey()}]))});
+   for(const item of availableStructureItems('vc')){
+    gameVC(item.text);check(currentAnswer===item.text,'wrong VC target');const before=state.mastery[structureMasteryKey(item.text)]?.correct||0;
+    answer('structure-answer',item.text);check((state.mastery[structureMasteryKey(item.text)]?.correct||0)===before+1,'VC mastery missing '+item.text);counts.vc++;
+   }
+   const cvcMastery=Object.fromEntries(DATA.sets.flat().map(x=>[x,{attempts:4,correct:4,lastSeen:localDayKey()}]));
+   for(const item of structureStage('vc').items.slice(0,CVC_STRUCTURE_MIN_VC_SECURE))cvcMastery[structureMasteryKey(item.text)]={attempts:2,correct:2,lastSeen:localDayKey()};
+   state=normalizeState({mastery:cvcMastery});check(cvcStructureUnlocked(),'CVC fixture is not ready');
+   for(const item of availableStructureItems('cvc')){
+    gameCVC(item.text);check(currentAnswer===item.text,'wrong CVC target');const before=state.mastery[structureMasteryKey(item.text)]?.correct||0;
+    answer('structure-answer',item.text);check((state.mastery[structureMasteryKey(item.text)]?.correct||0)===before+1,'CVC mastery missing '+item.text);counts.cvc++;
+   }
+   state=normalizeState({missionHistory:Array.from({length:20},(_,i)=>({date:'2020-02-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(DATA.sets.flat().map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});
    check(silentEUnlocked(),'silent-e fixture is not ready');
    for(const word of silentEWordPool()){
     const before=JSON.stringify([state.stats,state.stars,state.mastery]);
@@ -137,6 +156,7 @@ module.exports=async function auditGames(page){
    const before=JSON.stringify([state.stats,state.mastery,state.stars]);
    document.querySelector('[data-action="sound-repeat"]').click();activate('words');document.querySelector('[data-action="word-read"]').click();gamePronunciation();
    check(JSON.stringify([state.stats,state.mastery,state.stars])===before,'practice inflated results');
+   check(!vcStructureUnlocked()&&!cvcStructureUnlocked(),'new profile has advanced structures unlocked');gameVC();check(currentView==='games','VC lock');gameCVC();check(currentView==='games','CVC lock');
    check(!sentenceUnlocked(),'new profile has phrases unlocked');gameOrder();check(currentView==='games','phrase lock');gameComprehension();check(currentView==='games','comprehension lock');
    return counts;
   }finally{

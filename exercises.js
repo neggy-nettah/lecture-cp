@@ -77,6 +77,8 @@ function gamesMenu(){
  `<div class="levels">
   <button class="level" data-action="game-listen"><div class="ico">👂</div><b>Écoute & trouve</b><small>Quelle syllabe as-tu entendue ?</small></button>
   <button class="level" data-action="game-encode"><div class="ico">✍️</div><b>J’écris la syllabe</b><small>J’entends puis je choisis les bons morceaux</small></button>
+  <button class="level" data-action="game-vc" ${vcStructureUnlocked()?"":"disabled"}><div class="ico">${vcStructureUnlocked()?"↩️":"🔒"}</div><b>Syllabes inversées</b><small>${vcStructureUnlocked()?"La voyelle passe devant : i + l = il":vcStructureUnlockText()}</small></button>
+  <button class="level" data-action="game-cvc" ${cvcStructureUnlocked()?"":"disabled"}><div class="ico">${cvcStructureUnlocked()?"🔤":"🔒"}</div><b>Syllabes 3 lettres</b><small>${cvcStructureUnlocked()?"Un son au début et un à la fin : m + a + l":cvcStructureUnlockText()}</small></button>
   <button class="level" data-action="game-word-encode" ${wordEncodingUnlocked()?"":"disabled"}><div class="ico">${wordEncodingUnlocked()?"📝":"🔒"}</div><b>J’écris le mot</b><small>${wordEncodingUnlocked()?"J’écoute puis j’assemble les syllabes":wordEncodingUnlockText()}</small></button>
   <button class="level" data-action="game-bubbles"><div class="ico">🫧</div><b>Bulles express</b><small>Écoute et éclate la bonne syllabe</small></button>
   <button class="level" data-action="game-memory"><div class="ico">🧠</div><b>Memory des sons</b><small>Associe le son à la syllabe</small></button>
@@ -129,6 +131,31 @@ function updateEncode(){
  }
 }
 
+
+function structureItemHTML(item){
+ return (item?.parts||[]).map(part=>'<span class="'+("aioueé".includes(part)?"blue":"red")+'">'+esc(part)+'</span>').join("")
+}
+function gameStructure(id,forcedText=null){
+ const unlocked=id==="vc"?vcStructureUnlocked():cvcStructureUnlocked();
+ if(!unlocked){activate("games");return}
+ const pool=availableStructureItems(id);if(pool.length<2){activate("games");return}
+ missionMode=false;currentView=id+"-structures";state.lastView=currentView;save(false);locked=false;resetQuestionTracking();
+ const item=forcedText&&pool.some(x=>x.text===forcedText)?pool.find(x=>x.text===forcedText):pick(pool);currentAnswer=item.text;
+ const opts=nextRandom(pool.map(x=>x.text),currentAnswer,4),isVc=id==="vc";
+ const explanation=isVc?"La voyelle peut venir avant la consonne.":"La syllabe peut avoir un son au début et un autre à la fin.";
+ const example=isVc?"i + l = il":"m + a + l = mal";
+ stage.innerHTML=title(isVc?"Syllabes inversées":"Syllabes à 3 lettres",explanation,isVc?"Structure VC":"Structure CVC")+
+ instructionAudio(isVc?"Écoute la syllabe inversée, puis touche son écriture.":"Écoute la syllabe à trois lettres, puis touche son écriture.")+
+ '<div class="card center"><div class="hero-emoji">'+(isVc?"↩️":"🔤")+'</div><div class="tip"><b>Nouveau modèle :</b> '+example+'</div>'+
+ '<button class="btn yellow" data-action="structure-repeat">🔊 Écouter la syllabe</button>'+
+ '<div class="choices">'+opts.map(text=>{const found=pool.find(x=>x.text===text);return '<button class="choice" data-action="structure-answer" data-value="'+esc(text)+'">'+structureItemHTML(found)+'</button>'}).join("")+'</div>'+
+ '<div style="margin-top:8px;font-weight:900;color:var(--muted)">Maîtrise : '+masteryStars(structureMasteryKey(currentAnswer))+'</div>'+
+ '<div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>'+
+ '<div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="'+(isVc?"game-vc":"game-cvc")+'">Nouvelle syllabe →</button></div>';
+ playInstruction(isVc?"Écoute la syllabe inversée, puis touche son écriture.":"Écoute la syllabe à trois lettres, puis touche son écriture.",()=>speak(currentAnswer,.60))
+}
+function gameVC(forcedText=null){gameStructure("vc",forcedText)}
+function gameCVC(forcedText=null){gameStructure("cvc",forcedText)}
 
 function wordEncodePool(){
  return decodableMissionWords().filter(word=>word.parts.length>=2&&word.parts.length<=4)

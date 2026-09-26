@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.44.0";
+const APP_VERSION="0.45.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -11,7 +11,7 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 const UI_TEXT_SIZE_KEY="lectureCpLargeText";
-const GAME_VIEWS=new Set(["listen","encode","word-encode","bubbles","memory","family","missing","silent-e","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
+const GAME_VIEWS=new Set(["listen","encode","vc-structures","cvc-structures","word-encode","bubbles","memory","family","missing","silent-e","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
 const MISSION_VIEWS=new Set(["mission","mission-discover","mission-complete"]);
 const RESTORABLE_VIEWS=new Set(["home","sounds","syllables","words","games","world","collection","parents","mission","mission-complete",...GAME_VIEWS]);
 function normalizedView(value){return typeof value==="string"&&RESTORABLE_VIEWS.has(value)?value:"home"}
@@ -102,6 +102,7 @@ function mergeProgressStates(localRaw,remoteRaw){
 function validMasteryKey(key){
  if(typeof key!=="string")return false;
  if(DATA.sets.flat().includes(key))return true;
+ if(key.startsWith("structure:")){const value=key.slice(10);return SYLLABLE_STRUCTURE_PLAN.some(stage=>stage.items.some(item=>item.text===value))}
  if(!key.startsWith("word:"))return false;
  const word=key.slice(5);return DATA.words.some(item=>item.w===word)
 }
@@ -561,7 +562,7 @@ function missionsLast7Days(){
  return missionDates().filter(date=>date>=key).length
 }
 function badgeData(){
- const missions=completedMissionCount(),ms=masterySummary(),stars=state.stars||0,streak=bestMissionStreak();
+ const missions=completedMissionCount(),ms=masterySummary(),stars=state.stars||0,streak=bestMissionStreak(),vc=structureMasterySummary("vc"),cvc=structureMasterySummary("cvc");
  return [
   {emoji:"🌟",name:"Première étoile",desc:"Gagner une étoile",ok:stars>=1},
   {emoji:"🏁",name:"Première mission",desc:"Terminer une mission",ok:missions>=1},
@@ -571,7 +572,9 @@ function badgeData(){
   {emoji:"💫",name:"50 étoiles",desc:"Gagner 50 étoiles",ok:stars>=50},
   {emoji:"🗺️",name:"Grande aventure",desc:"Terminer 10 missions",ok:missions>=10},
   {emoji:"👑",name:"As de la lecture",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30},
-  {emoji:"🔤",name:"Explorateur du CH",desc:"Atteindre la première famille à trois lettres",ok:unlockedFamilyCount()>=DATA.sets.length},
+  {emoji:"↩️",name:"As des syllabes inversées",desc:"Consolider 4 syllabes VC",ok:vc.secure>=4},
+  {emoji:"🧱",name:"Bâtisseur de syllabes",desc:"Consolider 4 syllabes CVC",ok:cvc.secure>=4},
+  {emoji:"🔤",name:"Explorateur du CH",desc:"Atteindre la famille CH",ok:unlockedFamilyCount()>=DATA.sets.length},
   {emoji:"🤫",name:"Détective du e muet",desc:"Découvrir le e final muet",ok:!!state.done?.silentE},
   {emoji:"🌙",name:"Voyage au long cours",desc:"Terminer 20 missions",ok:missions>=20},
   {emoji:"🏆",name:"Grand lecteur",desc:"Terminer 40 missions",ok:missions>=40}
@@ -715,7 +718,7 @@ function resetDailyMission(){
  state.dailyMission=null;missionMode=false;currentView="home";save();render();alert("Nouvelle mission créée.")
 }
 function parents(){
- const ms=masterySummary(),wm=wordMasterySummary(),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
+ const ms=masterySummary(),wm=wordMasterySummary(),vc=structureMasterySummary("vc"),cvc=structureMasterySummary("cvc"),attempts=state.stats?.attempts||0,correct=state.stats?.correct||0,accuracy=attempts?Math.round(correct/attempts*100):0,recent=recentPerformance(),dueCount=dueReviewSyllables().length;
  const weak=ms.weakest.length?ms.weakest.map(x=>`<span class="collectible">${x.s.toUpperCase()} ${masteryStars(x.s)} • ${x.m.correct}/${x.m.attempts}</span>`).join(""):`<span style="color:var(--muted);font-size:13px">Aucune difficulté repérée dans les réponses enregistrées. Les syllabes non évaluées restent à découvrir.</span>`;
  const weakWords=wm.weakest.length?wm.weakest.map(x=>`<button class="collectible" data-action="parent-word-review" data-word="${esc(x.word.w)}">${esc(x.word.w.toUpperCase())} ${masteryStars(x.key)} • ${x.m.correct}/${x.m.attempts}</button>`).join(""):`<span style="color:var(--muted);font-size:13px">Pas encore assez de réponses sur les mots pour repérer une difficulté.</span>`;
  const milestoneCards=learningMilestones().map(item=>`<div class="parent-box"><h3>${item.icon} ${esc(item.label)}</h3><p><b>${item.ready?"✅ Disponible":"🔒 En préparation"}</b><br><small>${esc(item.detail)}</small></p></div>`).join("");
@@ -724,6 +727,8 @@ function parents(){
   <div class="parent-box"><h3>🎯 Réussite des tentatives</h3><p><b style="font-size:26px">${recent.accuracy==null?"—":recent.accuracy+" %"}</b><br>${recent.missions?recent.missions+" dernière(s) mission(s) mesurée(s)":"Pas encore de mission mesurée"}.<br><small>Depuis le début : ${attempts?accuracy+" % ("+correct+"/"+attempts+")":"pas encore de réponse"}</small></p></div>
   <div class="parent-box"><h3>🏆 Syllabes maîtrisées</h3><p><b style="font-size:26px">${ms.mastered} / ${ms.total}</b><br>★★★ = maîtrisée dans les exercices de l’app.</p></div>
   <div class="parent-box"><h3>📝 Mots évalués</h3><p><b style="font-size:26px">${wm.evaluated} / ${wm.total}</b><br>${wm.mastered} mot(s) à ★★★ parmi les mots actuellement décodables.<br><small>${wm.needsReview} à reprendre • ${wm.learning} en apprentissage.</small></p></div>
+  <div class="parent-box"><h3>↩️ Syllabes VC</h3><p><b style="font-size:26px">${vc.secure} / ${vc.total}</b><br>au moins ★★ = consolidée.<br><small>${vcStructureUnlocked()?vcStructureUnlockText():"Palier encore verrouillé • "+vcStructureUnlockText()}</small></p></div>
+  <div class="parent-box"><h3>🔤 Syllabes CVC</h3><p><b style="font-size:26px">${cvc.secure} / ${cvc.total}</b><br>au moins ★★ = consolidée.<br><small>${cvcStructureUnlocked()?cvcStructureUnlockText():"Palier encore verrouillé • "+cvcStructureUnlockText()}</small></p></div>
   <div class="parent-box"><h3>🌱 En apprentissage</h3><p><b style="font-size:26px">${ms.learning}</b><br>Syllabes à ★ ou ★★ • ${unlockedFamilyCount()} / ${DATA.sets.length} familles débloquées.<br>${curriculumNextText()}</p></div>
   <div class="parent-box"><h3>🔁 À reprendre</h3><p><b style="font-size:26px">${ms.needsReview}</b><br>Syllabes déjà évaluées, sans réussite autonome enregistrée.</p></div>
   <div class="parent-box"><h3>🔎 Pas encore évaluées</h3><p><b style="font-size:26px">${ms.unseen}</b><br>Aucune réponse évaluée pour ces syllabes. Ce n’est pas une difficulté constatée.</p></div>
@@ -750,7 +755,7 @@ function render(){
  const views={
   home,sounds,syllables,words,games:gamesMenu,world:worldView,collection:collectionView,parents,
   mission:missionHub,"mission-complete":missionComplete,
-  listen:gameListen,encode:gameEncode,"word-encode":gameWordEncode,bubbles:gameBubbles,memory:gameMemory,
+  listen:gameListen,encode:gameEncode,"vc-structures":gameVC,"cvc-structures":gameCVC,"word-encode":gameWordEncode,bubbles:gameBubbles,memory:gameMemory,
   family:gameFamily,missing:gameMissing,"silent-e":gameSilentE,pronunciation:gamePronunciation,pictures:gamePicture,build:gameBuild,
   order:gameOrder,readaloud:gameReadAloud,comprehension:gameComprehension,"mini-text":gameMiniText
  };
@@ -921,6 +926,16 @@ document.addEventListener("click",e=>{
  if(a==="word-read"){const pool=decodableMissionWords(),w=pool[state.word%pool.length];state.wordPractice=state.wordPractice||{};state.wordPractice[w.w]=true;if(wordPracticeComplete())setDone("words");else save();refreshPracticeScreen(words,a);practiceDone("Bien essayé ! Les étoiles sont réservées aux réponses vérifiées.");return}
  if(a==="game-listen"){gameListen();return}
  if(a==="game-encode"){gameEncode();return}
+ if(a==="game-vc"){gameVC();return}
+ if(a==="game-cvc"){gameCVC();return}
+ if(a==="structure-repeat"){if(typeof currentAnswer==="string")speak(currentAnswer,.60);return}
+ if(a==="structure-answer"){
+   if(locked||typeof currentAnswer!=="string")return;
+   const value=b.dataset.value,key=structureMasteryKey(currentAnswer),isVc=currentView==="vc-structures",kind=isVc?"vc":"cvc";
+   if(value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(key,kind+":"+currentAnswer);rewardVerified("Syllabe réussie !",kind+":"+currentAnswer);setDone(isVc?"vcStructures":"cvcStructures");$("#feedback").innerHTML='<div class="ok">🎉 Bravo : <b>'+esc(currentAnswer)+'</b></div>';speak(currentAnswer,.60);if(state.streak>0&&state.streak%5===0)confetti()}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError(key);miss("Écoute encore la syllabe.");speak(currentAnswer,.60);setTimeout(()=>b.classList.remove("wrong","wiggle"),650)}
+   return
+ }
  if(a==="game-word-encode"){gameWordEncode();return}
  if(a==="word-encode-listen"){if(currentAnswer?.w)speak(currentAnswer.w,.68);return}
  if(a==="word-encode-token"){if(locked||b.disabled||!currentAnswer?.parts||wordEncodeMade.length>=currentAnswer.parts.length)return;b.disabled=true;wordEncodeMade.push(b.dataset.value);updateWordEncode();return}
