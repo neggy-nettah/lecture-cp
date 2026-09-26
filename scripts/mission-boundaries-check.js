@@ -25,6 +25,32 @@ module.exports=async function checkMissionBoundaries(page){
  assert.deepEqual(await page.evaluate(()=>({date:state.missionHistory[0]?.date,pieces:state.rewards.pieces,index:state.dailyMission.index,stars:state.stars})),{date:oldDay,pieces:3,index:0,stars:14});
  await page.reload();await page.locator('[data-action="mission-start"]').first().waitFor();
  assert.equal(await page.evaluate(()=>state.rewards.pieces),3);
+ // VC/CVC mission steps must run like normal scored mission steps and must be invalid when their stage is locked.
+ await page.evaluate(()=>{
+  state=normalizeState({});
+  const legacy=buildDailyMission();legacy.steps[3]={type:'vc',target:'il',title:'VC',detail:'VC'};
+  if(validDailyMission(legacy))throw Error('Locked VC mission was accepted');
+  const cv=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat().slice(0,VC_STRUCTURE_MIN_SECURE);
+  state=normalizeState({mastery:Object.fromEntries(cv.map(x=>[x,{attempts:2,correct:2,lastSeen:localDayKey()}]))});
+  const m=buildDailyMission(),target=missionStructureTarget('vc');m.index=3;m.steps[3]={type:'vc',target,title:'Je change l’ordre',detail:'Lis '+target.toUpperCase()};state.dailyMission=m;save();startMissionStep();
+ });
+ assert.equal(await page.evaluate(()=>currentView),'vc-structures');
+ let structureTarget=await page.evaluate(()=>currentAnswer);
+ await page.locator(`[data-action="structure-answer"][data-value="${structureTarget}"]`).click();
+ assert.equal(await page.evaluate(()=>state.dailyMission.index),4,'VC mission step did not advance');
+ assert.equal(await page.evaluate(t=>state.mastery[structureMasteryKey(t)]?.correct||0,structureTarget),1,'VC mission mastery missing');
+
+ await page.evaluate(()=>{
+  const cv=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat().slice(0,CVC_STRUCTURE_MIN_CV_SECURE),mastery=Object.fromEntries(cv.map(x=>[x,{attempts:2,correct:2,lastSeen:localDayKey()}]));
+  for(const item of structureStage('vc').items.slice(0,CVC_STRUCTURE_MIN_VC_SECURE))mastery[structureMasteryKey(item.text)]={attempts:2,correct:2,lastSeen:localDayKey()};
+  state=normalizeState({mastery});const m=buildDailyMission(),target=missionStructureTarget('cvc');m.index=3;m.steps[3]={type:'cvc',target,title:'Je lis 3 lettres',detail:'Lis '+target.toUpperCase()};state.dailyMission=m;save();startMissionStep();
+ });
+ assert.equal(await page.evaluate(()=>currentView),'cvc-structures');
+ structureTarget=await page.evaluate(()=>currentAnswer);
+ await page.locator(`[data-action="structure-answer"][data-value="${structureTarget}"]`).click();
+ assert.equal(await page.evaluate(()=>state.dailyMission.index),4,'CVC mission step did not advance');
+ assert.equal(await page.evaluate(t=>state.mastery[structureMasteryKey(t)]?.correct||0,structureTarget),1,'CVC mission mastery missing');
+
  // An answer on yesterday's still-visible exercise must not validate today's step.
  await page.evaluate(()=>{
   state=normalizeState({});buildDailyMission();state.dailyMission.index=1;startMissionStep();
@@ -41,5 +67,5 @@ module.exports=async function checkMissionBoundaries(page){
  }finally{
   await page.evaluate(raw=>{localDayKey=window.__originalDay;delete window.__originalDay;state=normalizeState(JSON.parse(raw));missionMode=false;activate('home')},before);
  }
- console.log('Mission boundaries OK: immediate reward, reload, old completed mission, idempotency and day rollover');
+ console.log('Mission boundaries OK: rewards, reload, VC/CVC mission steps, idempotency and day rollover');
 };
