@@ -211,16 +211,18 @@ window.supabase={createClient:()=>({
   assert.equal(await page.evaluate(()=>JSON.stringify({stats:state.stats,stars:state.stars,mastery:state.mastery,rewardLedger:state.rewardLedger,reviewQueue:state.reviewQueue})),readAloudBefore);
   assert.equal(await page.locator('[data-action="readaloud-done"]').isDisabled(),true);
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.action),'readaloud-model');
-  // Mini-text comprehension uses two decodable sentences and an oral question without reading the text for the child.
+   // Mini-text comprehension keeps the question hidden until requested, then reveals a visual fallback.
   await page.setViewportSize({width:320,height:900});
   await page.evaluate(()=>{state=normalizeState({missionHistory:Array.from({length:12},(_,i)=>({date:'2026-09-'+String(i+1).padStart(2,'0')})),mastery:Object.fromEntries(['ma','mi','mo','mu','mé','la','li'].map(s=>[s,{attempts:4,correct:4,lastSeen:localDayKey()}]))});gameMiniText('velo-sari')});
   assert.equal(await page.evaluate(()=>currentMiniText.id),'velo-sari');
   assert.equal(await page.locator('.mini-text-reading .readaloud-sentence').count(),2);
-  assert.equal(await page.evaluate(()=>stage.textContent.includes('Qui a le vélo ?')),false);
+   assert.equal(await page.locator('#miniTextQuestion').isHidden(),true);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'mini-text overflows at 320px');
   const miniMasteryBefore=await page.evaluate(()=>JSON.stringify(state.mastery));
   const miniStarsBefore=await page.evaluate(()=>state.stars);
   await page.locator('[data-action="mini-text-question"]').click();
+   assert.equal(await page.locator('#miniTextQuestion').isVisible(),true);
+   assert((await page.locator('#miniTextQuestion').textContent()).includes('Qui a le vélo ?'));
   await page.locator('[data-action="mini-text-answer"][data-value="Mila"]').click();
   assert.equal(await page.evaluate(()=>locked),false);
   assert.equal(await page.locator('[data-action="mini-text-answer"][data-value="Mila"]').isDisabled(),true);
