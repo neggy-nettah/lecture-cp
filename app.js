@@ -2,7 +2,7 @@
 const SUPABASE_URL="https://dqxwwxzpvxroiueqursc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_uyKC1ioxc2-1MgOscqyDlQ_0AMqbOli";
 const APP_URL="https://neggy-nettah.github.io/lecture-cp/";
-const APP_VERSION="0.42.1";
+const APP_VERSION="0.43.0";
 const STATE_SCHEMA_VERSION=1;
 const incomingAuthLinkError=/(?:#|&)error(?:_code)?=/.test(window.location?.hash||"");
 const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY):null;
@@ -11,7 +11,7 @@ let session=null,currentChild=null,children=[],saveTimer=null,remoteSaveInFlight
 const pendingProfileSaves=new Map();
 let profileLoadSequence=0,localSaveFailed=false,profileLoading=false;
 const UI_TEXT_SIZE_KEY="lectureCpLargeText";
-const GAME_VIEWS=new Set(["listen","encode","word-encode","bubbles","memory","family","missing","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
+const GAME_VIEWS=new Set(["listen","encode","word-encode","bubbles","memory","family","missing","silent-e","pronunciation","pictures","build","order","readaloud","comprehension","mini-text"]);
 const MISSION_VIEWS=new Set(["mission","mission-discover","mission-complete"]);
 const RESTORABLE_VIEWS=new Set(["home","sounds","syllables","words","games","world","collection","parents","mission","mission-complete",...GAME_VIEWS]);
 function normalizedView(value){return typeof value==="string"&&RESTORABLE_VIEWS.has(value)?value:"home"}
@@ -124,6 +124,9 @@ function normalizeState(raw){
  for(const item of Array.isArray(rewards.collection)?rewards.collection:[]){
   const known=COLLECTIBLES.find(x=>x.id===item?.id);
   if(known&&!ids.has(known.id)){out.rewards.collection.push({...known});ids.add(known.id)}
+ }
+ for(let i=0;i<Math.min(out.rewards.puzzles,COLLECTIBLES.length);i++){
+  const known=COLLECTIBLES[i];if(known&&!ids.has(known.id)){out.rewards.collection.push({...known});ids.add(known.id)}
  }
  const m=stateObject(raw.dailyMission);
  out.dailyMission=Object.keys(m).length?{...m,index:Math.min(5,stateCount(m.index)),completed:stateCount(m.index)>=5,failedSteps:stateFlags(m.failedSteps)}:null;
@@ -238,7 +241,7 @@ function topUI(){
  $("#hello").textContent=displayName?`Allez ${displayName} ! Mission lecture 🌟`:"Mission : progresser en lecture 🌟";
  $("#childLabel").textContent=currentChild?`${currentChild.avatar||"🦊"} ${currentChild.nickname}`:"Invité";
  $("#accountBtn").textContent=session?"👤 Mon compte":"👤 Se connecter";
- const keys=["sounds","syllables","words","listen","encoding","bubbles","memory","families","missing","pictures",...(sentenceUnlocked()?["order","comprehension"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";$("#progressBarWrap")?.setAttribute("aria-valuenow",String(pct));
+ const keys=["sounds","syllables","words","listen","encoding","bubbles","memory","families","missing","pictures",...(silentEUnlocked()?["silentE"]:[]),...(sentenceUnlocked()?["order","comprehension"]:[])],done=keys.filter(k=>k==="sounds"?soundPracticeComplete():k==="words"?wordPracticeComplete():state.done[k]).length;const syllables=DATA.sets.flat(),masteryPoints=syllables.reduce((sum,s)=>sum+masteryLevel(s),0),masteryPct=masteryPoints/(syllables.length*3),activityPct=done/keys.length,pct=Math.round((masteryPct*.7+activityPct*.3)*100);$("#progressBar").style.width=pct+"%";$("#progressText").textContent=pct+" %";$("#progressBarWrap")?.setAttribute("aria-valuenow",String(pct));
  if(localSaveFailed||!navigator.onLine){updateConnectivityUI()}else if(!session){$("#syncStatus").textContent="Mode invité • sauvegarde locale";$("#syncStatus").className="sync"}else if(!currentChild){$("#syncStatus").textContent="Compte connecté • choisissez un profil enfant";$("#syncStatus").className="sync"}
 }
 function setDone(k){state.done[k]=true;save()}
@@ -246,7 +249,12 @@ function shuffle(a){const out=[...a];for(let i=out.length-1;i>0;i--){const j=Mat
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function colorSyl(s){const text=String(s||""),parts=syllableGraphemes(text);if(parts.length<2)return `<span class="purple">${esc(text)}</span>`;return `<span class="red">${esc(parts[0])}</span><span class="blue">${esc(parts.slice(1).join(""))}</span>`}
-function wordHTML(parts){return parts.map((p,i)=>`<span>${esc(p)}</span>`).join("·")}
+function wordHTML(parts){return parts.map(p=>`<span>${esc(p)}</span>`).join("·")}
+function silentEWordHTML(word,reveal=true){
+ const text=String(word||"");
+ if(!SILENT_FINAL_E_WORDS.includes(text)||!text.endsWith("e"))return esc(text);
+ return esc(text.slice(0,-1))+`<span class="silent-letter ${reveal?"revealed":"pending"}">e</span>`
+}
 
 let speechVoiceCache=[],speechRequestId=0;
 function refreshSpeechVoices(){
@@ -562,11 +570,18 @@ function badgeData(){
   {emoji:"📚",name:"10 syllabes",desc:"Maîtriser 10 syllabes",ok:ms.mastered>=10},
   {emoji:"💫",name:"50 étoiles",desc:"Gagner 50 étoiles",ok:stars>=50},
   {emoji:"🗺️",name:"Grande aventure",desc:"Terminer 10 missions",ok:missions>=10},
-  {emoji:"👑",name:"As de la lecture",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30}
+  {emoji:"👑",name:"As de la lecture",desc:"Maîtriser 30 syllabes",ok:ms.mastered>=30},
+  {emoji:"🔤",name:"Explorateur du CH",desc:"Atteindre la première famille à trois lettres",ok:unlockedFamilyCount()>=DATA.sets.length},
+  {emoji:"🤫",name:"Détective du e muet",desc:"Découvrir le e final muet",ok:!!state.done?.silentE},
+  {emoji:"🌙",name:"Voyage au long cours",desc:"Terminer 20 missions",ok:missions>=20},
+  {emoji:"🏆",name:"Grand lecteur",desc:"Terminer 40 missions",ok:missions>=40}
  ]
 }
 function companionLevel(){
  const n=completedMissionCount();
+ if(n>=40)return {emoji:"🦊🏆",name:"Léo, maître des histoires",level:8};
+ if(n>=28)return {emoji:"🦊📚",name:"Léo, gardien des livres",level:7};
+ if(n>=20)return {emoji:"🦊🌙",name:"Léo, voyageur des graphèmes",level:6};
  if(n>=14)return {emoji:"🦊👑",name:"Léo, gardien des étoiles",level:5};
  if(n>=9)return {emoji:"🦊🚀",name:"Léo, explorateur",level:4};
  if(n>=5)return {emoji:"🦊🛡️",name:"Léo, aventurier",level:3};
@@ -678,7 +693,9 @@ function parseProgressImport(text){
  imported.rewardLedger=Object.fromEntries(Object.entries(imported.rewardLedger||{}).filter(([,v])=>!!v).slice(-300));
  const rewardIds=new Set(COLLECTIBLES.map(x=>x.id)),seenRewards=new Set(),collection=[];
  (imported.rewards?.collection||[]).forEach(x=>{if(x&&rewardIds.has(x.id)&&!seenRewards.has(x.id)){collection.push(COLLECTIBLES.find(c=>c.id===x.id));seenRewards.add(x.id)}});
- imported.rewards={towardPiece:0,pieces:Math.min(3,stateCount(imported.rewards?.pieces)),puzzles:stateCount(imported.rewards?.puzzles),collection};
+ const importedPuzzles=stateCount(imported.rewards?.puzzles);
+ for(let i=0;i<Math.min(importedPuzzles,COLLECTIBLES.length);i++){const item=COLLECTIBLES[i];if(!seenRewards.has(item.id)){collection.push(item);seenRewards.add(item.id)}}
+ imported.rewards={towardPiece:0,pieces:Math.min(3,stateCount(imported.rewards?.pieces)),puzzles:importedPuzzles,collection};
  if(!validDailyMission(imported.dailyMission)||imported.dailyMission.date!==localDayKey())imported.dailyMission=null;
  return imported
 }
@@ -734,7 +751,7 @@ function render(){
   home,sounds,syllables,words,games:gamesMenu,world:worldView,collection:collectionView,parents,
   mission:missionHub,"mission-complete":missionComplete,
   listen:gameListen,encode:gameEncode,"word-encode":gameWordEncode,bubbles:gameBubbles,memory:gameMemory,
-  family:gameFamily,missing:gameMissing,pronunciation:gamePronunciation,pictures:gamePicture,build:gameBuild,
+  family:gameFamily,missing:gameMissing,"silent-e":gameSilentE,pronunciation:gamePronunciation,pictures:gamePicture,build:gameBuild,
   order:gameOrder,readaloud:gameReadAloud,comprehension:gameComprehension,"mini-text":gameMiniText
  };
  const view=views[currentView];
@@ -942,7 +959,22 @@ document.addEventListener("click",e=>{
  if(a==="family-answer"){
    if(locked)return;
    if(b.dataset.value===currentAnswer){locked=true;b.classList.add("correct");recordQuestionSuccess(null,"family:"+currentAnswer);rewardVerified("Intrus trouvé !","family:"+currentAnswer);setDone("families");$("#feedback").innerHTML='<div class="ok">🎉 Bravo, tu as trouvé l’intrus !</div>';completeMissionStep()}
-   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Regarde bien la première lettre.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   else{b.classList.add("wrong","wiggle");b.disabled=true;recordQuestionError();miss("Regarde bien le début des syllabes.");setTimeout(()=>b.classList.remove("wrong","wiggle"),600)}
+   return
+ }
+ if(a==="game-silent-e"){gameSilentE();return}
+ if(a==="silent-e-listen"){if(currentAnswer?.w)speak(currentAnswer.w,.70);return}
+ if(a==="silent-e-answer"){
+   if(locked||!currentAnswer?.w)return;
+   if(b.dataset.value==="e"){
+    locked=true;b.classList.add("correct");
+    const first=!state.done?.silentE;setDone("silentE");
+    const word=$("#silentEWord");if(word)word.innerHTML=silentEWordHTML(currentAnswer.w,true);
+    tone("ok");if(first){confetti();toast("🤫 Nouveau pouvoir : tu sais repérer le e muet !","ok")}else practiceDone("Tu as bien repéré le e muet !");
+    $("#feedback").innerHTML='<div class="ok">Bravo ! Le <b>e</b> final est écrit, mais il ne s’entend pas dans ce mot.</div>'
+   }else{
+    b.classList.add("wrong","wiggle");b.disabled=true;miss("Écoute le mot et regarde sa fin.");speak(currentAnswer.w,.70);setTimeout(()=>b.classList.remove("wrong","wiggle"),650)
+   }
    return
  }
  if(a==="game-pronunciation"){gamePronunciation();return}

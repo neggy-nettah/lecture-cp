@@ -3,7 +3,7 @@
 module.exports=async function auditGames(page){
  await page.setViewportSize({width:320,height:900});
  const result=await page.evaluate(()=>{
-  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,families:0,wordBuilds:0,missingWords:0,pictures:0,sentences:0,readAloud:0,comprehension:0,miniTexts:0};
+  const originals={speak,tone,confetti,starFx},counts={tiers:0,syllableQuestions:0,encoding:0,wordEncoding:0,families:0,wordBuilds:0,missingWords:0,silentE:0,pictures:0,sentences:0,readAloud:0,comprehension:0,miniTexts:0};
   speak=()=>{};tone=()=>{};confetti=()=>{};starFx=()=>{};
   const check=(ok,message)=>{if(!ok)throw Error('Exercise audit: '+message)};
   const buttons=action=>[...document.querySelectorAll(`[data-action="${action}"]`)];
@@ -18,8 +18,13 @@ module.exports=async function auditGames(page){
   };
   try{
    for(let tier=3;tier<=DATA.sets.length;tier++){
-    state=normalizeState({mastery:{[DATA.sets[tier-1][0]]:{attempts:1,correct:0}},missionHistory:Array.from({length:14},(_,i)=>({date:'2020-01-'+String(i+1).padStart(2,'0')}))});
-    missionMode=false;check(unlockedFamilyCount()===tier,'curriculum fixture');counts.tiers++;
+    const fixtureMastery={[DATA.sets[tier-1][0]]:{attempts:1,correct:0}};
+    if(tier>BASIC_CV_FAMILY_COUNT){
+     const simple=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat(),needed=Math.ceil(simple.length*.60);
+     simple.slice(0,needed).forEach(s=>{fixtureMastery[s]={attempts:2,correct:2,lastSeen:localDayKey()}})
+    }
+    state=normalizeState({mastery:fixtureMastery,missionHistory:Array.from({length:14},(_,i)=>({date:'2020-01-'+String(i+1).padStart(2,'0')}))});
+    missionMode=false;check(unlockedFamilyCount()===tier,'curriculum fixture tier '+tier);counts.tiers++;
     for(const target of activeLearningSyllables()){
      gameListen(target);answer('listen-answer',target,true);counts.syllableQuestions++;
      gameBubbles(target);answer('bubble-answer',target);counts.syllableQuestions++;
@@ -99,6 +104,18 @@ module.exports=async function auditGames(page){
     check(locked&&wordEncodeMade.join('')===word.w,'word encoding failed '+word.w);
     check((state.mastery['word:'+word.w]?.correct||0)===before+1,'word encoding mastery missing '+word.w);
     const snapshot=JSON.stringify([state.stats,state.stars,state.mastery]);buttons('word-encode-token')[0]?.click();check(JSON.stringify([state.stats,state.stars,state.mastery])===snapshot,'word encoding duplicate reward '+word.w);counts.wordEncoding++;
+   }
+   check(silentEUnlocked(),'silent-e fixture is not ready');
+   for(const word of silentEWordPool()){
+    const before=JSON.stringify([state.stats,state.stars,state.mastery]);
+    gameSilentE(word);check(currentAnswer.w===word.w,'wrong silent-e target');
+    check(document.querySelector('#silentEWord .silent-letter.pending'),'silent-e target is revealed too early');
+    const answerButton=buttons('silent-e-answer').find(b=>b.dataset.value==='e');check(!!answerButton,'silent-e answer missing');
+    answerButton.click();
+    check(locked&&state.done.silentE,'silent-e discovery did not complete');
+    check(document.querySelector('#silentEWord .silent-letter.revealed'),'silent-e letter was not revealed');
+    check(JSON.stringify([state.stats,state.stars,state.mastery])===before,'silent-e discovery inflated scored mastery');
+    counts.silentE++;
    }
    for(const item of miniTextPool()){
     gameMiniText(item.id);check(currentMiniText?.id===item.id,'wrong mini-text target');

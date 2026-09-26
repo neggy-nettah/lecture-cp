@@ -51,6 +51,8 @@ En conséquence, les mots de `SILENT_FINAL_E_WORDS` restent dans le corpus mais 
 
 Pour compenser sans gonfler artificiellement le corpus, privilégier des mots CV réguliers comme **menu, poli, puni, revu, relu, pari, rami, vomi**.
 
+Le palier `Le e muet` devient disponible seulement après ouverture de la famille `ch` et quelques réussites sur ce nouveau palier. Il s'agit d'une **découverte guidée**, pas d'une preuve de maîtrise : l'enfant écoute le mot, repère le `e` final et le voit ensuite affiché dans une couleur grisée distincte. Cette activité débloque un badge mais n'ajoute ni étoile de maîtrise ni faux succès de décodage.
+
 ### 4. Décodage et encodage se renforcent mutuellement
 
 Le programme et le livret CP 2025 associent explicitement décodage et encodage des correspondances graphème-phonème. L'application peut donc proposer des activités où l'enfant entend une syllabe et reconstruit son écriture, à condition de rester dans les graphèmes déjà enseignés.
@@ -157,12 +159,12 @@ Le premier palier de compréhension de texte se débloque à partir de 12 missio
 
 L'ordre précis des nouvelles correspondances reste un **choix de conception de l'application**, pas un ordre imposé par le programme officiel. Le projet conserve maintenant un `CGP_EXPANSION_PLAN` séparé des contenus actifs :
 
-- les familles `d` puis `j` sont désormais actives ; les prochaines consonnes simples prévues sont `z`, `k` ;
-- premier digramme consonantique prévu : `ch` ;
-- graphèmes vocaliques complexes à traiter avec une décomposition explicite des syllabes : `ou`, `on`, `an`, `en`, `in`, `oi` ;
+- les familles simples `z` puis `k` sont désormais actives après les familles de base ;
+- `ch` est le premier digramme consonantique actif : l'enfant voit par exemple `ch + a = cha`, sans présenter `ch` comme deux sons séparés ;
+- graphèmes vocaliques complexes encore prévus : `ou`, `on`, `an`, `en`, `in`, `oi` ;
 - `c` et `g` restent hors des familles uniformes car leur valeur dépend du contexte graphique.
 
-En dehors des familles `d` et `j`, déjà actives, les graphèmes encore listés comme prévus ne sont pas exposés à l'enfant. Ils ne doivent entrer dans le curriculum qu'avec un corpus de mots vérifié, les aides audio correspondantes et les tests de décodabilité.
+Le passage à `ch` est protégé par un seuil de maîtrise des syllabes CV simples : les missions seules ne peuvent pas forcer l'ouverture du palier complexe. Les futurs graphèmes vocaliques restent hors du curriculum actif tant qu'un corpus et des tests adaptés ne sont pas prêts.
 
 ## Curriculum actuel
 
@@ -170,14 +172,15 @@ Les familles sont actuellement débloquées progressivement à partir de la list
 
 Le moteur :
 
-- contient actuellement 12 familles (72 syllabes CV), les familles `d` puis `j` ayant été ajoutées en dernier pour préserver la progression des anciens profils ;
+- contient actuellement 15 familles : 14 familles CV simples, puis la famille `ch` ;
 - commence avec 3 familles ;
-- ajoute une famille environ toutes les 2 missions terminées ;
+- ajoute progressivement les familles selon les missions **et** les preuves de maîtrise ;
+- exige qu'au moins 60 % des syllabes CV simples atteignent le niveau de maîtrise 2 avant d'ouvrir `ch` ;
 - conserve les syllabes déjà travaillées ;
 - limite les distracteurs au curriculum actif ;
 - filtre les mots et phrases selon ce qui est disponible.
 
-L'ordre exact des familles reste **provisoire** et devra être revu avant une diffusion publique plus large, en particulier lorsque seront ajoutés les graphèmes complexes.
+Le corpus comprend maintenant des mots réguliers associés aux nouveaux paliers, par exemple `zébu`, `zéro`, `kilo`, `kaki`, `kimono`, `chéri` et `chili`.
 
 ## Audio et prononciation
 

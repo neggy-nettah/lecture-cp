@@ -126,10 +126,17 @@ function bestMissionStreak(snapshot=state){
  }
  return Math.min(completedMissionCount(snapshot),Math.max(stateCount(snapshot.bestMissionStreak),best))
 }
+function simpleCvReadiness(){
+ const syllables=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat(),secure=syllables.filter(s=>masteryLevel(s)>=2).length,strong=syllables.filter(s=>masteryLevel(s)>=3).length;
+ const target=Math.ceil(syllables.length*.60);
+ return {total:syllables.length,secure,strong,target,ready:secure>=target}
+}
 function unlockedFamilyCount(){
  const missions=completedMissionCount(),points=curriculumMasteryPoints();
  const missionCap=Math.min(DATA.sets.length,3+Math.floor(missions/2)),readinessCap=Math.min(DATA.sets.length,3+Math.floor(points/6));
- return Math.min(DATA.sets.length,Math.max(knownFamilyFloor(),Math.min(missionCap,readinessCap)))
+ let count=Math.min(DATA.sets.length,Math.max(knownFamilyFloor(),Math.min(missionCap,readinessCap)));
+ if(count>BASIC_CV_FAMILY_COUNT&&!simpleCvReadiness().ready)count=BASIC_CV_FAMILY_COUNT;
+ return count
 }
 function activeLearningSyllables(){
  const unlocked=DATA.sets.slice(0,unlockedFamilyCount()).flat(),known=Object.keys(state.mastery||{}).filter(k=>DATA.sets.flat().includes(k));
@@ -179,21 +186,40 @@ function textComprehensionUnlockText(){
  if(s.remainingMissions>0)return "Encore "+s.remainingMissions+" mission(s)";
  return "Consolide encore les syllabes"
 }
+function silentEReadiness(){
+ const simple=simpleCvReadiness(),chSet=DATA.sets.find((set,i)=>familyGraphemeAt(i)==="ch")||[],chSeen=chSet.filter(s=>masteryLevel(s)>=1).length;
+ const familiesReady=unlockedFamilyCount()>=DATA.sets.length;
+ return {ready:familiesReady&&simple.ready&&chSeen>=3,familiesReady,simpleReady:simple.ready,chSeen}
+}
+function silentEUnlocked(){return silentEReadiness().ready}
+function silentEUnlockText(){
+ const s=silentEReadiness();
+ if(!s.familiesReady)return "Débloque d’abord les nouvelles familles de syllabes";
+ if(!s.simpleReady)return "Consolide encore les syllabes simples";
+ if(s.chSeen<3)return "Entraîne-toi encore avec la famille CH";
+ return "Le e muet est prêt à être découvert"
+}
+function silentEWordPool(){
+ if(!silentEUnlocked())return [];
+ return SILENT_E_PRACTICE_WORDS.map(name=>DATA.words.find(w=>w.w===name)).filter(Boolean)
+}
 function learningMilestones(){
  return [
   {id:"word-encoding",icon:"✍️",label:"Écrire des mots entendus",ready:wordEncodingUnlocked(),detail:wordEncodingUnlockText()},
   {id:"sentences",icon:"💬",label:"Lire et comprendre des phrases",ready:sentenceUnlocked(),detail:sentenceUnlockText()},
-  {id:"mini-text",icon:"📚",label:"Comprendre un mini-texte",ready:textComprehensionUnlocked(),detail:textComprehensionUnlockText()}
+  {id:"mini-text",icon:"📚",label:"Comprendre un mini-texte",ready:textComprehensionUnlocked(),detail:textComprehensionUnlockText()},
+  {id:"silent-e",icon:"🤫",label:"Découvrir le e muet",ready:silentEUnlocked(),detail:silentEUnlockText()}
  ]
 }
 function curriculumStatus(){
- const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints();
- if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0};
- const next=DATA.sets[count],missionThreshold=2*(count-2),pointThreshold=6*(count-2);
- return {count,complete:false,next,nextInitial:familyGraphemeAt(count).toUpperCase()||"?",remainingMissions:Math.max(0,missionThreshold-missions),remainingPoints:Math.max(0,pointThreshold-points)}
+ const count=unlockedFamilyCount(),missions=completedMissionCount(),points=curriculumMasteryPoints(),simple=simpleCvReadiness();
+ if(count>=DATA.sets.length)return {count,complete:true,next:null,remainingMissions:0,remainingPoints:0,advancedGate:false};
+ const next=DATA.sets[count],missionThreshold=2*(count-2),pointThreshold=6*(count-2),advancedGate=count===BASIC_CV_FAMILY_COUNT&&!simple.ready;
+ return {count,complete:false,next,nextInitial:familyGraphemeAt(count).toUpperCase()||"?",remainingMissions:Math.max(0,missionThreshold-missions),remainingPoints:Math.max(0,pointThreshold-points),advancedGate,simple}
 }
 function curriculumNextText(){
  const s=curriculumStatus();if(s.complete)return "Toutes les familles sont ouvertes.";
+ if(s.advancedGate)return "Avant la famille "+s.nextInitial+", consolide les syllabes simples : "+s.simple.secure+" / "+s.simple.target+" bien installées.";
  if(s.remainingMissions>0&&s.remainingPoints>0)return "Prochaine famille "+s.nextInitial+" : encore "+s.remainingMissions+" mission(s) et un peu de consolidation.";
  if(s.remainingMissions>0)return "Prochaine famille "+s.nextInitial+" dans "+s.remainingMissions+" mission(s).";
  if(s.remainingPoints>0)return "Prochaine famille "+s.nextInitial+" : consolide encore les syllabes actuelles.";
