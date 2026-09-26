@@ -8,7 +8,7 @@
 - encodage reformulé en « deux morceaux » pour rester exact lorsque le premier graphème est `ch`
 - nouveau palier guidé « Le e muet » : lettre finale affichée en gris après identification, sans gonfler artificiellement la maîtrise
 - nouveau badge « Détective du e muet » et badge d'accès au palier `ch`
-- collection portée à 12 découvertes et monde prolongé jusqu'à 40 missions
+- collection portée à 13 découvertes, avec la princesse prévue dans les récompenses, et monde prolongé jusqu'à 40 missions
 - compagnon Léo prolongé jusqu'au niveau 8
 - récupération automatique des nouveaux collectibles correspondant aux puzzles déjà gagnés
 - audit navigateur étendu au palier `e` muet et aux nouvelles familles
