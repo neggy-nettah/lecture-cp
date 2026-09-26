@@ -14,6 +14,8 @@ const cgpExpansionPlan=vm.runInContext("CGP_EXPANSION_PLAN",context);
 const syllableOverrides=vm.runInContext("SYLLABLE_GRAPHEME_OVERRIDES",context);
 const deferredWords=vm.runInContext("DEFERRED_WORDS",context);
 const silentFinalEWords=vm.runInContext("SILENT_FINAL_E_WORDS",context);
+const silentEPracticeWords=vm.runInContext("SILENT_E_PRACTICE_WORDS",context);
+const basicCvFamilyCount=vm.runInContext("BASIC_CV_FAMILY_COUNT",context);
 const pictureWords=vm.runInContext("PICTURE_WORDS",context);
 const pictures=data.words.filter(w=>pictureWords.includes(w.w));
 if(pictures.length!==pictureWords.length||new Set(pictures.map(w=>w.emoji)).size!==pictures.length)throw Error("Ambiguous or missing picture vocabulary");
@@ -45,9 +47,10 @@ for(const id of ["stable-single","consonant-digraph","vowel-complex","context-se
   if(!expansionIds.has(id))fail("Missing CGP expansion stage:",id);
 }
 const contextStage=cgpExpansionPlan.find(x=>x.id==="context-sensitive");
-if(!contextStage?.graphemes?.includes("c")||!contextStage?.graphemes?.includes("g")||contextStage.mode!=="rule")fail("Context-sensitive c/g handling is no longer protected.");
-const stableStage=cgpExpansionPlan.find(x=>x.id==="stable-single");
-if(!stableStage||stableStage.graphemes.some(g=>data.familyGraphemes?.includes(g)))fail("Active family grapheme still appears in the future stable-single plan.");
+if(!contextStage?.graphemes?.includes("c")||!contextStage?.graphemes?.includes("g")||contextStage.mode!=="planned-rule")fail("Context-sensitive c/g handling is no longer protected.");
+const stableStage=cgpExpansionPlan.find(x=>x.id==="stable-single"),digraphStage=cgpExpansionPlan.find(x=>x.id==="consonant-digraph");
+if(stableStage?.mode!=="active"||!["z","k"].every(g=>stableStage.graphemes.includes(g)&&data.familyGraphemes?.includes(g)))fail("Active z/k progression metadata is inconsistent.");
+if(digraphStage?.mode!=="active"||!digraphStage.graphemes.includes("ch")||!data.familyGraphemes?.includes("ch"))fail("Active ch progression metadata is inconsistent.");
 if(!Array.isArray(cpMilestones)||cpMilestones.length<2)fail("Official CP milestones are missing.");
 const period1=cpMilestones.find(x=>x.id==="period-1"),midyear=cpMilestones.find(x=>x.id==="midyear");
 if(period1?.cgpMin!==12||period1?.cgpMax!==15||midyear?.cgpMin!==25||midyear?.cgpMax!==30)fail("Official CP CGP milestones changed unexpectedly.");
@@ -55,15 +58,24 @@ if(cpRoadmap.findIndex(x=>x.id==="complex-graphemes")>cpRoadmap.findIndex(x=>x.i
 
 if(!Array.isArray(data.sounds)||data.sounds.length<10)fail("Sound list is missing or too small.");
 if(!Array.isArray(data.sets)||data.sets.length<10)fail("Expected at least 10 syllable families.");
-const STABILIZATION_FROZEN_FAMILIES=["m","l","s","r","f","v","p","t","n","b","d","j"];
-if(data.familyGraphemes?.join("|")!==STABILIZATION_FROZEN_FAMILIES.join("|")||data.sets.length!==STABILIZATION_FROZEN_FAMILIES.length)fail("Pedagogical expansion is frozen during product stabilization.");
-if(Object.keys(syllableOverrides).length!==0)fail("Complex syllable overrides must remain inactive during product stabilization.");
+const EXPECTED_FAMILIES=["m","l","s","r","f","v","p","t","n","b","d","j","z","k","ch"];
+if(data.familyGraphemes?.join("|")!==EXPECTED_FAMILIES.join("|")||data.sets.length!==EXPECTED_FAMILIES.length)fail("CP syllable-family progression changed unexpectedly.");
+if(basicCvFamilyCount!==14)fail("Basic CV family boundary changed unexpectedly.");
+for(const vowel of ["a","e","i","o","u","é"]){
+ const syllable="ch"+vowel,parts=syllableOverrides[syllable];
+ if(!Array.isArray(parts)||parts[0]!=="ch"||parts[1]!==vowel)fail("Missing ch grapheme override:",syllable);
+}
 
 if(!Array.isArray(data.familyGraphemes)||data.familyGraphemes.length!==data.sets.length)fail("Syllable family grapheme metadata is incomplete.");
 if(!Array.isArray(data.words)||data.words.length<35)fail("Word bank is unexpectedly small.");
-for(const expected of [{w:"judo",parts:["ju","do"]},{w:"joli",parts:["jo","li"]}]){
+for(const expected of [
+ {w:"judo",parts:["ju","do"]},{w:"joli",parts:["jo","li"]},
+ {w:"zébu",parts:["zé","bu"]},{w:"zéro",parts:["zé","ro"]},
+ {w:"kilo",parts:["ki","lo"]},{w:"kaki",parts:["ka","ki"]},{w:"kimono",parts:["ki","mo","no"]},
+ {w:"chéri",parts:["ché","ri"]},{w:"chili",parts:["chi","li"]}
+]){
   const word=data.words.find(x=>x.w===expected.w);
-  if(!word||word.parts.join("|")!==expected.parts.join("|"))fail("Missing or malformed j-family word:",expected.w);
+  if(!word||word.parts.join("|")!==expected.parts.join("|"))fail("Missing or malformed advanced word:",expected.w);
 }
 
 if(!Array.isArray(data.sentences)||data.sentences.length<10)fail("Sentence bank is unexpectedly small.");
@@ -117,6 +129,7 @@ for(const expected of ["menu","poli","puni","revu","relu","pari","rami","vomi","
   if(!fullyDecodable.some(w=>w.w===expected))fail("Expected regular CV word is not fully decodable:",expected);
 }
 if(!silentFinalEWords.every(w=>deferredWords.includes(w)))fail("Silent-final-e vocabulary must stay deferred until the rule is taught.");
+if(!Array.isArray(silentEPracticeWords)||silentEPracticeWords.length<5||silentEPracticeWords.some(w=>!silentFinalEWords.includes(w)||!data.words.some(x=>x.w===w)))fail("Silent-e practice vocabulary is invalid.");
 for(const deferred of ["maman","robot","tapis",...deferredWords]){
   if(fullyDecodable.some(w=>w.w===deferred))fail("Word with an untaught rule became decodable too early:",deferred);
 }
