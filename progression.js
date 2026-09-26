@@ -146,6 +146,34 @@ function activeSoundGraphemes(){
  return new Set(activeLearningSyllables().flatMap(syllableGraphemes))
 }
 function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.sounds.filter(x=>allowed.has(x.g))}
+function structureStage(id){return SYLLABLE_STRUCTURE_PLAN.find(stage=>stage.id===id)||null}
+function structureMasteryKey(text){return "structure:"+String(text||"")}
+function structureMasteryLevel(text){return masteryLevel(structureMasteryKey(text))}
+function availableStructureItems(id){
+ const stage=structureStage(id),allowed=activeSoundGraphemes();if(!stage)return [];
+ return stage.items.filter(item=>item.parts.every(part=>"aioueé".includes(part)||allowed.has(part)))
+}
+const VC_STRUCTURE_MIN_SECURE=18,CVC_STRUCTURE_MIN_VC_SECURE=4;
+function vcStructureReadiness(){
+ const simple=simpleCvReadiness(),pool=availableStructureItems("vc");
+ return {ready:simple.secure>=VC_STRUCTURE_MIN_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:VC_STRUCTURE_MIN_SECURE,pool}
+}
+function vcStructureUnlocked(){return vcStructureReadiness().ready}
+function vcStructureUnlockText(){
+ const s=vcStructureReadiness();if(s.ready)return "Syllabes inversées disponibles";
+ return "Consolide encore les syllabes simples ("+Math.min(s.secureCv,s.targetCv)+" / "+s.targetCv+")"
+}
+function cvcStructureReadiness(){
+ const simple=simpleCvReadiness(),vc=structureStage("vc")?.items||[],secureVc=vc.filter(item=>structureMasteryLevel(item.text)>=2).length,pool=availableStructureItems("cvc");
+ return {ready:simple.ready&&secureVc>=CVC_STRUCTURE_MIN_VC_SECURE&&pool.length>=4,simpleReady:simple.ready,secureVc,targetVc:CVC_STRUCTURE_MIN_VC_SECURE,pool}
+}
+function cvcStructureUnlocked(){return cvcStructureReadiness().ready}
+function cvcStructureUnlockText(){
+ const s=cvcStructureReadiness();
+ if(!s.simpleReady)return "Consolide encore les syllabes CV";
+ if(s.secureVc<s.targetVc)return "Maîtrise encore "+(s.targetVc-s.secureVc)+" syllabe(s) inversée(s)";
+ return s.ready?"Syllabes à 3 lettres disponibles":"Encore un peu de pratique"
+}
 const WORD_ENCODING_MIN_MISSIONS=4,WORD_ENCODING_MIN_MASTERY_POINTS=10;
 function wordEncodingReadiness(){
  const missions=completedMissionCount(),points=curriculumMasteryPoints();
@@ -206,6 +234,8 @@ function silentEWordPool(){
 function learningMilestones(){
  return [
   {id:"word-encoding",icon:"✍️",label:"Écrire des mots entendus",ready:wordEncodingUnlocked(),detail:wordEncodingUnlockText()},
+  {id:"vc-structures",icon:"↩️",label:"Lire des syllabes inversées (VC)",ready:vcStructureUnlocked(),detail:vcStructureUnlockText()},
+  {id:"cvc-structures",icon:"🔤",label:"Lire des syllabes à 3 lettres (CVC)",ready:cvcStructureUnlocked(),detail:cvcStructureUnlockText()},
   {id:"sentences",icon:"💬",label:"Lire et comprendre des phrases",ready:sentenceUnlocked(),detail:sentenceUnlockText()},
   {id:"mini-text",icon:"📚",label:"Comprendre un mini-texte",ready:textComprehensionUnlocked(),detail:textComprehensionUnlockText()},
   {id:"silent-e",icon:"🤫",label:"Découvrir le e muet",ready:silentEUnlocked(),detail:silentEUnlockText()}
