@@ -1,6 +1,6 @@
 # Phase de stabilisation
 
-Le projet est temporairement en **gel d’extension pédagogique**. Les nouvelles familles, nouveaux graphèmes et gros ajouts de contenu attendent que le socle produit soit suffisamment robuste.
+Le socle produit a passé la première phase de stabilisation automatisée. Les extensions pédagogiques reprennent désormais **par petits paliers testés**, sans contourner les validations navigateur, sauvegarde, PWA et progression.
 
 ## Objectif
 
@@ -25,7 +25,7 @@ Pouvoir faire utiliser l’application plusieurs jours sur iPhone, iPad/Mac et p
 
 ## Règle de travail
 
-Tant que les points techniques automatisables ci-dessus ne sont pas stabilisés, une modification doit prioritairement corriger ou tester le socle existant. Les ajouts pédagogiques ne reprennent qu’après cette phase, sauf correction indispensable du contenu déjà actif.
+Toute extension pédagogique doit rester incrémentale : corpus décodable vérifié, seuil de déblocage fondé sur la maîtrise, tests automatiques étendus au nouveau palier, puis validation sur appareil réel. Une nouveauté qui fragilise le socle est retirée ou corrigée avant fusion.
 
 ## Points externes
 
