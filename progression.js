@@ -149,6 +149,10 @@ function activeSoundData(){const allowed=activeSoundGraphemes();return DATA.soun
 function structureStage(id){return SYLLABLE_STRUCTURE_PLAN.find(stage=>stage.id===id)||null}
 function structureMasteryKey(text){return "structure:"+String(text||"")}
 function structureMasteryLevel(text){return masteryLevel(structureMasteryKey(text))}
+function structureMasterySummary(id){
+ const items=structureStage(id)?.items||[],levels=items.map(item=>structureMasteryLevel(item.text));
+ return {total:items.length,started:levels.filter(x=>x>0).length,secure:levels.filter(x=>x>=2).length,mastered:levels.filter(x=>x>=3).length}
+}
 function availableStructureItems(id){
  const stage=structureStage(id),allowed=activeSoundGraphemes();if(!stage)return [];
  return stage.items.filter(item=>item.parts.every(part=>"aioueé".includes(part)||allowed.has(part)))
@@ -164,8 +168,8 @@ function vcStructureUnlockText(){
  return "Consolide encore les syllabes simples ("+Math.min(s.secureCv,s.targetCv)+" / "+s.targetCv+")"
 }
 function cvcStructureReadiness(){
- const simple=simpleCvReadiness(),vc=structureStage("vc")?.items||[],secureVc=vc.filter(item=>structureMasteryLevel(item.text)>=2).length,pool=availableStructureItems("cvc");
- return {ready:simple.secure>=CVC_STRUCTURE_MIN_CV_SECURE&&secureVc>=CVC_STRUCTURE_MIN_VC_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:CVC_STRUCTURE_MIN_CV_SECURE,secureVc,targetVc:CVC_STRUCTURE_MIN_VC_SECURE,pool}
+ const simple=simpleCvReadiness(),vc=structureMasterySummary("vc"),pool=availableStructureItems("cvc");
+ return {ready:simple.secure>=CVC_STRUCTURE_MIN_CV_SECURE&&vc.secure>=CVC_STRUCTURE_MIN_VC_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:CVC_STRUCTURE_MIN_CV_SECURE,secureVc:vc.secure,targetVc:CVC_STRUCTURE_MIN_VC_SECURE,pool}
 }
 function cvcStructureUnlocked(){return cvcStructureReadiness().ready}
 function cvcStructureUnlockText(){
