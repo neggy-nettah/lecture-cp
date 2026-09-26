@@ -145,6 +145,7 @@ const probes=[
   'typeof recentPerformance==="function"',
   'typeof recordQuestionError==="function"',
   'typeof parseProgressImport==="function"',
+  '(()=>{const p={app:"La Fabrique des Syllabes",state:{mastery:{ma:{attempts:"oops",correct:"999",lastSeen:"not-a-date"}},rewards:{pieces:"oops",puzzles:"Infinity"}}};const x=parseProgressImport(JSON.stringify(p));return x.mastery.ma.attempts===0&&x.mastery.ma.correct===0&&x.mastery.ma.lastSeen===null&&x.rewards.pieces===0&&x.rewards.puzzles===0})()',
   'typeof importProgressFile==="function"',
   'typeof registerServiceWorker==="function"',
   '(()=>{let checks=0;serviceWorkerRegistration={update:()=>{checks++;return Promise.resolve()}};lastServiceWorkerCheck=0;checkForAppUpdate(true);checkForAppUpdate(false);serviceWorkerRegistration=null;return checks===1})()',
