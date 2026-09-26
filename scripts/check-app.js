@@ -267,6 +267,7 @@ if(!html.includes('id="textSizeBtn"')||!css.includes(".large-text .titlebar h2")
 if(!html.includes('id="progressBarWrap" role="progressbar"')||!html.includes('id="syncStatus" role="status" aria-live="polite"')||!app.includes('setAttribute("aria-valuenow",String(pct))')){
   fail("Progress or synchronization accessibility semantics are missing.");
 }
+if(!app.includes('setAttribute("aria-current",active?"page":"false")'))fail("Active navigation is not exposed with aria-current.");
 if(!app.includes('memoryMissedPairs.has(a.card.pair)?null:a.card.pair')){
   fail("Memory mistakes can inflate syllable mastery again.");
 }
