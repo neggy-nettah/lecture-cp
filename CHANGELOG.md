@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.46.0 — 2026-09-26
+
+- intégration des paliers **VC** et **CVC** dans la mission quotidienne après leur déblocage
+- sélection prioritaire des syllabes de structure les moins maîtrisées
+- nouveau palier encore fragile proposé un jour sur deux jusqu’à 4 syllabes consolidées
+- étapes VC/CVC compatibles avec la progression, les récompenses et l’avancement normal de la mission
+- validation renforcée des missions sauvegardées : une étape VC/CVC verrouillée est reconstruite au lieu de bloquer l’enfant
+- tests runtime et navigateur ajoutés pour la sélection, la persistance et les limites des missions VC/CVC
+
 ## 0.45.0 — 2026-09-26
 
 - nouveau palier **VC** « Syllabes inversées » avec exemples comme `il`, `or`, `al`
