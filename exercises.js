@@ -366,6 +366,7 @@ function gameMiniText(forcedId=null){
  ${phraseToolHelpHTML(tokens)}
  <div class="tip"><b>1.</b> Lis les deux phrases. <b>2.</b> Quand tu as fini, touche 🔊 pour entendre la question. <b>3.</b> Choisis la bonne réponse.</div>
  <div class="actions" style="margin-top:12px"><button class="btn yellow" data-action="mini-text-question">🔊 Écouter la question</button></div>
+ <div id="miniTextQuestion" class="tip" hidden><b>Question :</b> ${esc(item.question)}</div>
  <div class="choices">${opts.map(name=>`<button class="choice" data-action="mini-text-answer" data-value="${esc(name)}">${esc(name)}</button>`).join("")}</div>
  <div id="feedback" class="feedback" role="status" aria-live="polite"></div></div>
  <div class="nextbar"><button class="btn gray" data-action="go" data-to="games">← Jeux</button><button class="btn primary" data-action="game-mini-text">Nouveau mini-texte →</button></div>`;
