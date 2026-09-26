@@ -989,7 +989,7 @@ document.addEventListener("click",e=>{
  if(a==="readaloud-model"){speak(readAloudSentence.join(" "),.76);return}
  if(a==="game-comprehension"){gameComprehension();return}
  if(a==="game-mini-text"){gameMiniText();return}
- if(a==="mini-text-question"){if(currentMiniText?.question)speak(currentMiniText.question,.78);return}
+ if(a==="mini-text-question"){if(currentMiniText?.question){const q=$("#miniTextQuestion");if(q)q.hidden=false;speak(currentMiniText.question,.78)}return}
  if(a==="comprehension-answer"){
    if(locked)return;
    const value=b.dataset.value,key="comprehension:"+currentAnswer;
