@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.44.0 — 2026-09-26
+
+- mini-textes portés à 8 situations et questions variées entre « qui ? » et « quoi ? »
+- question audio des mini-textes désormais déclenchée par l’enfant seulement quand il a fini de lire
+- consigne autonome en 3 étapes : lire, écouter la question, répondre
+- exemple audio de fusion corrigé pour les graphèmes de plusieurs lettres comme `ch`
+- libellé de l’encodage corrigé : l’enfant choisit des « morceaux » plutôt que forcément deux lettres
+- validations automatiques ajoutées pour la variété des questions et le rythme autonome
+
 ## 0.43.0 — 2026-09-26
 
 - progression CP étendue avec les familles `z`, `k` puis le digramme `ch`
