@@ -4,6 +4,7 @@
 
 - mini-textes portés à 8 situations et questions variées entre « qui ? » et « quoi ? »
 - question audio des mini-textes désormais déclenchée par l’enfant seulement quand il a fini de lire
+- la question devient aussi visible au clic, pour que l’exercice reste utilisable si l’audio échoue
 - consigne autonome en 3 étapes : lire, écouter la question, répondre
 - exemple audio de fusion corrigé pour les graphèmes de plusieurs lettres comme `ch`
 - libellé de l’encodage corrigé : l’enfant choisit des « morceaux » plutôt que forcément deux lettres
