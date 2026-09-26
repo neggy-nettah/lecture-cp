@@ -71,6 +71,12 @@ const requiredFunctions=[
   "function knownFamilyFloor(",
   "function simpleCvReadiness(",
   "function activeLearningSyllables(",
+  "function structureStage(",
+  "function structureMasteryKey(",
+  "function vcStructureReadiness(",
+  "function vcStructureUnlocked(",
+  "function cvcStructureReadiness(",
+  "function cvcStructureUnlocked(",
   "function silentEReadiness(",
   "function silentEUnlocked(",
   "function silentEWordPool(",
@@ -80,6 +86,9 @@ const requiredFunctions=[
   "function decodableSentencePool(",
   "function comprehensionSentencePool(",
   "function gameMemory(",
+  "function gameStructure(",
+  "function gameVC(",
+  "function gameCVC(",
   "function missingSyllableWords(",
   "function gameMissing(",
   "function gameSilentE(",
@@ -133,6 +142,12 @@ if(!css.includes("silent-letter.revealed")||!app.includes("SILENT_FINAL_E_WORDS.
 }
 if(!app.includes("simpleCvReadiness()")||!app.includes("BASIC_CV_FAMILY_COUNT")){
   fail("Advanced syllable families are no longer mastery-gated.");
+}
+if(!app.includes('"vc-structures":gameVC')||!app.includes('"cvc-structures":gameCVC')||!app.includes('data-action="structure-answer"')){
+  fail("VC/CVC games are not fully routed.");
+}
+if(!app.includes('key.startsWith("structure:")')||!app.includes("CVC_STRUCTURE_MIN_CV_SECURE")){
+  fail("VC/CVC mastery persistence or gating is missing.");
 }
 
 if(!app.includes("function refreshSpeechVoices(")||!app.includes("function speakNow(")||!app.includes('addEventListener?.("voiceschanged",tryVoices)')){
