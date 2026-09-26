@@ -18,8 +18,13 @@ module.exports=async function auditGames(page){
   };
   try{
    for(let tier=3;tier<=DATA.sets.length;tier++){
-    state=normalizeState({mastery:{[DATA.sets[tier-1][0]]:{attempts:1,correct:0}},missionHistory:Array.from({length:14},(_,i)=>({date:'2020-01-'+String(i+1).padStart(2,'0')}))});
-    missionMode=false;check(unlockedFamilyCount()===tier,'curriculum fixture');counts.tiers++;
+    const fixtureMastery={[DATA.sets[tier-1][0]]:{attempts:1,correct:0}};
+    if(tier>BASIC_CV_FAMILY_COUNT){
+     const simple=DATA.sets.slice(0,BASIC_CV_FAMILY_COUNT).flat(),needed=Math.ceil(simple.length*.60);
+     simple.slice(0,needed).forEach(s=>{fixtureMastery[s]={attempts:2,correct:2,lastSeen:localDayKey()}})
+    }
+    state=normalizeState({mastery:fixtureMastery,missionHistory:Array.from({length:14},(_,i)=>({date:'2020-01-'+String(i+1).padStart(2,'0')}))});
+    missionMode=false;check(unlockedFamilyCount()===tier,'curriculum fixture tier '+tier);counts.tiers++;
     for(const target of activeLearningSyllables()){
      gameListen(target);answer('listen-answer',target,true);counts.syllableQuestions++;
      gameBubbles(target);answer('bubble-answer',target);counts.syllableQuestions++;
