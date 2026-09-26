@@ -126,7 +126,8 @@ const COLLECTIBLES=[
  {id:"dino",emoji:"🦕",name:"Petit dinosaure"},{id:"fox",emoji:"🦊",name:"Renard explorateur"},
  {id:"panda",emoji:"🐼",name:"Panda rêveur"},{id:"astronaut",emoji:"🧑‍🚀",name:"Mini astronaute"},
  {id:"mermaid",emoji:"🧜",name:"Sirène des océans"},{id:"wizard",emoji:"🧙",name:"Mage des mots"},
- {id:"key",emoji:"🗝️",name:"Clé dorée"},{id:"crown",emoji:"👑",name:"Couronne des lecteurs"}
+ {id:"key",emoji:"🗝️",name:"Clé dorée"},{id:"crown",emoji:"👑",name:"Couronne des lecteurs"},
+ {id:"princess",emoji:"👸",name:"Princesse des histoires"}
 ];
 
 const WORLD_ZONES=[
