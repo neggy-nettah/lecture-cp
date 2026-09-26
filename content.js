@@ -24,9 +24,9 @@ const CP_READING_ROADMAP=[
  {id:"texts-comprehension",label:"Comprendre des textes courts",skills:["lire un texte court décodable","répondre à des questions explicites","enrichir le vocabulaire"],app:["mini-text"],planned:true}
 ];
 
-// Future complex syllables can override their grapheme decomposition here.
-// Examples once taught: {lou:["l","ou"],cha:["ch","a"]}. Keep empty until the
-// corresponding graphemes and content have been explicitly introduced.
+// Complex syllables override their grapheme decomposition here.
+// The active ch family is explicit; future vowel digraphs such as ou will only be
+// added once their corresponding stage and decodable corpus are introduced.
 const SYLLABLE_GRAPHEME_OVERRIDES={
  "cha":["ch","a"],"che":["ch","e"],"chi":["ch","i"],"cho":["ch","o"],"chu":["ch","u"],"ché":["ch","é"]
 };
