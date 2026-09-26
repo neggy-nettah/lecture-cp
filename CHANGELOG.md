@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.42.1 — 2026-09-26
+
+- import de progression durci contre les compteurs corrompus, non numériques ou non finis
+- compteurs de maîtrise importés normalisés avec les mêmes règles sûres que l’état courant
+- dates de maîtrise importées validées avant restauration
+- compteurs de puzzles/pièces importés bornés et normalisés
+- test de régression ajouté pour une sauvegarde volontairement corrompue
+- cache hors ligne et assets renouvelés pour livrer le correctif sur les appareils installés
+
 ## 0.42.0 — 2026-09-26
 
 - durcissement navigateur avec Content Security Policy limitée au CDN JS et au projet Supabase configuré
