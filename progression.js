@@ -153,7 +153,7 @@ function availableStructureItems(id){
  const stage=structureStage(id),allowed=activeSoundGraphemes();if(!stage)return [];
  return stage.items.filter(item=>item.parts.every(part=>"aioueé".includes(part)||allowed.has(part)))
 }
-const VC_STRUCTURE_MIN_SECURE=18,CVC_STRUCTURE_MIN_VC_SECURE=4;
+const VC_STRUCTURE_MIN_SECURE=18,CVC_STRUCTURE_MIN_CV_SECURE=30,CVC_STRUCTURE_MIN_VC_SECURE=4;
 function vcStructureReadiness(){
  const simple=simpleCvReadiness(),pool=availableStructureItems("vc");
  return {ready:simple.secure>=VC_STRUCTURE_MIN_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:VC_STRUCTURE_MIN_SECURE,pool}
@@ -165,12 +165,12 @@ function vcStructureUnlockText(){
 }
 function cvcStructureReadiness(){
  const simple=simpleCvReadiness(),vc=structureStage("vc")?.items||[],secureVc=vc.filter(item=>structureMasteryLevel(item.text)>=2).length,pool=availableStructureItems("cvc");
- return {ready:simple.ready&&secureVc>=CVC_STRUCTURE_MIN_VC_SECURE&&pool.length>=4,simpleReady:simple.ready,secureVc,targetVc:CVC_STRUCTURE_MIN_VC_SECURE,pool}
+ return {ready:simple.secure>=CVC_STRUCTURE_MIN_CV_SECURE&&secureVc>=CVC_STRUCTURE_MIN_VC_SECURE&&pool.length>=4,secureCv:simple.secure,targetCv:CVC_STRUCTURE_MIN_CV_SECURE,secureVc,targetVc:CVC_STRUCTURE_MIN_VC_SECURE,pool}
 }
 function cvcStructureUnlocked(){return cvcStructureReadiness().ready}
 function cvcStructureUnlockText(){
  const s=cvcStructureReadiness();
- if(!s.simpleReady)return "Consolide encore les syllabes CV";
+ if(s.secureCv<s.targetCv)return "Consolide encore les syllabes CV ("+Math.min(s.secureCv,s.targetCv)+" / "+s.targetCv+")";
  if(s.secureVc<s.targetVc)return "Maîtrise encore "+(s.targetVc-s.secureVc)+" syllabe(s) inversée(s)";
  return s.ready?"Syllabes à 3 lettres disponibles":"Encore un peu de pratique"
 }
